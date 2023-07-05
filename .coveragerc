@@ -1,0 +1,12 @@
+[run]
+source = clean_python
+omit = test_*.py
+
+[report]
+show_missing = true
+
+[html]
+directory = htmlcov
+
+[xml]
+output = coverage.xml

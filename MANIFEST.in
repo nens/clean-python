@@ -1,0 +1,6 @@
+# Include docs in the root.
+include *.md
+include LICENSE
+# Exclude byte-compiled code
+global-exclude __pycache__
+global-exclude *.py[co]

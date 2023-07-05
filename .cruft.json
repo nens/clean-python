@@ -1,0 +1,14 @@
+{
+  "template": "https://github.com/nens/cookiecutter-python-template",
+  "commit": "f70892c4590d8573425d333818c0333b1837ba79",
+  "checkout": null,
+  "context": {
+    "cookiecutter": {
+      "project_name": "clean-python",
+      "package_name": "clean_python",
+      "project_short_description": "Clean architecture in Python",
+      "_template": "https://github.com/nens/cookiecutter-python-template"
+    }
+  },
+  "directory": null
+}
