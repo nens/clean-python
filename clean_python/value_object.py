@@ -1,0 +1,46 @@
+from typing import Optional, Type, TypeVar
+
+from pydantic import BaseModel, ValidationError
+
+from .exceptions import BadRequest
+
+T = TypeVar("T", bound="ValueObject")
+
+
+class ValueObject(BaseModel):
+    class Config:
+        allow_mutation = False
+
+    def run_validation(self: T) -> T:
+        try:
+            return self.__class__(**self.dict())
+        except ValidationError as e:
+            raise BadRequest(e)
+
+    @classmethod
+    def create(cls: Type[T], **values) -> T:
+        try:
+            return cls(**values)
+        except ValidationError as e:
+            raise BadRequest(e)
+
+    def update(self: T, **values) -> T:
+        try:
+            return self.__class__(**{**self.dict(), **values})
+        except ValidationError as e:
+            raise BadRequest(e)
+
+    def __hash__(self):
+        return hash(self.__class__) + hash(tuple(self.__dict__.values()))
+
+
+K = TypeVar("K", bound="ValueObjectWithId")
+
+
+class ValueObjectWithId(ValueObject):
+    id: Optional[int] = None
+
+    def update(self: K, **values) -> K:
+        if "id" in values and self.id is not None and values["id"] != self.id:
+            raise ValueError("Cannot change the id")
+        return super().update(**values)
