@@ -10,7 +10,7 @@ license = {text = "MIT"}
 classifiers = ["Programming Language :: Python"]
 keywords = []
 requires-python = ">=3.7"
-dependencies = ["pydantic==1.*"]
+dependencies = ["pydantic==1.*", "inject", "asgiref"]
 dynamic = ["version"]
 
 [project.optional-dependencies]
@@ -18,6 +18,11 @@ test = [
     "pytest",
     "pytest-cov"
 ]
+dramatiq = ["dramatiq"]
+fastapi = ["fastapi"]
+auth = ["jwt"]
+fluentbit = ["fluentbit"]
+sql = ["sqlalchemy==2.*"]
 
 [project.urls]
 homepage = "https://github.com/nens/clean-python"
