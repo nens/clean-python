@@ -2,7 +2,7 @@
 
 ``clean-python`` contains abstractions for *clean architecture* in Python
 
-using asyncio. It is independent of frameworks.
+It is independent of frameworks and has asyncio at its core.
 
 The terminology used is consistently derived from the "Big Blue Book" (Domain Driven Design by E. Evans, 2004). Software consists of one or more modules, each having four layers: presentation, application, domain, and infrastructure. Each layer has its own responsibilities, in short:
 
@@ -31,7 +31,8 @@ Layers are loosly coupled with dependencies in only one direction: presentation 
 
 A module may only depend on another module though its infrastructure layer. See ``InternalGateway``.
 
-This library was initially developed as a web backend using FastAPI. Its core dependencies are ``pydantic``, ``inject`` and ``asgiref``. Optional dependencies may be added in case for instance an ``SQLGateway`` is needed.
+This library was initially developed as a web backend using FastAPI. Its core dependency is ``pydantic``, 
+for strict type parsing and validation. Optional dependencies may be added as needed.
 
 ## Core concepts
 
