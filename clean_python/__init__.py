@@ -29,3 +29,7 @@ from .oauth2.oauth2 import *  # NOQA
 from .sql.sql_gateway import SQLGateway  # NOQA
 from .sql.sql_provider import *  # NOQA
 from .testing.attr_dict import AttrDict  # NOQA
+
+# fmt: off
+__version__ = '0.0.1.dev0'
+# fmt: on

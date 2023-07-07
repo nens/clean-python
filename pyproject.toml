@@ -16,7 +16,8 @@ dynamic = ["version"]
 [project.optional-dependencies]
 test = [
     "pytest",
-    "pytest-cov"
+    "pytest-cov",
+    "pytest-asyncio"
 ]
 dramatiq = ["dramatiq"]
 fastapi = ["fastapi"]
