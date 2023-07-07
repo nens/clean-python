@@ -1,6 +1,9 @@
-from typing import Optional, Type, TypeVar
+from typing import Optional
+from typing import Type
+from typing import TypeVar
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
+from pydantic import ValidationError
 
 from .exceptions import BadRequest
 

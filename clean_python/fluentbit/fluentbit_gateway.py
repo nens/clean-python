@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # (c) Nelen & Schuurmans
 
-from typing import Any, Dict
+from typing import Any
+from typing import Dict
 
 from asgiref.sync import sync_to_async
 from fluent.sender import FluentSender

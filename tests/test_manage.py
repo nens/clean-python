@@ -5,7 +5,9 @@ from unittest import mock
 
 import pytest
 
-from clean_python import Filter, Manage, RootEntity
+from clean_python import Filter
+from clean_python import Manage
+from clean_python import RootEntity
 
 
 class User(RootEntity):

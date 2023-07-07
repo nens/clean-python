@@ -2,19 +2,37 @@
 # (c) Nelen & Schuurmans
 from contextlib import asynccontextmanager
 from datetime import datetime
-from typing import AsyncIterator, Callable, List, Optional, TypeVar
+from typing import AsyncIterator
+from typing import Callable
+from typing import List
+from typing import Optional
+from typing import TypeVar
 
 import inject
-from sqlalchemy import asc, delete, desc, func, select, Table, true, update
+from sqlalchemy import asc
+from sqlalchemy import delete
+from sqlalchemy import desc
+from sqlalchemy import func
+from sqlalchemy import select
+from sqlalchemy import Table
+from sqlalchemy import true
+from sqlalchemy import update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import Executable
-from sqlalchemy.sql.expression import ColumnElement, false
+from sqlalchemy.sql.expression import ColumnElement
+from sqlalchemy.sql.expression import false
 
-from clean_python.base.domain.exceptions import AlreadyExists, Conflict, DoesNotExist
-from clean_python.base.infrastructure.gateway import Filter, Gateway, Json
+from clean_python.base.domain.exceptions import AlreadyExists
+from clean_python.base.domain.exceptions import Conflict
+from clean_python.base.domain.exceptions import DoesNotExist
 from clean_python.base.domain.pagination import PageOptions
-from .sql_provider import SQLDatabase, SQLProvider
+from clean_python.base.infrastructure.gateway import Filter
+from clean_python.base.infrastructure.gateway import Gateway
+from clean_python.base.infrastructure.gateway import Json
+
+from .sql_provider import SQLDatabase
+from .sql_provider import SQLProvider
 
 
 def _is_unique_violation_error_id(e: IntegrityError, id: int):

@@ -7,7 +7,9 @@ from unittest import mock
 import jwt
 import pytest
 
-from clean_python import OAuth2AccessTokenVerifier, PermissionDenied, Unauthorized
+from clean_python import OAuth2AccessTokenVerifier
+from clean_python import PermissionDenied
+from clean_python import Unauthorized
 
 
 @pytest.fixture

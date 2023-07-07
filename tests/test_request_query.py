@@ -3,8 +3,8 @@ from typing import Optional
 import pytest
 from pydantic import ValidationError
 
-from clean_python.base.infrastructure.gateway import Filter
 from clean_python.base.domain.pagination import PageOptions
+from clean_python.base.infrastructure.gateway import Filter
 from clean_python.fastapi.request_query import RequestQuery
 
 

@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 # (c) Nelen & Schuurmans
 
-from typing import Generic, Optional, Sequence, TypeVar
+from typing import Generic
+from typing import Optional
+from typing import Sequence
+from typing import TypeVar
 
 from pydantic import BaseModel
 from pydantic.generics import GenericModel

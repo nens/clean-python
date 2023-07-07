@@ -1,14 +1,19 @@
 # -*- coding: utf-8 -*-
 # (c) Nelen & Schuurmans
-from abc import abstractmethod, abstractproperty
-from typing import Generic, List, Optional, TypeVar
+from abc import abstractmethod
+from abc import abstractproperty
+from typing import Generic
+from typing import List
+from typing import Optional
+from typing import TypeVar
 
-from clean_python.base.domain.exceptions import BadRequest, DoesNotExist
-from clean_python.base.infrastructure.gateway import Filter
 from clean_python.base.application.manage import Manage
+from clean_python.base.domain.exceptions import BadRequest
+from clean_python.base.domain.exceptions import DoesNotExist
 from clean_python.base.domain.pagination import PageOptions
 from clean_python.base.domain.root_entity import RootEntity
 from clean_python.base.domain.value_object import ValueObject
+from clean_python.base.infrastructure.gateway import Filter
 
 E = TypeVar("E", bound=RootEntity)  # External
 T = TypeVar("T", bound=ValueObject)  # Internal

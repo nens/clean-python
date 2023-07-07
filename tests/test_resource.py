@@ -1,7 +1,11 @@
 import pytest
 from fastapi.routing import APIRouter
 
-from clean_python.fastapi.resource import APIVersion, get, Resource, Stability, v
+from clean_python.fastapi.resource import APIVersion
+from clean_python.fastapi.resource import get
+from clean_python.fastapi.resource import Resource
+from clean_python.fastapi.resource import Stability
+from clean_python.fastapi.resource import v
 
 
 def test_subclass():

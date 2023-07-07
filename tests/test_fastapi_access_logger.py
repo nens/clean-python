@@ -3,9 +3,11 @@ from unittest import mock
 import pytest
 from fastapi.routing import APIRoute
 from starlette.requests import Request
-from starlette.responses import JSONResponse, StreamingResponse
+from starlette.responses import JSONResponse
+from starlette.responses import StreamingResponse
 
-from clean_python import FastAPIAccessLogger, InMemoryGateway
+from clean_python import FastAPIAccessLogger
+from clean_python import InMemoryGateway
 
 
 @pytest.fixture

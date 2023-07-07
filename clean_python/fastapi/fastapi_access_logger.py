@@ -1,15 +1,17 @@
 import os
 import time
 from datetime import datetime
-from typing import Awaitable, Callable, Optional
+from typing import Awaitable
+from typing import Callable
+from typing import Optional
 
 import inject
 from starlette.background import BackgroundTasks
 from starlette.requests import Request
 from starlette.responses import Response
 
-from clean_python.fluentbit.fluentbit_gateway import FluentbitGateway
 from clean_python.base.infrastructure.gateway import Gateway
+from clean_python.fluentbit.fluentbit_gateway import FluentbitGateway
 
 __all__ = ["FastAPIAccessLogger"]
 

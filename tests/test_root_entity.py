@@ -1,4 +1,5 @@
-from datetime import datetime, timezone
+from datetime import datetime
+from datetime import timezone
 from unittest import mock
 
 import pytest
@@ -24,7 +25,9 @@ def user():
 
 @pytest.fixture
 def patched_now():
-    with mock.patch("clean_python.base.domain.root_entity.now", return_value=SOME_DATETIME):
+    with mock.patch(
+        "clean_python.base.domain.root_entity.now", return_value=SOME_DATETIME
+    ):
         yield
 
 

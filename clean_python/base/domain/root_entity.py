@@ -1,9 +1,11 @@
 from datetime import datetime
-from typing import Optional, Type, TypeVar
+from typing import Optional
+from typing import Type
+from typing import TypeVar
 
 from clean_python.base.domain.exceptions import BadRequest
-from clean_python.base.infrastructure.now import now
 from clean_python.base.domain.value_object import ValueObject
+from clean_python.base.infrastructure.now import now
 
 T = TypeVar("T", bound="RootEntity")
 

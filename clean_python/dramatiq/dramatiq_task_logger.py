@@ -4,13 +4,15 @@ import time
 from typing import Optional
 
 import inject
-from dramatiq import get_encoder, Middleware
-from dramatiq.errors import RateLimitExceeded, Retry
+from dramatiq import get_encoder
+from dramatiq import Middleware
+from dramatiq.errors import RateLimitExceeded
+from dramatiq.errors import Retry
 from dramatiq.message import Message
 from dramatiq.middleware import SkipMessage
 
-from clean_python.fluentbit.fluentbit_gateway import FluentbitGateway
 from clean_python.base.infrastructure.gateway import Gateway
+from clean_python.fluentbit.fluentbit_gateway import FluentbitGateway
 
 __all__ = ["AsyncLoggingMiddleware"]
 

@@ -2,14 +2,17 @@
 # (c) Nelen & Schuurmans
 
 import logging
-from typing import Dict, List
+from typing import Dict
+from typing import List
 
 import jwt
 from jwt import PyJWKClient
 from jwt.exceptions import PyJWTError
-from pydantic import AnyHttpUrl, BaseModel
+from pydantic import AnyHttpUrl
+from pydantic import BaseModel
 
-from clean_python.base.domain.exceptions import PermissionDenied, Unauthorized
+from clean_python.base.domain.exceptions import PermissionDenied
+from clean_python.base.domain.exceptions import Unauthorized
 
 __all__ = ["OAuth2Settings", "OAuth2AccessTokenVerifier"]
 

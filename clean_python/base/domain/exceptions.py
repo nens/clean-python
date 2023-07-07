@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 # (c) Nelen & Schuurmans
 
-from typing import Any, Optional, Union
+from typing import Any
+from typing import Optional
+from typing import Union
 
-from pydantic import create_model, ValidationError
+from pydantic import create_model
+from pydantic import ValidationError
 from pydantic.error_wrappers import ErrorWrapper
 
 __all__ = [

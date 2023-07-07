@@ -1,6 +1,12 @@
 from enum import Enum
 from functools import partial
-from typing import Any, Callable, Dict, List, Optional, Sequence, Type
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Sequence
+from typing import Type
 
 from fastapi.routing import APIRouter
 

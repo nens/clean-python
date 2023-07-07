@@ -9,8 +9,9 @@ import pika
 from asgiref.sync import sync_to_async
 from pydantic import AnyUrl
 
-from clean_python.base.infrastructure.gateway import Gateway, Json
 from clean_python.base.domain.value_object import ValueObject
+from clean_python.base.infrastructure.gateway import Gateway
+from clean_python.base.infrastructure.gateway import Json
 
 __all__ = ["CeleryRmqBroker"]
 

@@ -1,16 +1,15 @@
-from datetime import datetime, timezone
+from datetime import datetime
+from datetime import timezone
 from unittest import mock
 
 import pytest
 
-from clean_python import (
-    AlreadyExists,
-    Conflict,
-    DoesNotExist,
-    Filter,
-    InMemoryGateway,
-    PageOptions,
-)
+from clean_python import AlreadyExists
+from clean_python import Conflict
+from clean_python import DoesNotExist
+from clean_python import Filter
+from clean_python import InMemoryGateway
+from clean_python import PageOptions
 
 
 @pytest.fixture

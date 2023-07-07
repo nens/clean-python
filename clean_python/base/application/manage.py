@@ -1,12 +1,19 @@
 # -*- coding: utf-8 -*-
 # (c) Nelen & Schuurmans
 
-from typing import Any, Generic, List, Optional, Type, TypeVar
+from typing import Any
+from typing import Generic
+from typing import List
+from typing import Optional
+from typing import Type
+from typing import TypeVar
 
-from clean_python.base.infrastructure.gateway import Filter, Json
-from clean_python.base.domain.pagination import Page, PageOptions
+from clean_python.base.domain.pagination import Page
+from clean_python.base.domain.pagination import PageOptions
 from clean_python.base.domain.repository import Repository
 from clean_python.base.domain.root_entity import RootEntity
+from clean_python.base.infrastructure.gateway import Filter
+from clean_python.base.infrastructure.gateway import Json
 
 T = TypeVar("T", bound=RootEntity)
 

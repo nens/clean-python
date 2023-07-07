@@ -2,16 +2,14 @@ from unittest import mock
 
 import pytest
 
-from clean_python import (
-    BadRequest,
-    DoesNotExist,
-    Filter,
-    InMemoryGateway,
-    Page,
-    PageOptions,
-    Repository,
-    RootEntity,
-)
+from clean_python import BadRequest
+from clean_python import DoesNotExist
+from clean_python import Filter
+from clean_python import InMemoryGateway
+from clean_python import Page
+from clean_python import PageOptions
+from clean_python import Repository
+from clean_python import RootEntity
 
 
 class User(RootEntity):

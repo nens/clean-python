@@ -19,7 +19,7 @@ A big inspiration for this was the ``easy`` typescript framework by S. Hoogendoo
 The main goals of using layered architecture is isolating the domain-specific concepts from
 other functions related only to software technology. In this way:
 
-- The knowledge embedded in the domain is distilled and can more easily be 
+- The knowledge embedded in the domain is distilled and can more easily be
   understood and changed.
 - Developers are able to quickly grasp the code base because it uses
   a consistent structure and naming system.
@@ -31,7 +31,7 @@ Layers are loosly coupled with dependencies in only one direction: presentation 
 
 A module may only depend on another module though its infrastructure layer. See ``InternalGateway``.
 
-This library was initially developed as a web backend using FastAPI. Its core dependency is ``pydantic``, 
+This library was initially developed as a web backend using FastAPI. Its core dependency is ``pydantic``,
 for strict type parsing and validation. Optional dependencies may be added as needed.
 
 ## Core concepts
@@ -40,7 +40,7 @@ for strict type parsing and validation. Optional dependencies may be added as ne
 
 The domain layer is where the model lives. The domain model is a set of concepts; the domain layer
 is the manifestation of that model. Concepts in the domain model must have a 1:1 representation in the
-code and vice versa. 
+code and vice versa.
 
 THe layer does not depend on all other layers. Interaction with the infrastructure layer may be done
 using dependency injection from the application layer. It is allowable to have runtime dependencies on the
@@ -49,14 +49,14 @@ infrastructure layer to set for instance default ``Gateway`` implementations.
 There are 5 kinds of objects in this layer:
 
 - *Entity*: Types that have an identity (all attributes of an instance may change- but the instance is still the same)
-  Entities have an ``id`` and default fields associated with state changes ()``created_at``, ``updated_at``). 
+  Entities have an ``id`` and default fields associated with state changes ()``created_at``, ``updated_at``).
 - *ValueObject*: Types that have no identity (these are just complex values like a datetime).
 - *DomainService*: Important domain operations that aren't natural to model as objects. A service is stateless.
 - *Repository*: A repository is responsible for persistence (``add`` / ``get`` / ``filter``). This needs
   a *Gateway* to interface with e.g. a database; an instance of a *Gateway* is typically injected into a
   Repository from the application layer.
 - *DomainEvent*: A domain event may be emitted to signal a state change.
-  
+
 Associations between objects are hard. Especially many-to-many relations. We approach this by grouping objects
 into *aggregates*. An aggregate is a set of objects that change together / have the same lifecycle (e.g. delete together). One entity is the aggregate root; we call this the ``RootEntity``. A ``ChildEntity`` occurs only very
 rarely; mostly a nested object derive its identity from a ``RootEntity``.
@@ -81,7 +81,7 @@ the business of the presentation layer.
 In addition to directing the domain objects, an application layer method could trigger other behavior
 like logging or triggering other applications. At first, it may as well be just a single function call.
 
-This layer is kept thin. It directs domain objects, and possibly interacts with other systems 
+This layer is kept thin. It directs domain objects, and possibly interacts with other systems
 (for instance by sending a message through the infrastructure layer). The application layer should
 not contain fundamental domain rules.
 

@@ -8,12 +8,17 @@ import logging
 import threading
 import time
 from concurrent.futures import TimeoutError
-from typing import Any, Awaitable, Dict, Optional, TypeVar
+from typing import Any
+from typing import Awaitable
+from typing import Dict
+from typing import Optional
+from typing import TypeVar
 
 import dramatiq
 from asgiref.sync import sync_to_async
 from dramatiq.brokers.stub import StubBroker
-from dramatiq.middleware import Interrupt, Middleware
+from dramatiq.middleware import Interrupt
+from dramatiq.middleware import Middleware
 
 __all__ = ["AsyncActor", "AsyncMiddleware", "async_actor"]
 

@@ -1,18 +1,23 @@
-from datetime import datetime, timezone
+from datetime import datetime
+from datetime import timezone
 from unittest import mock
 
 import pytest
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, MetaData, Table, Text
+from sqlalchemy import Column
+from sqlalchemy import DateTime
+from sqlalchemy import ForeignKey
+from sqlalchemy import Integer
+from sqlalchemy import MetaData
+from sqlalchemy import Table
+from sqlalchemy import Text
 
-from clean_python import (
-    assert_query_equal,
-    Conflict,
-    DoesNotExist,
-    FakeSQLDatabase,
-    Filter,
-    PageOptions,
-    SQLGateway,
-)
+from clean_python import assert_query_equal
+from clean_python import Conflict
+from clean_python import DoesNotExist
+from clean_python import FakeSQLDatabase
+from clean_python import Filter
+from clean_python import PageOptions
+from clean_python import SQLGateway
 
 writer = Table(
     "writer",

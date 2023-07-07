@@ -4,12 +4,10 @@ from unittest import mock
 
 import pytest
 
-from clean_python.dramatiq.async_actor import (
-    async_actor,
-    AsyncActor,
-    AsyncMiddleware,
-    EventLoopThread,
-)
+from clean_python.dramatiq.async_actor import async_actor
+from clean_python.dramatiq.async_actor import AsyncActor
+from clean_python.dramatiq.async_actor import AsyncMiddleware
+from clean_python.dramatiq.async_actor import EventLoopThread
 
 
 @pytest.fixture

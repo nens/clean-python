@@ -3,15 +3,13 @@ from typing import cast
 import pytest
 from pydantic import Field
 
-from clean_python import (
-    Filter,
-    InMemoryGateway,
-    InternalGateway,
-    Manage,
-    Repository,
-    RootEntity,
-    ValueObject,
-)
+from clean_python import Filter
+from clean_python import InMemoryGateway
+from clean_python import InternalGateway
+from clean_python import Manage
+from clean_python import Repository
+from clean_python import RootEntity
+from clean_python import ValueObject
 
 
 # domain - other module
