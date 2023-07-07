@@ -1,5 +1,7 @@
 # clean-python
 
+[![Tests](https://github.com/nens/clean-python/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/nens/clean-python/actions/workflows/test.yml)
+
 ``clean-python`` contains abstractions for *clean architecture* in Python
 
 It is independent of frameworks and has asyncio at its core.
