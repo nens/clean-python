@@ -8,8 +8,8 @@ from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, create_async_engine
 from sqlalchemy.sql import Executable
 
-from .exceptions import Conflict
-from .gateway import Json
+from clean_python.base.domain.exceptions import Conflict
+from clean_python.base.infrastructure.gateway import Json
 
 __all__ = ["SQLProvider", "SQLDatabase", "FakeSQLDatabase", "assert_query_equal"]
 

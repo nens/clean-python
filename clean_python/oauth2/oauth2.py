@@ -9,7 +9,7 @@ from jwt import PyJWKClient
 from jwt.exceptions import PyJWTError
 from pydantic import AnyHttpUrl, BaseModel
 
-from .exceptions import PermissionDenied, Unauthorized
+from clean_python.base.domain.exceptions import PermissionDenied, Unauthorized
 
 __all__ = ["OAuth2Settings", "OAuth2AccessTokenVerifier"]
 

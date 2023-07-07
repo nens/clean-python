@@ -2,7 +2,7 @@ from unittest import mock
 
 import pytest
 
-from base_lib import (
+from clean_python import (
     BadRequest,
     DoesNotExist,
     Filter,

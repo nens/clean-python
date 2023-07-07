@@ -8,8 +8,8 @@ from starlette.background import BackgroundTasks
 from starlette.requests import Request
 from starlette.responses import Response
 
-from .fluentbit_gateway import FluentbitGateway
-from .gateway import Gateway
+from clean_python.fluentbit.fluentbit_gateway import FluentbitGateway
+from clean_python.base.infrastructure.gateway import Gateway
 
 __all__ = ["FastAPIAccessLogger"]
 

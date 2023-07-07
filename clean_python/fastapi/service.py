@@ -20,10 +20,10 @@ from .error_responses import (
     validation_error_handler,
     ValidationErrorResponse,
 )
-from .exceptions import Conflict, DoesNotExist, PermissionDenied, Unauthorized
+from clean_python.base.domain.exceptions import Conflict, DoesNotExist, PermissionDenied, Unauthorized
 from .fastapi_access_logger import FastAPIAccessLogger
-from .gateway import Gateway
-from .oauth2 import OAuth2AccessTokenVerifier, OAuth2Settings
+from clean_python.base.infrastructure.gateway import Gateway
+from clean_python.oauth2.oauth2 import OAuth2AccessTokenVerifier, OAuth2Settings
 from .resource import APIVersion, clean_resources, Resource
 
 logger = logging.getLogger(__name__)

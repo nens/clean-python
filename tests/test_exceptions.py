@@ -1,7 +1,7 @@
 from pydantic import ValidationError
 
-from base_lib import ValueObject
-from base_lib.exceptions import BadRequest, DoesNotExist
+from clean_python.base.domain.value_object import ValueObject
+from clean_python.base.domain.exceptions import BadRequest, DoesNotExist
 
 
 def test_bad_request_short_str():

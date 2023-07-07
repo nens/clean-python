@@ -3,7 +3,7 @@ from typing import cast
 import pytest
 from pydantic import Field
 
-from base_lib import (
+from clean_python import (
     Filter,
     InMemoryGateway,
     InternalGateway,

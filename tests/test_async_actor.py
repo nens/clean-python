@@ -4,7 +4,7 @@ from unittest import mock
 
 import pytest
 
-from base_lib.async_actor import (
+from clean_python.dramatiq.async_actor import (
     async_actor,
     AsyncActor,
     AsyncMiddleware,

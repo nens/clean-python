@@ -2,7 +2,7 @@ from unittest import mock
 
 import pytest
 
-from base_lib import CeleryRmqBroker
+from clean_python.celery.celery_rmq_broker import CeleryRmqBroker
 
 
 @pytest.fixture
@@ -10,7 +10,7 @@ def celery_rmq_broker():
     return CeleryRmqBroker("amqp://rmq:1234//", "some_queue", "host", False)
 
 
-@mock.patch("base_lib.celery_rmq_broker.pika.BlockingConnection")
+@mock.patch("clean_python.celery.celery_rmq_broker.pika.BlockingConnection")
 async def test_celery_rmq_broker(connection, celery_rmq_broker):
     await celery_rmq_broker.add({"task": "some.task", "args": ["foo", 15]})
 

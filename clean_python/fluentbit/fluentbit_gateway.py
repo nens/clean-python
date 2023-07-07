@@ -6,7 +6,7 @@ from typing import Any, Dict
 from asgiref.sync import sync_to_async
 from fluent.sender import FluentSender
 
-from .gateway import Gateway
+from clean_python.base.infrastructure.gateway import Gateway
 
 Json = Dict[str, Any]
 

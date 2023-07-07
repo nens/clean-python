@@ -3,7 +3,7 @@ from unittest import mock
 
 import pytest
 
-from base_lib import RootEntity
+from clean_python import RootEntity
 
 SOME_DATETIME = datetime(2023, 1, 1, tzinfo=timezone.utc)
 
@@ -24,7 +24,7 @@ def user():
 
 @pytest.fixture
 def patched_now():
-    with mock.patch("base_lib.root_entity.now", return_value=SOME_DATETIME):
+    with mock.patch("clean_python.base.domain.root_entity.now", return_value=SOME_DATETIME):
         yield
 
 

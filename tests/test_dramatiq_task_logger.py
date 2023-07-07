@@ -5,8 +5,8 @@ import pytest
 from dramatiq.errors import Retry
 from dramatiq.message import Message
 
-from base_lib.dramatiq_task_logger import DramatiqTaskLogger
-from base_lib.gateway import InMemoryGateway
+from clean_python.dramatiq.dramatiq_task_logger import DramatiqTaskLogger
+from clean_python.base.infrastructure.gateway import InMemoryGateway
 
 
 @pytest.fixture

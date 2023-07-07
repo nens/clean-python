@@ -4,7 +4,7 @@ from unittest import mock
 import pytest
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, MetaData, Table, Text
 
-from base_lib import (
+from clean_python import (
     assert_query_equal,
     Conflict,
     DoesNotExist,

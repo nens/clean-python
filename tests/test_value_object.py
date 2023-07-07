@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError, validator
 
-from base_lib import BadRequest, ValueObject
+from clean_python import BadRequest, ValueObject
 
 
 class Color(ValueObject):

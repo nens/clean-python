@@ -10,7 +10,7 @@ license = {text = "MIT"}
 classifiers = ["Programming Language :: Python"]
 keywords = []
 requires-python = ">=3.7"
-dependencies = ["pydantic==1.*", "inject", "asgiref"]
+dependencies = ["pydantic==1.*", "inject", "asgiref", "blinker"]
 dynamic = ["version"]
 
 [project.optional-dependencies]
@@ -20,8 +20,9 @@ test = [
 ]
 dramatiq = ["dramatiq"]
 fastapi = ["fastapi"]
-auth = ["jwt"]
-fluentbit = ["fluentbit"]
+auth = ["pyjwt[crypto]==2.6.0"]
+celery = ["pika"]
+fluentbit = ["fluent-logger"]
 sql = ["sqlalchemy==2.*"]
 
 [project.urls]

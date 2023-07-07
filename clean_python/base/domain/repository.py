@@ -3,10 +3,10 @@
 
 from typing import Any, Generic, List, Optional, Type, TypeVar, Union
 
-from .exceptions import DoesNotExist
-from .gateway import Filter, Gateway, Json
-from .pagination import Page, PageOptions
-from .root_entity import RootEntity
+from clean_python.base.domain.exceptions import DoesNotExist
+from clean_python.base.infrastructure.gateway import Filter, Gateway, Json
+from clean_python.base.domain.pagination import Page, PageOptions
+from clean_python.base.domain.root_entity import RootEntity
 
 T = TypeVar("T", bound=RootEntity)
 

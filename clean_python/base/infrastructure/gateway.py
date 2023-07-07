@@ -5,9 +5,9 @@ from copy import deepcopy
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional
 
-from .exceptions import AlreadyExists, Conflict, DoesNotExist
-from .pagination import PageOptions
-from .value_object import ValueObject
+from clean_python.base.domain.exceptions import AlreadyExists, Conflict, DoesNotExist
+from clean_python.base.domain.pagination import PageOptions
+from clean_python.base.domain.value_object import ValueObject
 
 __all__ = ["Gateway", "Json", "Filter", "InMemoryGateway"]
 Json = Dict[str, Any]

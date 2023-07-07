@@ -4,7 +4,7 @@ from typing import Any, Callable, Dict, List, Optional, Sequence, Type
 
 from fastapi.routing import APIRouter
 
-from .value_object import ValueObject
+from clean_python.base.domain.value_object import ValueObject
 
 __all__ = [
     "Resource",

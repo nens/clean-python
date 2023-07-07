@@ -1,6 +1,6 @@
 import pytest
 
-from base_lib import Resource, Service, v
+from clean_python import Resource, Service, v
 
 
 class V1Foo(Resource, version=v(1), name="foo"):

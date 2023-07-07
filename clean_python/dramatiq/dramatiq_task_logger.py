@@ -9,8 +9,8 @@ from dramatiq.errors import RateLimitExceeded, Retry
 from dramatiq.message import Message
 from dramatiq.middleware import SkipMessage
 
-from .fluentbit_gateway import FluentbitGateway
-from .gateway import Gateway
+from clean_python.fluentbit.fluentbit_gateway import FluentbitGateway
+from clean_python.base.infrastructure.gateway import Gateway
 
 __all__ = ["AsyncLoggingMiddleware"]
 

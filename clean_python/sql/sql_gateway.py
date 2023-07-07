@@ -11,9 +11,9 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import Executable
 from sqlalchemy.sql.expression import ColumnElement, false
 
-from .exceptions import AlreadyExists, Conflict, DoesNotExist
-from .gateway import Filter, Gateway, Json
-from .pagination import PageOptions
+from clean_python.base.domain.exceptions import AlreadyExists, Conflict, DoesNotExist
+from clean_python.base.infrastructure.gateway import Filter, Gateway, Json
+from clean_python.base.domain.pagination import PageOptions
 from .sql_provider import SQLDatabase, SQLProvider
 
 

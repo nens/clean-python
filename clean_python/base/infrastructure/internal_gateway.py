@@ -3,12 +3,12 @@
 from abc import abstractmethod, abstractproperty
 from typing import Generic, List, Optional, TypeVar
 
-from .exceptions import BadRequest, DoesNotExist
-from .gateway import Filter
-from .manage import Manage
-from .pagination import PageOptions
-from .root_entity import RootEntity
-from .value_object import ValueObject
+from clean_python.base.domain.exceptions import BadRequest, DoesNotExist
+from clean_python.base.infrastructure.gateway import Filter
+from clean_python.base.application.manage import Manage
+from clean_python.base.domain.pagination import PageOptions
+from clean_python.base.domain.root_entity import RootEntity
+from clean_python.base.domain.value_object import ValueObject
 
 E = TypeVar("E", bound=RootEntity)  # External
 T = TypeVar("T", bound=ValueObject)  # Internal
