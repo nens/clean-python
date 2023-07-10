@@ -29,9 +29,6 @@ sql = ["sqlalchemy==2.*"]
 [project.urls]
 homepage = "https://github.com/nens/clean-python"
 
-[project.scripts]
-run-clean-python = "clean_python.scripts:main"
-
 [tool.setuptools]
 zip-safe = false
 
