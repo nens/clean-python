@@ -17,7 +17,8 @@ dynamic = ["version"]
 test = [
     "pytest",
     "pytest-cov",
-    "pytest-asyncio"
+    "pytest-asyncio",
+    "debugpy"
 ]
 dramatiq = ["dramatiq"]
 fastapi = ["fastapi"]

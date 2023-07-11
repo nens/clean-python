@@ -4,6 +4,7 @@ import asyncio
 
 import pytest
 
+from clean_python.sql import SQLDatabase
 from clean_python.testing import setup_debugger
 
 
@@ -32,3 +33,11 @@ def event_loop(request):
 @pytest.fixture(scope="session")
 def postgres_url():
     return "postgresql+asyncpg://postgres:postgres@localhost:5432/cleanpython_test"
+
+
+@pytest.fixture(scope="session")
+async def provider(postgres_url):
+    provider = SQLDatabase(postgres_url)
+    # await provider.execute(text("DELETE FROM test_model WHERE TRUE RETURNING id"))
+    yield provider
+    # await provider.execute(text("DELETE FROM test_model WHERE TRUE RETURNING id"))

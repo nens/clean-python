@@ -15,8 +15,7 @@ insert_query = text(
 
 
 @pytest.fixture
-async def provider(postgres_url):
-    provider = SQLDatabase(postgres_url)
+async def provider(provider):
     await provider.execute(text("DELETE FROM test_model WHERE TRUE RETURNING id"))
     yield provider
     await provider.execute(text("DELETE FROM test_model WHERE TRUE RETURNING id"))
@@ -24,7 +23,7 @@ async def provider(postgres_url):
 
 @pytest.fixture
 async def testing_provider(provider):
-    async with provider.transaction() as nested:
+    async with provider.testing_transaction() as nested:
         yield nested
 
 

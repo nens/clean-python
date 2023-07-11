@@ -40,8 +40,7 @@ class TstSQLGateway(SQLGateway, table=test_model):
 
 
 @pytest.fixture(scope="session")
-async def test_database(postgres_url):
-    provider = SQLDatabase(postgres_url)
+async def test_database(provider):
     async with provider.engine.begin() as conn:
         await conn.run_sync(test_model.metadata.drop_all)
         await conn.run_sync(test_model.metadata.create_all)
