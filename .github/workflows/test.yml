@@ -43,4 +43,10 @@ jobs:
           pip list
 
       - name: Run tests
-        run: pytest --cov
+        run: pytest tests --cov
+
+      - name: Start databases
+        run: docker-compose up -d db
+
+      - name: Integration tests
+        run: pytest integration_tests

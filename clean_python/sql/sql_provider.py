@@ -54,6 +54,13 @@ class SQLDatabase(SQLProvider):
             async with connection.begin():
                 yield SQLTransaction(connection)
 
+    @asynccontextmanager
+    async def testing_transaction(self) -> AsyncIterator[SQLProvider]:
+        async with self.engine.connect() as connection:
+            async with connection.begin() as transaction:
+                yield SQLTransaction(connection)
+                await transaction.rollback()
+
 
 class SQLTransaction(SQLProvider):
     def __init__(self, connection: AsyncConnection):

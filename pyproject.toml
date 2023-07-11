@@ -24,7 +24,7 @@ fastapi = ["fastapi"]
 auth = ["pyjwt[crypto]==2.6.0"]
 celery = ["pika"]
 fluentbit = ["fluent-logger"]
-sql = ["sqlalchemy==2.*"]
+sql = ["sqlalchemy==2.*", "asyncpg"]
 
 [project.urls]
 homepage = "https://github.com/nens/clean-python"
