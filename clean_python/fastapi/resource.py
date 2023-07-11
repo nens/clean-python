@@ -1,3 +1,5 @@
+# (c) Nelen & Schuurmans
+
 from enum import Enum
 from functools import partial
 from typing import Any
@@ -10,7 +12,7 @@ from typing import Type
 
 from fastapi.routing import APIRouter
 
-from clean_python.base.domain.value_object import ValueObject
+from clean_python import ValueObject
 
 __all__ = [
     "Resource",

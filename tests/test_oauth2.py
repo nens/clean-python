@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # (c) Nelen & Schuurmans
 
 import time
@@ -7,9 +6,9 @@ from unittest import mock
 import jwt
 import pytest
 
-from clean_python import OAuth2AccessTokenVerifier
 from clean_python import PermissionDenied
 from clean_python import Unauthorized
+from clean_python.oauth2 import OAuth2AccessTokenVerifier
 
 
 @pytest.fixture

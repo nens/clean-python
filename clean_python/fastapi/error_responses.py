@@ -1,3 +1,5 @@
+# (c) Nelen & Schuurmans
+
 from typing import List
 from typing import Union
 
@@ -6,12 +8,12 @@ from fastapi.requests import Request
 from fastapi.responses import JSONResponse
 from starlette import status
 
-from clean_python.base.domain.exceptions import BadRequest
-from clean_python.base.domain.exceptions import Conflict
-from clean_python.base.domain.exceptions import DoesNotExist
-from clean_python.base.domain.exceptions import PermissionDenied
-from clean_python.base.domain.exceptions import Unauthorized
-from clean_python.base.domain.value_object import ValueObject
+from clean_python import BadRequest
+from clean_python import Conflict
+from clean_python import DoesNotExist
+from clean_python import PermissionDenied
+from clean_python import Unauthorized
+from clean_python import ValueObject
 
 __all__ = [
     "ValidationErrorResponse",

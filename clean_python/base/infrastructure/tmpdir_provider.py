@@ -1,3 +1,5 @@
+# (c) Nelen & Schuurmans
+
 from tempfile import TemporaryDirectory
 from typing import Optional
 

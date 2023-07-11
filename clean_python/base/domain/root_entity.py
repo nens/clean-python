@@ -1,13 +1,23 @@
+# (c) Nelen & Schuurmans
+
 from datetime import datetime
+from datetime import timezone
 from typing import Optional
 from typing import Type
 from typing import TypeVar
 
-from clean_python.base.domain.exceptions import BadRequest
-from clean_python.base.domain.value_object import ValueObject
-from clean_python.base.infrastructure.now import now
+from .exceptions import BadRequest
+from .value_object import ValueObject
+
+
+def now():
+    # this function is there so that we can mock it in tests
+    return datetime.now(timezone.utc)
+
 
 T = TypeVar("T", bound="RootEntity")
+
+__all__ = ["RootEntity", "now"]
 
 
 class RootEntity(ValueObject):

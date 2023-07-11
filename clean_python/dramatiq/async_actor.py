@@ -1,7 +1,4 @@
-# -*- coding: utf-8 -*-
 # (c) Nelen & Schuurmans
-
-"""Dramatiq configuration"""
 
 import asyncio
 import logging

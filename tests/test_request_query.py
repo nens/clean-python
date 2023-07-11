@@ -3,9 +3,9 @@ from typing import Optional
 import pytest
 from pydantic import ValidationError
 
-from clean_python.base.domain.pagination import PageOptions
-from clean_python.base.infrastructure.gateway import Filter
-from clean_python.fastapi.request_query import RequestQuery
+from clean_python import Filter
+from clean_python import PageOptions
+from clean_python.fastapi import RequestQuery
 
 
 class SomeQuery(RequestQuery):

@@ -1,3 +1,5 @@
+# (c) Nelen & Schuurmans
+
 from typing import Optional
 from typing import Type
 from typing import TypeVar
@@ -6,6 +8,9 @@ from pydantic import BaseModel
 from pydantic import ValidationError
 
 from .exceptions import BadRequest
+
+__all__ = ["ValueObject"]
+
 
 T = TypeVar("T", bound="ValueObject")
 

@@ -1,3 +1,5 @@
+# (c) Nelen & Schuurmans
+
 import logging
 from typing import Any
 from typing import Callable
@@ -17,13 +19,13 @@ from starlette.status import HTTP_401_UNAUTHORIZED
 from starlette.status import HTTP_403_FORBIDDEN
 from starlette.types import ASGIApp
 
-from clean_python.base.domain.exceptions import Conflict
-from clean_python.base.domain.exceptions import DoesNotExist
-from clean_python.base.domain.exceptions import PermissionDenied
-from clean_python.base.domain.exceptions import Unauthorized
-from clean_python.base.infrastructure.gateway import Gateway
-from clean_python.oauth2.oauth2 import OAuth2AccessTokenVerifier
-from clean_python.oauth2.oauth2 import OAuth2Settings
+from clean_python import Conflict
+from clean_python import DoesNotExist
+from clean_python import Gateway
+from clean_python import PermissionDenied
+from clean_python import Unauthorized
+from clean_python.oauth2 import OAuth2AccessTokenVerifier
+from clean_python.oauth2 import OAuth2Settings
 
 from .context import RequestMiddleware
 from .error_responses import BadRequest

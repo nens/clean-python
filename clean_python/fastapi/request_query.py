@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # (c) Nelen & Schuurmans
 
 from typing import List
@@ -6,9 +5,9 @@ from typing import List
 from fastapi import Query
 from pydantic import validator
 
-from clean_python.base.domain.pagination import PageOptions
-from clean_python.base.domain.value_object import ValueObject
-from clean_python.base.infrastructure.gateway import Filter
+from clean_python import Filter
+from clean_python import PageOptions
+from clean_python import ValueObject
 
 __all__ = ["RequestQuery"]
 

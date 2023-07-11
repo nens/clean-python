@@ -1,3 +1,5 @@
+# (c) Nelen & Schuurmans
+
 from pathlib import Path
 
 import dramatiq

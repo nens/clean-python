@@ -1,3 +1,5 @@
+# (c) Nelen & Schuurmans
+
 import os
 import threading
 import time
@@ -11,10 +13,10 @@ from dramatiq.errors import Retry
 from dramatiq.message import Message
 from dramatiq.middleware import SkipMessage
 
-from clean_python.base.infrastructure.gateway import Gateway
-from clean_python.fluentbit.fluentbit_gateway import FluentbitGateway
+from clean_python import Gateway
+from clean_python.fluentbit import FluentbitGateway
 
-__all__ = ["AsyncLoggingMiddleware"]
+__all__ = ["AsyncLoggingMiddleware", "DramatiqTaskLogger"]
 
 
 class AsyncLoggingMiddleware(Middleware):

@@ -1,4 +1,8 @@
+# (c) Nelen & Schuurmans
+
 from pydantic import BaseModel
+
+__all__ = ["DomainService"]
 
 
 class DomainService(BaseModel):

@@ -2,7 +2,7 @@ from unittest import mock
 
 import pytest
 
-from clean_python.celery.celery_rmq_broker import CeleryRmqBroker
+from clean_python.celery import CeleryRmqBroker
 
 
 @pytest.fixture

@@ -11,13 +11,13 @@ from sqlalchemy import MetaData
 from sqlalchemy import Table
 from sqlalchemy import Text
 
-from clean_python import assert_query_equal
 from clean_python import Conflict
 from clean_python import DoesNotExist
-from clean_python import FakeSQLDatabase
 from clean_python import Filter
 from clean_python import PageOptions
-from clean_python import SQLGateway
+from clean_python.sql import SQLGateway
+from clean_python.sql.testing import assert_query_equal
+from clean_python.sql.testing import FakeSQLDatabase
 
 writer = Table(
     "writer",

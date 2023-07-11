@@ -1,15 +1,12 @@
-# -*- coding: utf-8 -*-
 # (c) Nelen & Schuurmans
-
-from typing import Any
-from typing import Dict
 
 from asgiref.sync import sync_to_async
 from fluent.sender import FluentSender
 
-from clean_python.base.infrastructure.gateway import Gateway
+from clean_python import Gateway
+from clean_python import Json
 
-Json = Dict[str, Any]
+__all__ = ["FluentbitGateway"]
 
 
 class FluentbitGateway(Gateway):
