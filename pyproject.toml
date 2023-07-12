@@ -18,7 +18,7 @@ test = [
     "pytest",
     "pytest-cov",
     "pytest-asyncio",
-    "debugpy"
+    "debugpy",
 ]
 dramatiq = ["dramatiq"]
 fastapi = ["fastapi"]
@@ -48,4 +48,3 @@ force_single_line = true
 [tool.pytest.ini_options]
 norecursedirs=".venv data doc etc *.egg-info misc var build lib include"
 python_files = "test_*.py"
-testpaths = "clean_python"

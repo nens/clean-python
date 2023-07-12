@@ -35,27 +35,115 @@ test_model = Table(
 )
 
 
+### SQLProvider integration tests
+count_query = text("SELECT COUNT(*) FROM test_model")
+insert_query = text(
+    "INSERT INTO test_model (t, f, b, updated_at) "
+    "VALUES ('foo', 1.23, TRUE, '2016-06-22 19:10:25-07') "
+    "RETURNING id"
+)
+
+
+@pytest.fixture(scope="session")
+async def database():
+    dburl = "postgresql+asyncpg://postgres:postgres@localhost:5432"
+    dbname = "cleanpython_test"
+    root_provider = SQLDatabase(f"{dburl}/")
+    await root_provider.drop_database(dbname)
+    await root_provider.create_database(dbname)
+    provider = SQLDatabase(f"{dburl}/{dbname}")
+    async with provider.engine.begin() as conn:
+        await conn.run_sync(test_model.metadata.drop_all)
+        await conn.run_sync(test_model.metadata.create_all)
+    yield SQLDatabase(f"{dburl}/{dbname}")
+
+
+@pytest.fixture
+async def database_with_cleanup(database):
+    await database.execute(text("DELETE FROM test_model WHERE TRUE RETURNING id"))
+    yield database
+    await database.execute(text("DELETE FROM test_model WHERE TRUE RETURNING id"))
+
+
+@pytest.fixture
+async def transaction_with_cleanup(database_with_cleanup):
+    async with database_with_cleanup.transaction() as trans:
+        yield trans
+
+
+async def test_execute(database_with_cleanup):
+    db = database_with_cleanup
+    await db.execute(insert_query)
+    assert await db.execute(count_query) == [{"count": 1}]
+
+
+async def test_transaction_commits(database_with_cleanup):
+    db = database_with_cleanup
+
+    async with db.transaction() as trans:
+        await trans.execute(insert_query)
+
+    assert await db.execute(count_query) == [{"count": 1}]
+
+
+async def test_transaction_err(database_with_cleanup):
+    db = database_with_cleanup
+    await db.execute(insert_query)
+
+    with pytest.raises(RuntimeError):
+        async with db.transaction() as trans:
+            await trans.execute(insert_query)
+
+            raise RuntimeError()  # triggers rollback
+
+    assert await db.execute(count_query) == [{"count": 1}]
+
+
+async def test_nested_transaction_commits(transaction_with_cleanup):
+    db = transaction_with_cleanup
+
+    async with db.transaction() as trans:
+        await trans.execute(insert_query)
+
+    assert await db.execute(count_query) == [{"count": 1}]
+
+
+async def test_nested_transaction_err(transaction_with_cleanup):
+    db = transaction_with_cleanup
+    await db.execute(insert_query)
+
+    with pytest.raises(RuntimeError):
+        async with db.transaction() as trans:
+            await trans.execute(insert_query)
+
+            raise RuntimeError()  # triggers rollback
+
+    assert await db.execute(count_query) == [{"count": 1}]
+
+
+async def test_testing_transaction_rollback(database_with_cleanup):
+    async with database_with_cleanup.testing_transaction() as trans:
+        await trans.execute(insert_query)
+
+    assert await database_with_cleanup.execute(count_query) == [{"count": 0}]
+
+
+### SQLGateway integration tests
+
+
 class TstSQLGateway(SQLGateway, table=test_model):
     pass
 
 
-@pytest.fixture(scope="session")
-async def test_database(provider):
-    async with provider.engine.begin() as conn:
-        await conn.run_sync(test_model.metadata.drop_all)
-        await conn.run_sync(test_model.metadata.create_all)
-    return provider
+@pytest.fixture
+async def test_transaction(database):
+    async with database.testing_transaction() as test_transaction:
+        yield test_transaction
 
 
 @pytest.fixture
-async def provider(test_database):
-    async with test_database.testing_transaction() as provider:
-        yield provider
-
-
-@pytest.fixture
-def sql_gateway(provider):
-    return TstSQLGateway(provider)
+def sql_gateway(test_transaction):
+    return TstSQLGateway(test_transaction)
 
 
 @pytest.fixture
@@ -70,8 +158,8 @@ def obj():
 
 
 @pytest.fixture
-async def obj_in_db(provider, obj):
-    res = await provider.execute(
+async def obj_in_db(test_transaction, obj):
+    res = await test_transaction.execute(
         text(
             "INSERT INTO test_model (t, f, b, updated_at) "
             "VALUES ('foo', 1.23, TRUE, '2016-06-22 19:10:25-07') "
@@ -93,7 +181,7 @@ async def test_get_not_found(sql_gateway, obj_in_db):
     assert await sql_gateway.get(obj_in_db["id"] + 1) is None
 
 
-async def test_add(sql_gateway, provider, obj):
+async def test_add(sql_gateway, test_transaction, obj):
     created = await sql_gateway.add(obj)
 
     id = created.pop("id")
@@ -101,7 +189,9 @@ async def test_add(sql_gateway, provider, obj):
     assert created is not obj
     assert created == obj
 
-    res = await provider.execute(text(f"SELECT * FROM test_model WHERE id = {id}"))
+    res = await test_transaction.execute(
+        text(f"SELECT * FROM test_model WHERE id = {id}")
+    )
     assert res[0]["t"] == obj["t"]
 
 
@@ -126,7 +216,7 @@ async def test_add_unkown_column(sql_gateway, obj):
     assert created == obj
 
 
-async def test_update(sql_gateway, provider, obj_in_db):
+async def test_update(sql_gateway, test_transaction, obj_in_db):
     obj_in_db["t"] = "bar"
 
     updated = await sql_gateway.update(obj_in_db)
@@ -134,7 +224,7 @@ async def test_update(sql_gateway, provider, obj_in_db):
     assert updated is not obj_in_db
     assert updated == obj_in_db
 
-    res = await provider.execute(
+    res = await test_transaction.execute(
         text(f"SELECT * FROM test_model WHERE id = {obj_in_db['id']}")
     )
     assert res[0]["t"] == "bar"
@@ -154,41 +244,41 @@ async def test_update_unkown_column(sql_gateway, obj_in_db):
     assert updated == obj_in_db
 
 
-async def test_upsert_does_add(sql_gateway, provider, obj):
+async def test_upsert_does_add(sql_gateway, test_transaction, obj):
     obj["id"] = 42
     created = await sql_gateway.upsert(obj)
 
     assert created is not obj
     assert created == obj
 
-    res = await provider.execute(text("SELECT * FROM test_model WHERE id = 42"))
+    res = await test_transaction.execute(text("SELECT * FROM test_model WHERE id = 42"))
     assert res[0]["t"] == obj["t"]
 
 
-async def test_upsert_does_update(sql_gateway, provider, obj_in_db):
+async def test_upsert_does_update(sql_gateway, test_transaction, obj_in_db):
     obj_in_db["t"] = "bar"
     updated = await sql_gateway.upsert(obj_in_db)
 
     assert updated is not obj_in_db
     assert updated == obj_in_db
 
-    res = await provider.execute(
+    res = await test_transaction.execute(
         text(f"SELECT * FROM test_model WHERE id = {obj_in_db['id']}")
     )
     assert res[0]["t"] == "bar"
 
 
-async def test_upsert_no_id(sql_gateway, provider, obj):
+async def test_upsert_no_id(sql_gateway, test_transaction, obj):
     with mock.patch.object(sql_gateway, "add", new_callable=mock.AsyncMock) as add_m:
         created = await sql_gateway.upsert(obj)
         add_m.assert_awaited_with(obj)
         assert created == add_m.return_value
 
 
-async def test_remove(sql_gateway, provider, obj_in_db):
+async def test_remove(sql_gateway, test_transaction, obj_in_db):
     assert await sql_gateway.remove(obj_in_db["id"])
 
-    res = await provider.execute(
+    res = await test_transaction.execute(
         text(f"SELECT COUNT(*) FROM test_model WHERE id = {obj_in_db['id']}")
     )
     assert res[0]["count"] == 0
@@ -240,8 +330,8 @@ async def test_filter(filters, match, sql_gateway, obj_in_db):
 
 
 @pytest.fixture
-async def obj2_in_db(provider, obj):
-    res = await provider.execute(
+async def obj2_in_db(test_transaction, obj):
+    res = await test_transaction.execute(
         text(
             "INSERT INTO test_model (t, f, b, updated_at) "
             "VALUES ('bar', 1.24, TRUE, '2018-06-22 19:10:25-07') "
