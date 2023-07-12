@@ -54,7 +54,7 @@ jobs:
         run: pytest tests --cov
 
       - name: Wait for postgres
-        run: /scripts/wait-for-postgres.sh
+        run: scripts/wait-for-postgres.sh
         env:
           POSTGRES_URL: 'postgres:postgres@localhost:5432'
         timeout-minutes: 1
