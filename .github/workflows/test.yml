@@ -8,8 +8,8 @@ on:
   pull_request:
 
 jobs:
-  TestLinux:
-    name: Linux, Python ${{ matrix.python }}
+  test:
+    name: Test, Linux, Python ${{ matrix.python }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -28,6 +28,14 @@ jobs:
           - python: "3.11"
             pins: ""
 
+    services:
+      postgres:
+        image: postgres:14-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+
     steps:
       - uses: actions/checkout@v3
 
@@ -43,4 +51,15 @@ jobs:
           pip list
 
       - name: Run tests
-        run: pytest --cov
+        run: pytest tests --cov
+
+      - name: Wait for postgres
+        run: scripts/wait-for-postgres.sh
+        env:
+          POSTGRES_URL: 'postgres:postgres@localhost:5432'
+        timeout-minutes: 1
+
+      - name: Run integration tests
+        run: pytest integration_tests
+        env:
+          POSTGRES_URL: 'postgres:postgres@localhost:5432'

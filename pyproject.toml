@@ -17,14 +17,15 @@ dynamic = ["version"]
 test = [
     "pytest",
     "pytest-cov",
-    "pytest-asyncio"
+    "pytest-asyncio",
+    "debugpy",
 ]
 dramatiq = ["dramatiq"]
 fastapi = ["fastapi"]
 auth = ["pyjwt[crypto]==2.6.0"]
 celery = ["pika"]
 fluentbit = ["fluent-logger"]
-sql = ["sqlalchemy==2.*"]
+sql = ["sqlalchemy==2.*", "asyncpg"]
 
 [project.urls]
 homepage = "https://github.com/nens/clean-python"
@@ -47,4 +48,3 @@ force_single_line = true
 [tool.pytest.ini_options]
 norecursedirs=".venv data doc etc *.egg-info misc var build lib include"
 python_files = "test_*.py"
-testpaths = "clean_python"

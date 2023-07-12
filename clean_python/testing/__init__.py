@@ -1,2 +1,2 @@
 from .attr_dict import *  # NOQA
-from .profilers import *  # NOQA
+from .debugger import *  # NOQA

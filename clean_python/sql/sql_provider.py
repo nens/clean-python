@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from typing import AsyncIterator
 from typing import List
 
+from sqlalchemy import text
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncConnection
 from sqlalchemy.ext.asyncio import AsyncEngine
@@ -53,6 +54,24 @@ class SQLDatabase(SQLProvider):
         async with self.engine.connect() as connection:
             async with connection.begin():
                 yield SQLTransaction(connection)
+
+    @asynccontextmanager
+    async def testing_transaction(self) -> AsyncIterator[SQLProvider]:
+        async with self.engine.connect() as connection:
+            async with connection.begin() as transaction:
+                yield SQLTransaction(connection)
+                await transaction.rollback()
+
+    async def _execute_autocommit(self, query: Executable) -> None:
+        engine = create_async_engine(self.engine.url, isolation_level="AUTOCOMMIT")
+        async with engine.connect() as connection:
+            await connection.execute(query)
+
+    async def create_database(self, name: str) -> None:
+        await self._execute_autocommit(text(f"CREATE DATABASE {name}"))
+
+    async def drop_database(self, name: str) -> None:
+        await self._execute_autocommit(text(f"DROP DATABASE IF EXISTS {name}"))
 
 
 class SQLTransaction(SQLProvider):
