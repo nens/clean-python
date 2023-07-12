@@ -45,8 +45,8 @@ insert_query = text(
 
 
 @pytest.fixture(scope="session")
-async def database():
-    dburl = "postgresql+asyncpg://postgres:postgres@localhost:5432"
+async def database(postgres_url):
+    dburl = f"postgresql+asyncpg://{postgres_url}"
     dbname = "cleanpython_test"
     root_provider = SQLDatabase(f"{dburl}/")
     await root_provider.drop_database(dbname)

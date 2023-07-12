@@ -1,6 +1,7 @@
 # (c) Nelen & Schuurmans
 
 import asyncio
+import os
 
 import pytest
 
@@ -27,3 +28,8 @@ def event_loop(request):
     loop = asyncio.get_event_loop_policy().new_event_loop()
     yield loop
     loop.close()
+
+
+@pytest.fixture(scope="session")
+async def postgres_url():
+    return os.environ.get("POSTGRES_URL", "postgres:postgres@localhost:5432")
