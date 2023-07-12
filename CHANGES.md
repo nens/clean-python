@@ -1,6 +1,12 @@
 # Changelog of clean-python
 
 
+0.1.1 (unreleased)
+------------------
+
+- Nothing changed yet.
+
+
 0.1.0 (2023-07-12)
 
 - Initial project structure created with cookiecutter and
