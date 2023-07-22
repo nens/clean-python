@@ -67,19 +67,19 @@ class Repository(Generic[T]):
     async def add(self, item: Union[T, Json]) -> T:
         if isinstance(item, dict):
             item = self.entity.create(**item)
-        created = await self.gateway.add(item.dict())
+        created = await self.gateway.add(item.model_dump())
         return self.entity(**created)
 
     async def update(self, id: int, values: Json) -> T:
         if not values:
             return await self.get(id)
         updated = await self.gateway.update_transactional(
-            id, lambda x: self.entity(**x).update(**values).dict()
+            id, lambda x: self.entity(**x).update(**values).model_dump()
         )
         return self.entity(**updated)
 
     async def upsert(self, item: T) -> T:
-        values = item.dict()
+        values = item.model_dump()
         upserted = await self.gateway.upsert(values)
         return self.entity(**upserted)
 

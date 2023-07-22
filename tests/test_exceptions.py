@@ -7,7 +7,7 @@ from clean_python.base.domain.value_object import ValueObject
 
 def test_bad_request_short_str():
     e = BadRequest("bla bla bla")
-    assert str(e) == "validation error: bla bla bla"
+    assert str(e) == "bla bla bla"
 
 
 def test_does_not_exist_str():
@@ -30,4 +30,4 @@ def test_bad_request_from_validation_error():
     except ValidationError as e:
         err = BadRequest(e)
 
-    assert str(err) == "validation error: 'title' field required"
+    assert str(err) == "validation error: 'title' Field required"

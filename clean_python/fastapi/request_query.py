@@ -4,7 +4,7 @@
 from typing import List
 
 from fastapi import Query
-from pydantic import validator
+from pydantic import field_validator
 
 from clean_python.base.domain.pagination import PageOptions
 from clean_python.base.domain.value_object import ValueObject
@@ -20,11 +20,11 @@ class RequestQuery(ValueObject):
         default="id", enum=["id", "-id"], description="Field to order by"
     )
 
-    @validator("order_by")
-    def validate_order_by_enum(cls, v):
+    @field_validator("order_by")
+    def validate_order_by_enum(cls, v, _):
         # the 'enum' parameter doesn't actually do anthing in validation
         # See: https://github.com/tiangolo/fastapi/issues/2910
-        allowed = cls.__fields__["order_by"].field_info.extra["enum"]
+        allowed = cls.model_fields["order_by"].json_schema_extra["enum"]
         if v not in allowed:
             raise ValueError(f"'order_by' must be one of {allowed}")
         return v
@@ -42,7 +42,7 @@ class RequestQuery(ValueObject):
 
     def filters(self) -> List[Filter]:
         result = []
-        for name in self.__fields__:
+        for name in self.model_fields:
             if name in {"limit", "offset", "order_by"}:
                 continue
             value = getattr(self, name)

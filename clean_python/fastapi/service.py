@@ -139,7 +139,8 @@ class Service:
         app = FastAPI(
             version=version.prefix,
             tags=sorted(
-                [x.get_openapi_tag().dict() for x in resources], key=lambda x: x["name"]
+                [x.get_openapi_tag().model_dump() for x in resources],
+                key=lambda x: x["name"],
             ),
             **kwargs,
         )

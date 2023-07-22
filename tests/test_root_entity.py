@@ -5,6 +5,7 @@ from unittest import mock
 import pytest
 
 from clean_python import RootEntity
+from clean_python.base.domain.exceptions import BadRequest
 
 SOME_DATETIME = datetime(2023, 1, 1, tzinfo=timezone.utc)
 
@@ -64,7 +65,7 @@ def test_update_including_id(user):
 
 @pytest.mark.parametrize("new_id", [None, 42, "foo"])
 def test_update_with_wrong_id(user, new_id):
-    with pytest.raises(ValueError):
+    with pytest.raises(BadRequest):
         user.update(id=new_id, name="piet")
 
 
