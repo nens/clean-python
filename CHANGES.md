@@ -1,10 +1,10 @@
 # Changelog of clean-python
 
 
-0.1.1 (unreleased)
-------------------
+0.2.0b (unreleased)
+-------------------
 
-- Nothing changed yet.
+- Pydantic 2.x support. Drops Pydantic 1.x support, use 0.1.x for Pydantic 1.x.
 
 
 0.1.0 (2023-07-12)
