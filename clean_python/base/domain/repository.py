@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # (c) Nelen & Schuurmans
 
 from typing import Any
@@ -9,13 +8,13 @@ from typing import Type
 from typing import TypeVar
 from typing import Union
 
-from clean_python.base.domain.exceptions import DoesNotExist
-from clean_python.base.domain.pagination import Page
-from clean_python.base.domain.pagination import PageOptions
-from clean_python.base.domain.root_entity import RootEntity
-from clean_python.base.infrastructure.gateway import Filter
-from clean_python.base.infrastructure.gateway import Gateway
-from clean_python.base.infrastructure.gateway import Json
+from .exceptions import DoesNotExist
+from .filter import Filter
+from .gateway import Gateway
+from .json import Json
+from .pagination import Page
+from .pagination import PageOptions
+from .root_entity import RootEntity
 
 T = TypeVar("T", bound=RootEntity)
 

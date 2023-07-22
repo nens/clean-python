@@ -1,8 +1,8 @@
 import pytest
 
-from clean_python import Resource
-from clean_python import Service
-from clean_python import v
+from clean_python.fastapi import Resource
+from clean_python.fastapi import Service
+from clean_python.fastapi import v
 
 
 class V1Foo(Resource, version=v(1), name="foo"):

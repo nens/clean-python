@@ -1,8 +1,10 @@
-# -*- coding: utf-8 -*-
 # (c) Nelen & Schuurmans
 
+from typing import TypedDict
+
 from pydantic import AnyHttpUrl
-from typing_extensions import TypedDict
+
+__all__ = ["Link"]
 
 
 class Link(TypedDict):

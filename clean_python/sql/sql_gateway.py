@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # (c) Nelen & Schuurmans
 from contextlib import asynccontextmanager
 from datetime import datetime
@@ -23,16 +22,18 @@ from sqlalchemy.sql import Executable
 from sqlalchemy.sql.expression import ColumnElement
 from sqlalchemy.sql.expression import false
 
-from clean_python.base.domain.exceptions import AlreadyExists
-from clean_python.base.domain.exceptions import Conflict
-from clean_python.base.domain.exceptions import DoesNotExist
-from clean_python.base.domain.pagination import PageOptions
-from clean_python.base.infrastructure.gateway import Filter
-from clean_python.base.infrastructure.gateway import Gateway
-from clean_python.base.infrastructure.gateway import Json
+from clean_python import AlreadyExists
+from clean_python import Conflict
+from clean_python import DoesNotExist
+from clean_python import Filter
+from clean_python import Gateway
+from clean_python import Json
+from clean_python import PageOptions
 
 from .sql_provider import SQLDatabase
 from .sql_provider import SQLProvider
+
+__all__ = ["SQLGateway"]
 
 
 def _is_unique_violation_error_id(e: IntegrityError, id: int):

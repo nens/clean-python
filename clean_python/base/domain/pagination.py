@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # (c) Nelen & Schuurmans
 
 from typing import Generic

@@ -1,5 +1,9 @@
+# (c) Nelen & Schuurmans
+
 from pydantic import BaseModel
 from pydantic import ConfigDict
+
+__all__ = ["DomainService"]
 
 
 class DomainService(BaseModel):

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # (c) Nelen & Schuurmans
 
 import json
@@ -9,9 +8,9 @@ import pika
 from asgiref.sync import sync_to_async
 from pydantic import AnyUrl
 
-from clean_python.base.domain.value_object import ValueObject
-from clean_python.base.infrastructure.gateway import Gateway
-from clean_python.base.infrastructure.gateway import Json
+from clean_python import Gateway
+from clean_python import Json
+from clean_python import ValueObject
 
 __all__ = ["CeleryRmqBroker"]
 

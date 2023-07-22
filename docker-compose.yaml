@@ -1,0 +1,11 @@
+version: "3.8"
+
+services:
+
+  db:
+    image: postgres:14-alpine
+    environment:
+      POSTGRES_PASSWORD: "postgres"
+    # command: ["postgres", "-c", "log_connections=all", "-c", "log_disconnections=all", "-c", "log_statement=all", "-c", "log_destination=stderr"]
+    ports:
+      - "5432:5432"

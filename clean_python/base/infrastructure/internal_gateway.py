@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # (c) Nelen & Schuurmans
 from abc import abstractmethod
 from abc import abstractproperty
@@ -8,12 +7,12 @@ from typing import Optional
 from typing import TypeVar
 
 from clean_python.base.application.manage import Manage
-from clean_python.base.domain.exceptions import BadRequest
-from clean_python.base.domain.exceptions import DoesNotExist
-from clean_python.base.domain.pagination import PageOptions
-from clean_python.base.domain.root_entity import RootEntity
-from clean_python.base.domain.value_object import ValueObject
-from clean_python.base.infrastructure.gateway import Filter
+from clean_python.base.domain import BadRequest
+from clean_python.base.domain import DoesNotExist
+from clean_python.base.domain import Filter
+from clean_python.base.domain import PageOptions
+from clean_python.base.domain import RootEntity
+from clean_python.base.domain import ValueObject
 
 E = TypeVar("E", bound=RootEntity)  # External
 T = TypeVar("T", bound=ValueObject)  # Internal

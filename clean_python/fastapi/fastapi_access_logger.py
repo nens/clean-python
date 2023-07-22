@@ -1,3 +1,5 @@
+# (c) Nelen & Schuurmans
+
 import os
 import time
 from datetime import datetime
@@ -10,8 +12,8 @@ from starlette.background import BackgroundTasks
 from starlette.requests import Request
 from starlette.responses import Response
 
-from clean_python.base.infrastructure.gateway import Gateway
-from clean_python.fluentbit.fluentbit_gateway import FluentbitGateway
+from clean_python import Gateway
+from clean_python.fluentbit import FluentbitGateway
 
 __all__ = ["FastAPIAccessLogger"]
 

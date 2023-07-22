@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
 # (c) Nelen & Schuurmans
 
-import logging
 from typing import Dict
 from typing import List
 
@@ -15,8 +13,6 @@ from clean_python.base.domain.exceptions import PermissionDenied
 from clean_python.base.domain.exceptions import Unauthorized
 
 __all__ = ["OAuth2Settings", "OAuth2AccessTokenVerifier"]
-
-logger = logging.getLogger(__name__)
 
 
 class OAuth2Settings(BaseModel):
@@ -61,8 +57,8 @@ class OAuth2AccessTokenVerifier:
         # jwt.get_unverified_header will raise a JWTError if the structure is wrong.
         try:
             key = self.get_key(token)  # JSON Web Key
-        except PyJWTError as e:
-            logger.info("Token is invalid: %s", e)
+        except PyJWTError:
+            # logger.info("Token is invalid: %s", e)
             raise Unauthorized()
         # Step 2: Validate the JWT signature and standard claims
         try:
@@ -76,8 +72,8 @@ class OAuth2AccessTokenVerifier:
                     "require": ["exp", "iss", "sub", "scope", "token_use"],
                 },
             )
-        except PyJWTError as e:
-            logger.info("Token is invalid: %s", e)
+        except PyJWTError:
+            # logger.info("Token is invalid: %s", e)
             raise Unauthorized()
         # Step 3: Verify additional claims. At this point, we have passed
         # verification, so unverified claims may be used safely.
@@ -95,7 +91,7 @@ class OAuth2AccessTokenVerifier:
     def verify_token_use(self, claims):
         """Check the token_use claim."""
         if claims["token_use"] != "access":
-            logger.info("Token has invalid token_use claim: %s", claims["token_use"])
+            # logger.info("Token has invalid token_use claim: %s", claims["token_use"])
             raise Unauthorized()
 
     def verify_scope(self, claims):
@@ -106,11 +102,11 @@ class OAuth2AccessTokenVerifier:
            raster.lizard.net/*.readwrite
         """
         if f"{self.resource_server_id}{self.scope}" not in claims["scope"].split(" "):
-            logger.info("Token has invalid scope claim: %s", claims["scope"])
+            # logger.info("Token has invalid scope claim: %s", claims["scope"])
             raise Unauthorized()
 
     def authorize(self, claims):
         """The subject (sub) claim should be in a hard-coded whitelist."""
         if claims.get("sub") not in self.admin_users:
-            logger.info("User with sub %s is not authorized", claims.get("sub"))
+            # logger.info("User with sub %s is not authorized", claims.get("sub"))
             raise PermissionDenied()
