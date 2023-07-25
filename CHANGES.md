@@ -4,7 +4,9 @@
 0.2.0b1 (unreleased)
 --------------------
 
-- Nothing changed yet.
+- `BadRequest` needs `.errors()` method to be backwards compatible.
+
+- Added support for API key authentication.
 
 
 0.2.0b0 (2023-07-23)
