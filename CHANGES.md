@@ -1,7 +1,7 @@
 # Changelog of clean-python
 
 
-0.2.0b1 (unreleased)
+0.2.0b1 (2023-07-25)
 --------------------
 
 - `BadRequest` needs `.errors()` method to be backwards compatible.
