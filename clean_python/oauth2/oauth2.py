@@ -12,7 +12,7 @@ from pydantic import BaseModel
 from clean_python.base.domain.exceptions import PermissionDenied
 from clean_python.base.domain.exceptions import Unauthorized
 
-__all__ = ["OAuth2Settings", "OAuth2AccessTokenVerifier"]
+__all__ = ["OAuth2Settings", "AccessTokenVerifierSettings", "OAuth2AccessTokenVerifier"]
 
 
 class OAuth2Settings(BaseModel):
@@ -23,6 +23,14 @@ class OAuth2Settings(BaseModel):
     authorization_url: AnyHttpUrl
     algorithms: List[str] = ["RS256"]
     admin_users: List[str]
+
+
+class AccessTokenVerifierSettings(BaseModel):
+    issuer: str
+    resource_server_id: str
+    algorithms: List[str] = ["RS256"]
+    admin_users: List[str]
+    scope_validation_enabled: bool = True
 
 
 class OAuth2AccessTokenVerifier:
@@ -44,8 +52,10 @@ class OAuth2AccessTokenVerifier:
         resource_server_id: str,
         algorithms: List[str],
         admin_users: List[str],
+        verify_scope_enabled: bool = True,
     ):
         self.scope = scope
+        self.verify_scope_enabled = verify_scope_enabled
         self.issuer = issuer
         self.algorithms = algorithms
         self.resource_server_id = resource_server_id
@@ -101,6 +111,8 @@ class OAuth2AccessTokenVerifier:
 
            raster.lizard.net/*.readwrite
         """
+        if not self.verify_scope_enabled:
+            return
         if f"{self.resource_server_id}{self.scope}" not in claims["scope"].split(" "):
             # logger.info("Token has invalid scope claim: %s", claims["scope"])
             raise Unauthorized()

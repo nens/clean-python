@@ -7,14 +7,17 @@ from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Set
+from typing import Union
 
 from asgiref.sync import sync_to_async
 from fastapi import Depends
 from fastapi import FastAPI
 from fastapi import Request
+from fastapi import Security
 from fastapi.exceptions import HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.security import OAuth2AuthorizationCodeBearer
+from fastapi.security.api_key import APIKeyHeader
 from starlette.status import HTTP_401_UNAUTHORIZED
 from starlette.status import HTTP_403_FORBIDDEN
 from starlette.types import ASGIApp
@@ -24,6 +27,7 @@ from clean_python import DoesNotExist
 from clean_python import Gateway
 from clean_python import PermissionDenied
 from clean_python import Unauthorized
+from clean_python.oauth2 import AccessTokenVerifierSettings
 from clean_python.oauth2 import OAuth2AccessTokenVerifier
 from clean_python.oauth2 import OAuth2Settings
 
@@ -82,9 +86,7 @@ class OAuth2Dependable(OAuth2AuthorizationCodeBearer):
             raise HTTPException(status_code=HTTP_403_FORBIDDEN)
 
 
-def fastapi_oauth_kwargs(auth: Optional[OAuth2Settings]) -> Dict:
-    if auth is None:
-        return {}
+def fastapi_oauth_kwargs(auth: OAuth2Settings) -> Dict:
     return {
         "dependencies": [Depends(OAuth2Dependable(scope="*:readwrite", settings=auth))],
         "swagger_ui_init_oauth": {
@@ -92,6 +94,58 @@ def fastapi_oauth_kwargs(auth: Optional[OAuth2Settings]) -> Dict:
             "usePkceWithAuthorizationCodeGrant": True,
         },
     }
+
+
+api_key_header = APIKeyHeader(name="access_token", auto_error=False)
+
+
+class ApiKeyDependable:
+    def __init__(self, scope, settings: AccessTokenVerifierSettings):
+        self.verifier = sync_to_async(
+            OAuth2AccessTokenVerifier(
+                scope,
+                issuer=settings.issuer,
+                resource_server_id=settings.resource_server_id,
+                algorithms=settings.algorithms,
+                admin_users=settings.admin_users,
+                verify_scope_enabled=settings.scope_validation_enabled,
+            ),
+            thread_sensitive=False,
+        )
+
+    async def __call__(
+        self, request: Request, api_key_header: str = Security(api_key_header)
+    ) -> None:
+        try:
+            claims = await self.verifier(api_key_header)
+            request.scope["user"] = claims
+        except Unauthorized:
+            raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
+        except PermissionDenied:
+            raise HTTPException(status_code=HTTP_403_FORBIDDEN)
+
+
+def fastapi_accesstoken_verifier_kwargs(auth: AccessTokenVerifierSettings) -> Dict:
+    return {
+        "dependencies": [Depends(ApiKeyDependable("", settings=auth))],
+    }
+
+
+class UnknownAuthSettings(Exception):
+    pass
+
+
+AUTH_MAPPING = {
+    OAuth2Settings: fastapi_oauth_kwargs,
+    AccessTokenVerifierSettings: fastapi_accesstoken_verifier_kwargs,
+}
+
+
+def get_auth_kwargs(auth: Any) -> None:
+    func = AUTH_MAPPING.get(type(auth), None)
+    if func is None:
+        raise UnknownAuthSettings(f"Unknown auth setting: {auth}")
+    return func(auth)
 
 
 async def health_check():
@@ -170,7 +224,7 @@ class Service:
         title: str,
         description: str,
         hostname: str,
-        auth: Optional[OAuth2Settings] = None,
+        auth: Optional[Union[OAuth2Settings, AccessTokenVerifierSettings]] = None,
         on_startup: Optional[List[Callable[[], Any]]] = None,
         access_logger_gateway: Optional[Gateway] = None,
     ) -> ASGIApp:
@@ -184,7 +238,7 @@ class Service:
         kwargs = {
             "title": title,
             "description": description,
-            **fastapi_oauth_kwargs(auth),
+            **get_auth_kwargs(auth),
         }
         versioned_apps = {
             v: self._create_versioned_app(v, **kwargs) for v in self.versions
