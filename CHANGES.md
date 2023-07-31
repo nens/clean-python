@@ -4,10 +4,13 @@
 0.1.1 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Various import fixes.
+
+- Avoid inject==5.* because of its incompatibility with VS Code (pylance / pyright).
 
 
 0.1.0 (2023-07-12)
+------------------
 
 - Initial project structure created with cookiecutter and
   [cookiecutter-python-template](https://github.com/nens/cookiecutter-python-template).
