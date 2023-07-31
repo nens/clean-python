@@ -1,7 +1,7 @@
 # Changelog of clean-python
 
 
-0.1.1 (unreleased)
+0.1.1 (2023-07-31)
 ------------------
 
 - Various import fixes.
