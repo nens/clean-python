@@ -4,7 +4,7 @@
 0.1.2 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Added py.typed marker.
 
 
 0.1.1 (2023-07-31)
