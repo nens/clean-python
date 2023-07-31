@@ -14,6 +14,9 @@ from clean_python.base.domain import PageOptions
 from clean_python.base.domain import RootEntity
 from clean_python.base.domain import ValueObject
 
+__all__ = ["InternalGateway"]
+
+
 E = TypeVar("E", bound=RootEntity)  # External
 T = TypeVar("T", bound=ValueObject)  # Internal
 

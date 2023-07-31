@@ -1,5 +1,7 @@
 import os
 
+__all__ = ["setup_debugger"]
+
 
 def setup_debugger(*, host: str = "0.0.0.0", port: int = 5678):
     """Configure debugging via debugpy."""

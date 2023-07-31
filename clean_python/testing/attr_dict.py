@@ -1,5 +1,7 @@
 # (c) Nelen & Schuurmans
 
+__all__ = ["AttrDict"]
+
 
 class AttrDict(dict):
     def __init__(self, *args, **kwargs):

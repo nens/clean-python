@@ -9,6 +9,8 @@ from typing import TypeVar
 from .exceptions import BadRequest
 from .value_object import ValueObject
 
+__all__ = ["RootEntity", "now"]
+
 
 def now():
     # this function is there so that we can mock it in tests
@@ -16,8 +18,6 @@ def now():
 
 
 T = TypeVar("T", bound="RootEntity")
-
-__all__ = ["RootEntity", "now"]
 
 
 class RootEntity(ValueObject):

@@ -44,6 +44,8 @@ from .resource import Resource
 
 logger = logging.getLogger(__name__)
 
+__all__ = ["Service"]
+
 
 class OAuth2Dependable(OAuth2AuthorizationCodeBearer):
     """A fastapi 'dependable' configuring OAuth2.

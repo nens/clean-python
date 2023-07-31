@@ -9,7 +9,7 @@ from pydantic import ValidationError
 
 from .exceptions import BadRequest
 
-__all__ = ["ValueObject"]
+__all__ = ["ValueObject", "ValueObjectWithId"]
 
 
 T = TypeVar("T", bound="ValueObject")

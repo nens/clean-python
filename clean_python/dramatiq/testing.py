@@ -6,6 +6,8 @@ from dramatiq.middleware import SkipMessage
 
 from .async_actor import async_actor
 
+__all__ = ["sleep_task"]
+
 
 @async_actor(
     retry_when=lambda x, y: isinstance(y, KeyError),
