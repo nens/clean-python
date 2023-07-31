@@ -1,7 +1,7 @@
 # Changelog of clean-python
 
 
-0.1.2 (unreleased)
+0.1.2 (2023-07-31)
 ------------------
 
 - Added py.typed marker.
