@@ -123,7 +123,7 @@ class ApiKeyDependable:
             raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
 
         # skip bearer part
-        api_key_header = api_key_header[len(self.prefix) + 1, :]
+        api_key_header = api_key_header[len(self.prefix) + 1 :]
         try:
             claims = await self.verifier(api_key_header)
             request.scope["user"] = claims
