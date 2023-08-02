@@ -3,7 +3,8 @@
 
 0.2.0b2 (unreleased)
 --------------------
-- Nothing changed yet.
+
+- ApiKey authentication now uses `Authorization` header and `bearer` prefix by default.
 
 
 0.1.2 (2023-07-31)
