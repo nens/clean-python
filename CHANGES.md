@@ -1,7 +1,7 @@
 # Changelog of clean-python
 
 
-0.2.0b3 (unreleased)
+0.2.0b3 (2023-08-02)
 --------------------
 
 - Bugfix: remove bearer prefix from api-key
