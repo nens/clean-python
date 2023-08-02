@@ -7,7 +7,7 @@ from clean_python import ValueObject
 
 def test_bad_request_short_str():
     e = BadRequest("bla bla bla")
-    assert str(e) == "bla bla bla"
+    assert str(e) == "validation error: bla bla bla"
 
 
 def test_does_not_exist_str():

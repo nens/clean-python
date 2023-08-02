@@ -73,7 +73,7 @@ class BadRequest(Exception):
             if loc == "'*' ":
                 loc = ""
             return f"validation error: {loc}{error['msg']}"
-        return super().__str__()
+        return f"validation error: {super().__str__()}"
 
 
 class Unauthorized(Exception):
