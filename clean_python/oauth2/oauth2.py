@@ -31,6 +31,7 @@ class AccessTokenVerifierSettings(BaseModel):
     algorithms: List[str] = ["RS256"]
     admin_users: List[str]
     scope_validation_enabled: bool = True
+    prefix: str = "bearer"
 
 
 class OAuth2AccessTokenVerifier:

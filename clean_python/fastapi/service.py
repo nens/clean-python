@@ -96,7 +96,7 @@ def fastapi_oauth_kwargs(auth: OAuth2Settings) -> Dict:
     }
 
 
-api_key_header = APIKeyHeader(name="access_token", auto_error=False)
+api_key_header = APIKeyHeader(name="Authorization", auto_error=True)
 
 
 class ApiKeyDependable:
@@ -112,10 +112,16 @@ class ApiKeyDependable:
             ),
             thread_sensitive=False,
         )
+        self.prefix = settings.prefix
 
     async def __call__(
         self, request: Request, api_key_header: str = Security(api_key_header)
     ) -> None:
+        if not api_key_header.lower().startswith(self.prefix.lower()):
+            raise HTTPException(status_code=HTTP_401_UNAUTHORIZED)
+
+        # skip bearer part
+        api_key_header = api_key_header[len(self.prefix) + 1, :]
         try:
             claims = await self.verifier(api_key_header)
             request.scope["user"] = claims
