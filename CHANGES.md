@@ -1,7 +1,7 @@
 # Changelog of clean-python
 
 
-0.2.0b2 (unreleased)
+0.2.0b2 (2023-08-02)
 --------------------
 
 - ApiKey authentication now uses `Authorization` header and `bearer` prefix by default.
