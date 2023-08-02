@@ -16,6 +16,8 @@ from .pagination import Page
 from .pagination import PageOptions
 from .root_entity import RootEntity
 
+__all__ = ["Repository"]
+
 T = TypeVar("T", bound=RootEntity)
 
 

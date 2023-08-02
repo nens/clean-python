@@ -3,8 +3,13 @@
 
 0.2.0b2 (unreleased)
 --------------------
-
 - Nothing changed yet.
+
+
+0.1.2 (2023-07-31)
+------------------
+
+- Added py.typed marker.
 
 
 0.2.0b1 (2023-07-25)
@@ -21,7 +26,16 @@
 - Pydantic 2.x support. Drops Pydantic 1.x support, use 0.1.x for Pydantic 1.x.
 
 
+0.1.1 (2023-07-31)
+------------------
+
+- Various import fixes.
+
+- Avoid inject==5.* because of its incompatibility with VS Code (pylance / pyright).
+
+
 0.1.0 (2023-07-12)
+------------------
 
 - Initial project structure created with cookiecutter and
   [cookiecutter-python-template](https://github.com/nens/cookiecutter-python-template).
