@@ -4,7 +4,10 @@
 0.2.1 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Add HTTP Bearer to OpenAPI security schema.
+
+- Import debugpy at module level on setup_debugger import. Don't check for DEBUG
+  environment variable when setting up.
 
 
 0.2.0 (2023-08-03)

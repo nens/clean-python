@@ -12,6 +12,7 @@ from fastapi import Depends
 from fastapi import FastAPI
 from fastapi import Request
 from fastapi.exceptions import RequestValidationError
+from fastapi.security import HTTPBearer
 from fastapi.security import OAuth2AuthorizationCodeBearer
 from starlette.types import ASGIApp
 
@@ -58,6 +59,7 @@ class OAuth2WithClientDependable(OAuth2AuthorizationCodeBearer):
     ):
         self.verifier = sync_to_async(TokenVerifier(settings), thread_sensitive=False)
         super().__init__(
+            scheme_name="OAuth2 Authorization Code Flow with PKCE",
             authorizationUrl=str(client.authorization_url),
             tokenUrl=str(client.token_url),
         )
@@ -66,7 +68,7 @@ class OAuth2WithClientDependable(OAuth2AuthorizationCodeBearer):
         ctx.claims = await self.verifier(request.headers.get("Authorization"))
 
 
-class OAuth2WithoutClientDependable:
+class OAuth2WithoutClientDependable(HTTPBearer):
     """A fastapi 'dependable' configuring OAuth2.
 
     This does one thing:
@@ -75,6 +77,7 @@ class OAuth2WithoutClientDependable:
 
     def __init__(self, settings: TokenVerifierSettings):
         self.verifier = sync_to_async(TokenVerifier(settings), thread_sensitive=False)
+        super().__init__(scheme_name="JWT Bearer token", bearerFormat="JWT")
 
     async def __call__(self, request: Request) -> None:
         ctx.claims = await self.verifier(request.headers.get("Authorization"))
