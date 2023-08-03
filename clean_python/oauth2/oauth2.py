@@ -16,6 +16,7 @@ from clean_python import Unauthorized
 
 from .claims import Claims
 from .claims import Tenant
+from .claims import User
 
 __all__ = ["TokenVerifier", "TokenVerifierSettings", "OAuth2SPAClientSettings"]
 
@@ -84,13 +85,14 @@ class TokenVerifier:
             raise Unauthorized()
         # Step 3: Verify additional claims. At this point, we have passed
         # verification, so unverified claims may be used safely.
-        scope = self.parse_scope(claims)
+        user = self.parse_user(claims)
         tenant = self.parse_tenant(claims)
+        scope = self.parse_scope(claims)
         self.verify_token_use(claims)
         self.verify_scope(scope)
-        # Step 4: Authorization: verify 'sub' claim against 'admin_users'
-        self.verify_sub(claims)
-        return Claims(scope=scope, tenant=tenant)
+        # Step 4: Authorization: verify user id ('sub' claim) against 'admin_users'
+        self.authorize_user(user)
+        return Claims(user=user, scope=scope, tenant=tenant)
 
     def get_key(self, token) -> jwt.PyJWK:
         """Return the JSON Web KEY (JWK) corresponding to kid."""
@@ -110,13 +112,15 @@ class TokenVerifier:
             # logger.info("Token has invalid scope claim: %s", claims["scope"])
             raise Unauthorized()
 
-    def verify_sub(self, claims: Dict) -> None:
-        """The subject (sub) claim should be in a hard-coded whitelist."""
+    def authorize_user(self, user: User) -> None:
         if self.settings.admin_users is None:
             return
-        if claims.get("sub") not in self.settings.admin_users:
+        if user.id not in self.settings.admin_users:
             # logger.info("User with sub %s is not authorized", claims.get("sub"))
             raise PermissionDenied()
+
+    def parse_user(self, claims: Dict) -> User:
+        return User(id=claims["sub"], name=claims.get("username"))
 
     def parse_scope(self, claims: Dict) -> FrozenSet[str]:
         return frozenset(claims["scope"].split(" "))

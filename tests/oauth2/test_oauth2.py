@@ -17,10 +17,17 @@ def patched_verifier(jwk_patched, settings):
 def test_verifier_ok(patched_verifier, token_generator):
     token = token_generator()
     verified_claims = patched_verifier("Bearer " + token)
+    assert verified_claims.user.id == "foo"
     assert verified_claims.tenant is None
     assert verified_claims.scope == {"user"}
 
     patched_verifier.get_key.assert_called_once_with(token)
+
+
+def test_verifier_ok_with_username(patched_verifier, token_generator):
+    token = token_generator(username="sinterklaas")
+    verified_claims = patched_verifier("Bearer " + token)
+    assert verified_claims.user.name == "sinterklaas"
 
 
 def test_verifier_ok_with_tenant(patched_verifier, token_generator):
