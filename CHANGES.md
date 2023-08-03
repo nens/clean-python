@@ -4,7 +4,7 @@
 0.2.1 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Add HTTP Bearer to OpenAPI security schema.
 
 
 0.2.0 (2023-08-03)
