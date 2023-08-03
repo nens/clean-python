@@ -1,7 +1,7 @@
 # Changelog of clean-python
 
 
-0.2.1 (unreleased)
+0.2.1 (2023-08-03)
 ------------------
 
 - Add HTTP Bearer to OpenAPI security schema.
