@@ -20,7 +20,7 @@ def test_verifier_ok(patched_verifier, token_generator):
     verified_claims = patched_verifier("Bearer " + token)
     assert verified_claims == jwt.decode(token, options={"verify_signature": False})
 
-    patched_verifier.jwk_client.get_signing_key_from_jwt.assert_called_once_with(token)
+    patched_verifier.get_key.assert_called_once_with(token)
 
 
 def test_verifier_exp_leeway(patched_verifier, token_generator):
