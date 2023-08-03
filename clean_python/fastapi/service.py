@@ -24,6 +24,7 @@ from clean_python.oauth2 import OAuth2SPAClientSettings
 from clean_python.oauth2 import TokenVerifier
 from clean_python.oauth2 import TokenVerifierSettings
 
+from .context import ctx
 from .context import RequestMiddleware
 from .error_responses import BadRequest
 from .error_responses import conflict_handler
@@ -62,7 +63,7 @@ class OAuth2WithClientDependable(OAuth2AuthorizationCodeBearer):
         )
 
     async def __call__(self, request: Request) -> None:
-        await self.verifier(request.headers.get("Authorization"))
+        ctx.claims = await self.verifier(request.headers.get("Authorization"))
 
 
 class OAuth2WithoutClientDependable:
@@ -76,7 +77,7 @@ class OAuth2WithoutClientDependable:
         self.verifier = sync_to_async(TokenVerifier(settings), thread_sensitive=False)
 
     async def __call__(self, request: Request) -> None:
-        await self.verifier(request.headers.get("Authorization"))
+        ctx.claims = await self.verifier(request.headers.get("Authorization"))
 
 
 def get_auth_kwargs(
