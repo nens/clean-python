@@ -8,17 +8,18 @@ import pytest
 
 from clean_python import PermissionDenied
 from clean_python import Unauthorized
-from clean_python.oauth2 import OAuth2AccessTokenVerifier
+from clean_python.oauth2 import TokenVerifier
+from clean_python.oauth2 import TokenVerifierSettings
 
 
 @pytest.fixture
 def settings():
-    return {
-        "issuer": "https://cognito-idp.region.amazonaws.com/region_abc123",
-        "resource_server_id": "localhost/",
-        "algorithms": ["RS256"],
-        "admin_users": ["foo"],
-    }
+    return TokenVerifierSettings(
+        issuer="https://cognito-idp.region.amazonaws.com/region_abc123",
+        scope="user",
+        algorithms=["RS256"],
+        admin_users=["foo"],
+    )
 
 
 @pytest.fixture
@@ -48,7 +49,7 @@ def public_key(private_key):
 
 @pytest.fixture
 def patched_verifier(public_key, settings):
-    verifier = OAuth2AccessTokenVerifier(scope="all", **settings)
+    verifier = TokenVerifier(settings)
     with mock.patch.object(verifier, "jwk_client") as jwk_client:
         jwk_client.get_signing_key_from_jwt.return_value = jwt.PyJWK.from_dict(
             public_key
@@ -59,9 +60,9 @@ def patched_verifier(public_key, settings):
 @pytest.fixture
 def token_generator(private_key, settings):
     default_claims = {
-        "sub": "foo",
-        "iss": settings["issuer"],
-        "scope": f"{settings['resource_server_id']}all",
+        "sub": settings.admin_users[0],
+        "iss": settings.issuer,
+        "scope": settings.scope,
         "token_use": "access",
         "exp": int(time.time()) + 3600,
         "iat": int(time.time()) - 3600,
@@ -83,7 +84,7 @@ def token_generator(private_key, settings):
 
 def test_verifier_ok(patched_verifier, token_generator):
     token = token_generator()
-    verified_claims = patched_verifier(token)
+    verified_claims = patched_verifier("Bearer " + token)
     assert verified_claims == jwt.decode(token, options={"verify_signature": False})
 
     patched_verifier.jwk_client.get_signing_key_from_jwt.assert_called_once_with(token)
@@ -91,12 +92,12 @@ def test_verifier_ok(patched_verifier, token_generator):
 
 def test_verifier_exp_leeway(patched_verifier, token_generator):
     token = token_generator(exp=int(time.time()) - 60)
-    patched_verifier(token)
+    patched_verifier("Bearer " + token)
 
 
 def test_verifier_multiple_scopes(patched_verifier, token_generator, settings):
-    token = token_generator(scope=f"scope1 {settings['resource_server_id']}all scope3")
-    patched_verifier(token)
+    token = token_generator(scope=f"scope1 {settings.scope} scope3")
+    patched_verifier("Bearer " + token)
 
 
 @pytest.mark.parametrize(
@@ -117,10 +118,23 @@ def test_verifier_multiple_scopes(patched_verifier, token_generator, settings):
 def test_verifier_bad(patched_verifier, token_generator, claim_overrides):
     token = token_generator(**claim_overrides)
     with pytest.raises(Unauthorized):
-        patched_verifier(token)
+        patched_verifier("Bearer " + token)
 
 
 def test_verifier_authorize(patched_verifier, token_generator):
     token = token_generator(sub="bar")
     with pytest.raises(PermissionDenied):
-        patched_verifier(token)
+        patched_verifier("Bearer " + token)
+
+
+@pytest.mark.parametrize("prefix", ["", "foo ", "key ", "bearer ", "Bearer  "])
+def test_verifier_bad_header_prefix(patched_verifier, token_generator, prefix):
+    token = token_generator()
+    with pytest.raises(Unauthorized):
+        patched_verifier(prefix + token)
+
+
+@pytest.mark.parametrize("header", ["", None, " "])
+def test_verifier_no_header(patched_verifier, header):
+    with pytest.raises(Unauthorized):
+        patched_verifier(header)

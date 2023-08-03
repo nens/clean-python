@@ -50,6 +50,8 @@ class TokenVerifier:
         # Step 0: retrieve the token from the Authorization header
         # See https://tools.ietf.org/html/rfc6750#section-2.1,
         # Bearer is case-sensitive and there is exactly 1 separator after.
+        if authorization is None:
+            raise Unauthorized()
         token = authorization[7:] if authorization.startswith("Bearer") else None
         if token is None:
             raise Unauthorized()
