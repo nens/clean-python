@@ -11,6 +11,12 @@ class Tenant(ValueObject):
     name: str
 
 
+class User(ValueObject):
+    id: str
+    name: Optional[str]
+
+
 class Claims(ValueObject):
-    scope: FrozenSet[str]
+    user: User
     tenant: Optional[Tenant]
+    scope: FrozenSet[str]

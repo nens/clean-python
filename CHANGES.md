@@ -4,7 +4,7 @@
 0.2.2 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Expand ctx.claims with user details.
 
 
 0.2.1 (2023-08-03)
