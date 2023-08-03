@@ -1,30 +1,16 @@
-# (c) Nelen & Schuurmans
-
 import time
 from unittest import mock
 
 import jwt
 import pytest
 
-from clean_python import PermissionDenied
-from clean_python import Unauthorized
 from clean_python.oauth2 import TokenVerifier
 from clean_python.oauth2 import TokenVerifierSettings
 
 
 @pytest.fixture
-def settings():
-    return TokenVerifierSettings(
-        issuer="https://cognito-idp.region.amazonaws.com/region_abc123",
-        scope="user",
-        algorithms=["RS256"],
-        admin_users=["foo"],
-    )
-
-
-@pytest.fixture
 def private_key():
-    # this key was generated especially for this test suite; is has no other applications
+    # this key was generated especially for this test suite; it has no other applications
     return {
         "p": "_PgJBxrGEy8I5KvY_nDRT9loaBPqHHn0AUiTa92zBrAX0qA8ZhV66pUkX2JehU3efduel4FOK2xx-W31p7kCLoaGsMtfKAPYC33KptCH9YXkeMQHq1jWfcRgAVXpdXc7M4pQxO8Dh2BU8qhtAzhpbP4tUPoLIGcTUGd-1ieDkqE",  # NOQA
         "kty": "RSA",
@@ -48,21 +34,18 @@ def public_key(private_key):
 
 
 @pytest.fixture
-def patched_verifier(public_key, settings):
-    verifier = TokenVerifier(settings)
-    with mock.patch.object(verifier, "jwk_client") as jwk_client:
-        jwk_client.get_signing_key_from_jwt.return_value = jwt.PyJWK.from_dict(
-            public_key
-        )
-        yield verifier
+def jwk_patched(public_key):
+    with mock.patch.object(TokenVerifier, "get_key") as f:
+        f.return_value = jwt.PyJWK.from_dict(public_key)
+        yield
 
 
 @pytest.fixture
-def token_generator(private_key, settings):
+def token_generator(private_key):
     default_claims = {
-        "sub": settings.admin_users[0],
-        "iss": settings.issuer,
-        "scope": settings.scope,
+        "sub": "foo",
+        "iss": "https://some/auth/server",
+        "scope": "user",
         "token_use": "access",
         "exp": int(time.time()) + 3600,
         "iat": int(time.time()) - 3600,
@@ -82,59 +65,12 @@ def token_generator(private_key, settings):
     return generate_token
 
 
-def test_verifier_ok(patched_verifier, token_generator):
-    token = token_generator()
-    verified_claims = patched_verifier("Bearer " + token)
-    assert verified_claims == jwt.decode(token, options={"verify_signature": False})
-
-    patched_verifier.jwk_client.get_signing_key_from_jwt.assert_called_once_with(token)
-
-
-def test_verifier_exp_leeway(patched_verifier, token_generator):
-    token = token_generator(exp=int(time.time()) - 60)
-    patched_verifier("Bearer " + token)
-
-
-def test_verifier_multiple_scopes(patched_verifier, token_generator, settings):
-    token = token_generator(scope=f"scope1 {settings.scope} scope3")
-    patched_verifier("Bearer " + token)
-
-
-@pytest.mark.parametrize(
-    "claim_overrides",
-    [
-        {"iss": "https://authserver"},
-        {"iss": None},
-        {"scope": "nothing"},
-        {"scope": None},
-        {"exp": int(time.time()) - 3600},
-        {"exp": None},
-        {"nbf": int(time.time()) + 3600},
-        {"token_use": "id"},
-        {"token_use": None},
-        {"sub": None},
-    ],
-)
-def test_verifier_bad(patched_verifier, token_generator, claim_overrides):
-    token = token_generator(**claim_overrides)
-    with pytest.raises(Unauthorized):
-        patched_verifier("Bearer " + token)
-
-
-def test_verifier_authorize(patched_verifier, token_generator):
-    token = token_generator(sub="bar")
-    with pytest.raises(PermissionDenied):
-        patched_verifier("Bearer " + token)
-
-
-@pytest.mark.parametrize("prefix", ["", "foo ", "key ", "bearer ", "Bearer  "])
-def test_verifier_bad_header_prefix(patched_verifier, token_generator, prefix):
-    token = token_generator()
-    with pytest.raises(Unauthorized):
-        patched_verifier(prefix + token)
-
-
-@pytest.mark.parametrize("header", ["", None, " "])
-def test_verifier_no_header(patched_verifier, header):
-    with pytest.raises(Unauthorized):
-        patched_verifier(header)
+@pytest.fixture
+def settings():
+    # settings match the defaults in the token_generator fixture
+    return TokenVerifierSettings(
+        issuer="https://some/auth/server",
+        scope="user",
+        algorithms=["RS256"],
+        admin_users=["foo"],
+    )

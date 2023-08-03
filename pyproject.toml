@@ -19,6 +19,7 @@ test = [
     "pytest-cov",
     "pytest-asyncio",
     "debugpy",
+    "httpx",
 ]
 dramatiq = ["dramatiq"]
 fastapi = ["fastapi"]

@@ -57,8 +57,8 @@ class OAuth2WithClientDependable(OAuth2AuthorizationCodeBearer):
     ):
         self.verifier = sync_to_async(TokenVerifier(settings), thread_sensitive=False)
         super().__init__(
-            authorizationUrl=client.authorization_url,
-            tokenUrl=client.token_url,
+            authorizationUrl=str(client.authorization_url),
+            tokenUrl=str(client.token_url),
         )
 
     async def __call__(self, request: Request) -> None:
