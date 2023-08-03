@@ -1,3 +1,4 @@
+from typing import List
 from unittest import mock
 
 import pytest
@@ -30,8 +31,8 @@ class UserRepository(Repository[User]):
 
 
 @pytest.fixture
-def user_repository(users):
-    return UserRepository(gateway=InMemoryGateway(data=[x.dict() for x in users]))
+def user_repository(users: List[User]):
+    return UserRepository(gateway=InMemoryGateway(data=[x.model_dump() for x in users]))
 
 
 @pytest.fixture
@@ -61,69 +62,71 @@ async def test_all(filter_m, user_repository, page_options):
     filter_m.assert_awaited_once_with([], params=page_options)
 
 
-async def test_add(user_repository):
+async def test_add(user_repository: UserRepository):
     actual = await user_repository.add(User.create(name="d"))
     assert actual.name == "d"
-    assert user_repository.gateway.data[4] == actual.dict()
+    assert user_repository.gateway.data[4] == actual.model_dump()
 
 
-async def test_add_json(user_repository):
+async def test_add_json(user_repository: UserRepository):
     actual = await user_repository.add({"name": "d"})
     assert actual.name == "d"
-    assert user_repository.gateway.data[4] == actual.dict()
+    assert user_repository.gateway.data[4] == actual.model_dump()
 
 
-async def test_add_json_validates(user_repository):
+async def test_add_json_validates(user_repository: UserRepository):
     with pytest.raises(BadRequest):
         await user_repository.add({"id": "d"})
 
 
-async def test_update(user_repository):
+async def test_update(user_repository: UserRepository):
     actual = await user_repository.update(id=2, values={"name": "d"})
     assert actual.name == "d"
-    assert user_repository.gateway.data[2] == actual.dict()
+    assert user_repository.gateway.data[2] == actual.model_dump()
 
 
-async def test_update_does_not_exist(user_repository):
+async def test_update_does_not_exist(user_repository: UserRepository):
     with pytest.raises(DoesNotExist):
         await user_repository.update(id=4, values={"name": "d"})
 
 
-async def test_update_validates(user_repository):
+async def test_update_validates(user_repository: UserRepository):
     with pytest.raises(BadRequest):
         await user_repository.update(id=2, values={"id": 6})
 
 
-async def test_remove(user_repository):
+async def test_remove(user_repository: UserRepository):
     assert await user_repository.remove(2)
     assert 2 not in user_repository.gateway.data
 
 
-async def test_remove_does_not_exist(user_repository):
+async def test_remove_does_not_exist(user_repository: UserRepository):
     assert not await user_repository.remove(4)
 
 
-async def test_upsert_updates(user_repository):
+async def test_upsert_updates(user_repository: UserRepository):
     actual = await user_repository.upsert(User.create(id=2, name="d"))
     assert actual.name == "d"
-    assert user_repository.gateway.data[2] == actual.dict()
+    assert user_repository.gateway.data[2] == actual.model_dump()
 
 
-async def test_upsert_adds(user_repository):
+async def test_upsert_adds(user_repository: UserRepository):
     actual = await user_repository.upsert(User.create(id=4, name="d"))
     assert actual.name == "d"
-    assert user_repository.gateway.data[4] == actual.dict()
+    assert user_repository.gateway.data[4] == actual.model_dump()
 
 
 @mock.patch.object(InMemoryGateway, "count")
-async def test_filter(count_m, user_repository, users):
+async def test_filter(count_m, user_repository: UserRepository, users):
     actual = await user_repository.filter([Filter(field="name", values=["b"])])
     assert actual == Page(total=1, items=[users[1]], limit=None, offest=None)
     assert not count_m.called
 
 
 @mock.patch.object(InMemoryGateway, "count")
-async def test_filter_with_pagination(count_m, user_repository, users, page_options):
+async def test_filter_with_pagination(
+    count_m, user_repository: UserRepository, users, page_options
+):
     actual = await user_repository.filter(
         [Filter(field="name", values=["b"])], page_options
     )
@@ -142,7 +145,7 @@ async def test_filter_with_pagination(count_m, user_repository, users, page_opti
 )
 @mock.patch.object(InMemoryGateway, "count")
 async def test_filter_with_pagination_calls_count(
-    count_m, user_repository, users, page_options
+    count_m, user_repository: UserRepository, users, page_options
 ):
     count_m.return_value = 123
     actual = await user_repository.filter([], page_options)
@@ -156,7 +159,7 @@ async def test_filter_with_pagination_calls_count(
 
 
 @mock.patch.object(Repository, "filter")
-async def test_by(filter_m, user_repository, page_options):
+async def test_by(filter_m, user_repository: UserRepository, page_options):
     filter_m.return_value = Page(total=0, items=[])
     assert await user_repository.by("name", "b", page_options) is filter_m.return_value
 

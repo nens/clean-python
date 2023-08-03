@@ -5,6 +5,7 @@ from typing import Type
 from typing import TypeVar
 
 from pydantic import BaseModel
+from pydantic import ConfigDict
 from pydantic import ValidationError
 
 from .exceptions import BadRequest
@@ -16,12 +17,11 @@ T = TypeVar("T", bound="ValueObject")
 
 
 class ValueObject(BaseModel):
-    class Config:
-        allow_mutation = False
+    model_config = ConfigDict(frozen=True)
 
     def run_validation(self: T) -> T:
         try:
-            return self.__class__(**self.dict())
+            return self.__class__(**self.model_dump())
         except ValidationError as e:
             raise BadRequest(e)
 
@@ -34,7 +34,7 @@ class ValueObject(BaseModel):
 
     def update(self: T, **values) -> T:
         try:
-            return self.__class__(**{**self.dict(), **values})
+            return self.__class__(**{**self.model_dump(), **values})
         except ValidationError as e:
             raise BadRequest(e)
 

@@ -47,7 +47,7 @@ class InternalGateway(Generic[E, T]):
 
     async def add(self, item: T) -> T:
         try:
-            created = await self.manage.create(item.dict())
+            created = await self.manage.create(item.model_dump())
         except BadRequest as e:
             raise ValueError(e)
         return self._map(created)

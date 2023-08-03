@@ -1,16 +1,25 @@
 # Changelog of clean-python
 
 
-0.1.3 (unreleased)
-------------------
+0.2.0 (unreleased)
+--------------------
 
-- Nothing changed yet.
+- Pydantic 2.x support. Drops Pydantic 1.x support, use 0.1.x for Pydantic 1.x.
+  See https://docs.pydantic.dev/latest/migration/
+
+- `BadRequest` is a subclass of `Exception` instead of `ValidationError` / `ValueError`.
+
+- `oauth2.OAuth2Settings` is split into two new objects: `TokenVerifierSettings` and
+  `OAuth2SPAClientSettings`. The associated call signature of `Service` was changed.
 
 
 0.1.2 (2023-07-31)
 ------------------
 
 - Added py.typed marker.
+
+
+
 
 
 0.1.1 (2023-07-31)

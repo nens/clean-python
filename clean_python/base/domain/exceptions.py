@@ -1,12 +1,13 @@
 # (c) Nelen & Schuurmans
 
 from typing import Any
+from typing import Dict
+from typing import List
 from typing import Optional
 from typing import Union
 
 from pydantic import create_model
 from pydantic import ValidationError
-from pydantic.error_wrappers import ErrorWrapper
 
 __all__ = [
     "AlreadyExists",
@@ -54,23 +55,25 @@ class PreconditionFailed(Exception):
 request_model = create_model("Request")
 
 
-class BadRequest(ValidationError):
+class BadRequest(Exception):
     def __init__(self, err_or_msg: Union[ValidationError, str]):
-        if isinstance(err_or_msg, ValidationError):
-            errors = err_or_msg.raw_errors
-        else:
-            errors = [ErrorWrapper(ValueError(err_or_msg), "*")]
-        super().__init__(errors, request_model)
+        self._internal_error = err_or_msg
+        super().__init__(err_or_msg)
+
+    def errors(self) -> List[Dict]:
+        if isinstance(self._internal_error, ValidationError):
+            return self._internal_error.errors()
+        return [{"error": self}]
 
     def __str__(self) -> str:
-        errors = self.errors()
-        if len(errors) == 1:
-            error = errors[0]
+        error = self._internal_error
+        if isinstance(error, ValidationError):
+            error = error.errors()[0]
             loc = "'" + ",".join([str(x) for x in error["loc"]]) + "' "
             if loc == "'*' ":
                 loc = ""
             return f"validation error: {loc}{error['msg']}"
-        return super().__str__()
+        return f"validation error: {super().__str__()}"
 
 
 class Unauthorized(Exception):

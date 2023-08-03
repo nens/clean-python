@@ -30,4 +30,4 @@ def test_bad_request_from_validation_error():
     except ValidationError as e:
         err = BadRequest(e)
 
-    assert str(err) == "validation error: 'title' field required"
+    assert str(err) == "validation error: 'title' Field required"

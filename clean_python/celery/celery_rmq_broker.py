@@ -27,7 +27,7 @@ class CeleryHeaders(ValueObject):
     origin: Optional[str] = None
 
     def json_dict(self):
-        return json.loads(self.json())
+        return json.loads(self.model_dump_json())
 
 
 class CeleryRmqBroker(Gateway):

@@ -6,7 +6,6 @@ from typing import Sequence
 from typing import TypeVar
 
 from pydantic import BaseModel
-from pydantic.generics import GenericModel
 
 __all__ = ["Page", "PageOptions"]
 
@@ -20,7 +19,7 @@ class PageOptions(BaseModel):
     ascending: bool = True
 
 
-class Page(GenericModel, Generic[T]):
+class Page(BaseModel, Generic[T]):
     total: int
     items: Sequence[T]
     limit: Optional[int] = None

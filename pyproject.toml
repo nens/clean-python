@@ -10,7 +10,7 @@ license = {text = "MIT"}
 classifiers = ["Programming Language :: Python"]
 keywords = []
 requires-python = ">=3.7"
-dependencies = ["pydantic==1.*", "inject==4.*", "asgiref", "blinker"]
+dependencies = ["pydantic==2.*", "inject==4.*", "asgiref", "blinker"]
 dynamic = ["version"]
 
 [project.optional-dependencies]
@@ -19,6 +19,7 @@ test = [
     "pytest-cov",
     "pytest-asyncio",
     "debugpy",
+    "httpx",
 ]
 dramatiq = ["dramatiq"]
 fastapi = ["fastapi"]

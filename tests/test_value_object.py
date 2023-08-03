@@ -1,6 +1,6 @@
 import pytest
+from pydantic import field_validator
 from pydantic import ValidationError
-from pydantic import validator
 
 from clean_python import BadRequest
 from clean_python import ValueObject
@@ -9,8 +9,8 @@ from clean_python import ValueObject
 class Color(ValueObject):
     name: str
 
-    @validator("name")
-    def name_not_empty(cls, v):
+    @field_validator("name")
+    def name_not_empty(cls, v, _):
         assert v != ""
         return v
 
@@ -49,7 +49,7 @@ def test_run_validation(color):
 
 
 def test_run_validation_err():
-    color = Color.construct(name="")
+    color = Color.model_construct(name="")
 
     with pytest.raises(BadRequest):
         color.run_validation()
