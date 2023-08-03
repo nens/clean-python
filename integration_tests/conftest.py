@@ -5,15 +5,16 @@ import os
 
 import pytest
 
-from clean_python.testing import setup_debugger
-
 
 def pytest_sessionstart(session):
     """
     Called after the Session object has been created and
     before performing collection and entering the run test loop.
     """
-    setup_debugger()
+    if os.environ.get("DEBUG") or os.environ.get("DEBUG_WAIT_FOR_CLIENT"):
+        from clean_python.testing.debugger import setup_debugger
+
+        setup_debugger()
 
 
 @pytest.fixture(scope="session")
