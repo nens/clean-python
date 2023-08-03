@@ -73,6 +73,7 @@ async def unauthorized_handler(request: Request, exc: Unauthorized):
     return JSONResponse(
         status_code=status.HTTP_401_UNAUTHORIZED,
         content={"message": "Unauthorized"},
+        headers={"WWW-Authenticate": "Bearer"},
     )
 
 
