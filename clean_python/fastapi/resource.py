@@ -10,9 +10,14 @@ from typing import Optional
 from typing import Sequence
 from typing import Type
 
+from fastapi import Security
 from fastapi.routing import APIRouter
+from fastapi.security import SecurityScopes
 
+from clean_python import PermissionDenied
 from clean_python import ValueObject
+
+from .context import ctx
 
 __all__ = [
     "Resource",
@@ -71,12 +76,12 @@ class APIVersion(ValueObject):
         return APIVersion(version=self.version, stability=self.stability.decrease())
 
 
-def http_method(path: str, **route_options):
+def http_method(path: str, scope: Optional[str] = None, **route_options):
     def wrapper(unbound_method: Callable[..., Any]):
         setattr(
             unbound_method,
             "http_method",
-            (path, route_options),
+            (path, scope, route_options),
         )
         return unbound_method
 
@@ -92,6 +97,13 @@ post = partial(http_method, methods=["POST"])
 put = partial(http_method, methods=["PUT"])
 patch = partial(http_method, methods=["PATCH"])
 delete = partial(http_method, methods=["DELETE"])
+
+
+async def check_scope_dependable(security_scopes: SecurityScopes):
+    if not security_scopes.scopes:
+        return
+    if set(security_scopes.scopes) - ctx.claims.scope:
+        raise PermissionDenied(f"scope(s) '{security_scopes.scope_str}' are required")
 
 
 class OpenApiTag(ValueObject):
@@ -160,7 +172,7 @@ class Resource:
         router = APIRouter()
         operation_ids = set()
         for endpoint in self._endpoints():
-            path, route_options = endpoint.http_method
+            path, scope, route_options = endpoint.http_method
             operation_id = endpoint.__name__
             if operation_id in operation_ids:
                 raise RuntimeError(
@@ -170,6 +182,10 @@ class Resource:
             # The 'name' is used for reverse lookups (request.path_for): include the
             # version prefix so that we can uniquely refer to an operation.
             name = version.prefix + "/" + endpoint.__name__
+            if scope is not None:
+                dependencies = [Security(check_scope_dependable, scopes=[scope])]
+            else:
+                dependencies = []
             router.add_api_route(
                 path,
                 endpoint,
@@ -177,6 +193,7 @@ class Resource:
                 operation_id=endpoint.__name__,
                 name=name,
                 responses=responses,
+                dependencies=dependencies,
                 **route_options,
             )
         return router

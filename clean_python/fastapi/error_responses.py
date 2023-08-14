@@ -80,5 +80,5 @@ async def unauthorized_handler(request: Request, exc: Unauthorized):
 async def permission_denied_handler(request: Request, exc: PermissionDenied):
     return JSONResponse(
         status_code=status.HTTP_403_FORBIDDEN,
-        content={"message": "Permission denied"},
+        content={"message": "Permission denied", "detail": str(exc)},
     )

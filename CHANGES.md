@@ -4,7 +4,7 @@
 0.2.3 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Add `scope` kwarg to http_method decorators (get, post, etc.)
 
 
 0.2.2 (2023-08-03)
