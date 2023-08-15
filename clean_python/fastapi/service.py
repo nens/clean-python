@@ -139,8 +139,7 @@ class Service:
         on_startup: Optional[List[Callable[[], Any]]] = None,
         access_logger_gateway: Optional[Gateway] = None,
     ) -> ASGIApp:
-        if auth is not None:
-            set_verifier(auth)
+        set_verifier(auth)
         app = self._create_root_app(
             title=title,
             description=description,

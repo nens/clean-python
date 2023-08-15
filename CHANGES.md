@@ -6,7 +6,7 @@
 
 - Add `scope` kwarg to http_method decorators (get, post, etc.)
 
-- Add `requires_token`, `requires_user`, `requires_tenant`, `RequiresScope`
+- Add `get_token`, `get_user`, `get_tenant`, `RequiresScope`
   dependables in `clean_python.fastapi`
 
 

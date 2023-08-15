@@ -1,9 +1,8 @@
 import pytest
 
 from clean_python import PermissionDenied
-from clean_python.fastapi import requires_tenant
-from clean_python.fastapi import requires_token
-from clean_python.fastapi import requires_user
+from clean_python.fastapi import get_tenant
+from clean_python.fastapi import get_user
 from clean_python.fastapi import RequiresScope
 from clean_python.oauth2 import Token
 
@@ -26,26 +25,17 @@ def token_multitenant() -> Token:
     )
 
 
-async def test_requires_token(token):
-    assert await requires_token(token) is token
+async def test_get_user(token):
+    assert await get_user(token) == token.user
 
 
-async def test_requires_token_err():
+async def test_get_tenant(token_multitenant):
+    assert await get_tenant(token_multitenant) == token_multitenant.tenant
+
+
+async def test_get_tenant_err(token):
     with pytest.raises(PermissionDenied):
-        await requires_token(None)
-
-
-async def test_requires_user(token):
-    assert await requires_user(token) == token.user
-
-
-async def test_requires_tenant(token_multitenant):
-    assert await requires_tenant(token_multitenant) == token_multitenant.tenant
-
-
-async def test_requires_tenant_err(token):
-    with pytest.raises(PermissionDenied):
-        await requires_tenant(token)
+        await get_tenant(token)
 
 
 @pytest.mark.parametrize("scope", ["a", "b"])

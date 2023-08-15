@@ -19,7 +19,13 @@ from clean_python import User
 
 from .token import Token
 
-__all__ = ["TokenVerifier", "TokenVerifierSettings", "OAuth2SPAClientSettings"]
+__all__ = [
+    "BaseTokenVerifier",
+    "TokenVerifier",
+    "NoAuthTokenVerifier",
+    "TokenVerifierSettings",
+    "OAuth2SPAClientSettings",
+]
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +44,17 @@ class OAuth2SPAClientSettings(BaseModel):
     authorization_url: AnyHttpUrl
 
 
-class TokenVerifier:
+class BaseTokenVerifier:
+    def __call__(self, authorization: Optional[str]) -> Token:
+        raise NotImplementedError()
+
+
+class NoAuthTokenVerifier(BaseTokenVerifier):
+    def __call__(self, authorization: Optional[str]) -> Token:
+        return Token(claims={"sub": "DEV", "username": "dev", "scope": "superuser"})
+
+
+class TokenVerifier(BaseTokenVerifier):
     """A class for verifying OAuth2 Access Tokens from AWS Cognito
 
     The verification steps followed are documented here:
