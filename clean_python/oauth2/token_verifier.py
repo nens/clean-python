@@ -1,5 +1,6 @@
 # (c) Nelen & Schuurmans
 
+import logging
 from typing import Dict
 from typing import FrozenSet
 from typing import List
@@ -10,15 +11,17 @@ from jwt import PyJWKClient
 from jwt.exceptions import PyJWTError
 from pydantic import AnyHttpUrl
 from pydantic import BaseModel
+from pydantic import ValidationError
 
 from clean_python import PermissionDenied
 from clean_python import Unauthorized
+from clean_python import User
 
-from .claims import Claims
-from .claims import Tenant
-from .claims import User
+from .token import Token
 
 __all__ = ["TokenVerifier", "TokenVerifierSettings", "OAuth2SPAClientSettings"]
+
+logger = logging.getLogger(__name__)
 
 
 class TokenVerifierSettings(BaseModel):
@@ -51,22 +54,24 @@ class TokenVerifier:
         self.settings = settings
         self.jwk_client = PyJWKClient(f"{settings.issuer}/.well-known/jwks.json")
 
-    def __call__(self, authorization: Optional[str]) -> Claims:
+    def __call__(self, authorization: Optional[str]) -> Token:
         # Step 0: retrieve the token from the Authorization header
         # See https://tools.ietf.org/html/rfc6750#section-2.1,
         # Bearer is case-sensitive and there is exactly 1 separator after.
         if authorization is None:
+            logger.info("Missing Authorization header")
             raise Unauthorized()
         token = authorization[7:] if authorization.startswith("Bearer") else None
         if token is None:
+            logger.info("Authorization does not start with 'Bearer '")
             raise Unauthorized()
 
         # Step 1: Confirm the structure of the JWT. This check is part of get_kid since
         # jwt.get_unverified_header will raise a JWTError if the structure is wrong.
         try:
             key = self.get_key(token)  # JSON Web Key
-        except PyJWTError:
-            # logger.info("Token is invalid: %s", e)
+        except PyJWTError as e:
+            logger.info("Token is invalid: %s", e)
             raise Unauthorized()
         # Step 2: Validate the JWT signature and standard claims
         try:
@@ -80,19 +85,21 @@ class TokenVerifier:
                     "require": ["exp", "iss", "sub", "scope", "token_use"],
                 },
             )
-        except PyJWTError:
-            # logger.info("Token is invalid: %s", e)
+        except PyJWTError as e:
+            logger.info("Token is invalid: %s", e)
             raise Unauthorized()
         # Step 3: Verify additional claims. At this point, we have passed
         # verification, so unverified claims may be used safely.
-        user = self.parse_user(claims)
-        tenant = self.parse_tenant(claims)
-        scope = self.parse_scope(claims)
         self.verify_token_use(claims)
-        self.verify_scope(scope)
+        try:
+            token = Token(claims=claims)
+        except ValidationError as e:
+            logger.info("Token is invalid: %s", e)
+            raise Unauthorized()
+        self.verify_scope(token.scope)
         # Step 4: Authorization: verify user id ('sub' claim) against 'admin_users'
-        self.authorize_user(user)
-        return Claims(user=user, scope=scope, tenant=tenant)
+        self.authorize_user(token.user)
+        return token
 
     def get_key(self, token) -> jwt.PyJWK:
         """Return the JSON Web KEY (JWK) corresponding to kid."""
@@ -101,7 +108,7 @@ class TokenVerifier:
     def verify_token_use(self, claims: Dict) -> None:
         """Check the token_use claim."""
         if claims["token_use"] != "access":
-            # logger.info("Token has invalid token_use claim: %s", claims["token_use"])
+            logger.info("Token has invalid token_use claim: %s", claims["token_use"])
             raise Unauthorized()
 
     def verify_scope(self, claims_scope: FrozenSet[str]) -> None:
@@ -109,25 +116,11 @@ class TokenVerifier:
         if self.settings.scope is None:
             return
         if self.settings.scope not in claims_scope:
-            # logger.info("Token has invalid scope claim: %s", claims["scope"])
+            logger.info("Token is missing '%s' scope", self.settings.scope)
             raise Unauthorized()
 
     def authorize_user(self, user: User) -> None:
         if self.settings.admin_users is None:
             return
         if user.id not in self.settings.admin_users:
-            # logger.info("User with sub %s is not authorized", claims.get("sub"))
             raise PermissionDenied()
-
-    def parse_user(self, claims: Dict) -> User:
-        return User(id=claims["sub"], name=claims.get("username"))
-
-    def parse_scope(self, claims: Dict) -> FrozenSet[str]:
-        return frozenset(claims["scope"].split(" "))
-
-    def parse_tenant(self, claims: Dict) -> Optional[Tenant]:
-        if claims.get("tenant"):
-            tenant = Tenant(id=claims["tenant"], name=claims.get("tenant_name", ""))
-        else:
-            tenant = None
-        return tenant

@@ -1,16 +1,12 @@
 import pytest
 from fastapi.routing import APIRouter
-from fastapi.security import SecurityScopes
 
-from clean_python import PermissionDenied
 from clean_python.fastapi import APIVersion
-from clean_python.fastapi import ctx
 from clean_python.fastapi import get
+from clean_python.fastapi import RequiresScope
 from clean_python.fastapi import Resource
 from clean_python.fastapi import Stability
 from clean_python.fastapi import v
-from clean_python.fastapi.resource import check_scope_dependable
-from clean_python.oauth2 import Claims
 
 
 def test_subclass():
@@ -155,28 +151,6 @@ def test_get_router_with_scope():
     assert len(router.routes) == 1
 
     route = router.routes[0]
-    (security,) = route.dependencies
-    assert security.scopes == ["foo"]
-    assert security.dependency is check_scope_dependable
-
-
-@pytest.mark.parametrize(
-    "ctx_scope, security_scopes, ok",
-    [
-        (["view"], ["view"], True),
-        ([], ["view"], False),
-        (["start"], ["view"], False),
-        (["view"], [], True),
-        (["view", "start"], ["view"], True),
-    ],
-)
-async def test_check_scope_dependable(ctx_scope, security_scopes, ok):
-    ctx.claims = Claims(
-        user={"id": "abc", "name": "jan"}, tenant=None, scope=frozenset(ctx_scope)
-    )
-
-    if ok:
-        await check_scope_dependable(SecurityScopes(security_scopes))
-    else:
-        with pytest.raises(PermissionDenied):
-            await check_scope_dependable(SecurityScopes(security_scopes))
+    (dep,) = route.dependencies
+    assert isinstance(dep.dependency, RequiresScope)
+    assert dep.dependency.scope == "foo"

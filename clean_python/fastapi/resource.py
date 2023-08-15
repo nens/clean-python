@@ -10,14 +10,12 @@ from typing import Optional
 from typing import Sequence
 from typing import Type
 
-from fastapi import Security
+from fastapi import Depends
 from fastapi.routing import APIRouter
-from fastapi.security import SecurityScopes
 
-from clean_python import PermissionDenied
 from clean_python import ValueObject
 
-from .context import ctx
+from .security import RequiresScope
 
 __all__ = [
     "Resource",
@@ -99,13 +97,6 @@ patch = partial(http_method, methods=["PATCH"])
 delete = partial(http_method, methods=["DELETE"])
 
 
-async def check_scope_dependable(security_scopes: SecurityScopes):
-    if not security_scopes.scopes:
-        return
-    if set(security_scopes.scopes) - ctx.claims.scope:
-        raise PermissionDenied(f"scope(s) '{security_scopes.scope_str}' are required")
-
-
 class OpenApiTag(ValueObject):
     name: str
     description: Optional[str]
@@ -182,10 +173,10 @@ class Resource:
             # The 'name' is used for reverse lookups (request.path_for): include the
             # version prefix so that we can uniquely refer to an operation.
             name = version.prefix + "/" + endpoint.__name__
+            # 'scope' is implemented using FastAPI's dependency injection system
             if scope is not None:
-                dependencies = [Security(check_scope_dependable, scopes=[scope])]
-            else:
-                dependencies = []
+                route_options.setdefault("dependencies", [])
+                route_options["dependencies"].append(Depends(RequiresScope(scope)))
             router.add_api_route(
                 path,
                 endpoint,
@@ -193,7 +184,6 @@ class Resource:
                 operation_id=endpoint.__name__,
                 name=name,
                 responses=responses,
-                dependencies=dependencies,
                 **route_options,
             )
         return router
