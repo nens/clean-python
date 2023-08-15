@@ -3,7 +3,7 @@ from typing import Optional
 
 from clean_python import ValueObject
 
-__all__ = ["Claims"]
+__all__ = ["Claims", "User", "Tenant"]
 
 
 class Tenant(ValueObject):
