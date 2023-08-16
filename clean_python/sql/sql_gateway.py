@@ -98,7 +98,7 @@ class SQLGateway(Gateway):
         if not self.multitenant:
             return None
         if ctx.tenant is None:
-            raise ValueError(f"{self.__class__} requires a tenant in the context")
+            raise RuntimeError(f"{self.__class__} requires a tenant in the context")
         return ctx.tenant.id
 
     async def get_related(self, items: List[Json]) -> None:

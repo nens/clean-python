@@ -41,6 +41,25 @@ def tenant():
     return ctx.tenant
 
 
+async def test_no_tenant(sql_gateway):
+    with pytest.raises(RuntimeError):
+        await sql_gateway.filter([])
+    assert len(sql_gateway.provider.queries) == 0
+
+
+async def test_missing_tenant_column():
+    table = Table(
+        "notenant",
+        MetaData(),
+        Column("id", Integer, primary_key=True, autoincrement=True),
+    )
+
+    with pytest.raises(ValueError):
+
+        class Foo(SQLGateway, table=table, multitenant=True):
+            pass
+
+
 async def test_filter(sql_gateway, tenant):
     sql_gateway.provider.result.return_value = [{"id": 2, "value": "foo"}]
     assert await sql_gateway.filter([Filter(field="id", values=[1])]) == [
