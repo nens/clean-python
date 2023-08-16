@@ -10,16 +10,13 @@ from pydantic import FileUrl
 
 from .value_object import ValueObject
 
-__all__ = ["ctx", "User", "Tenant", "Scope", "anonymous", "dev"]
+__all__ = ["ctx", "User", "Tenant", "Scope"]
 
 
 class User(ValueObject):
     id: str
     name: str
 
-
-anonymous = User(id="ANONYMOUS", name="")
-dev = User(id="DEV", name="")
 
 Scope = FrozenSet[str]
 
@@ -30,14 +27,21 @@ class Tenant(ValueObject):
 
 
 class Context:
-    """"""
+    """Provide global access to some contextual properties.
+
+    The implementation makes use of python's contextvars, which automatically integrates
+    with asyncio tasks (so that each task runs in its own context). This makes sure that
+    every request-response cycle is isolated.
+    """
 
     def __init__(self):
         self._path_value: ContextVar[AnyUrl] = ContextVar(
             "path_value",
             default=FileUrl.build(scheme="file", host="/", path=os.getcwd()),
         )
-        self._user_value: ContextVar[User] = ContextVar("user_value", default=anonymous)
+        self._user_value: ContextVar[User] = ContextVar(
+            "user_value", default=User(id="ANONYMOUS", name="anonymous")
+        )
         self._tenant_value: ContextVar[Optional[Tenant]] = ContextVar(
             "tenant_value", default=None
         )
