@@ -1,7 +1,7 @@
 # Changelog of clean-python
 
 
-0.2.3 (unreleased)
+0.3.0 (2023-08-16)
 ------------------
 
 - Add `scope` kwarg to http_method decorators (get, post, etc.)
