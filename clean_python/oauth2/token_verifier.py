@@ -45,13 +45,24 @@ class OAuth2SPAClientSettings(BaseModel):
 
 
 class BaseTokenVerifier:
+    def force(self, token: Token) -> None:
+        raise NotImplementedError()
+
     def __call__(self, authorization: Optional[str]) -> Token:
         raise NotImplementedError()
 
 
 class NoAuthTokenVerifier(BaseTokenVerifier):
+    def __init__(self):
+        self.token = Token(
+            claims={"sub": "DEV", "username": "dev", "scope": "superuser"}
+        )
+
+    def force(self, token: Token) -> None:
+        self.token = token
+
     def __call__(self, authorization: Optional[str]) -> Token:
-        return Token(claims={"sub": "DEV", "username": "dev", "scope": "superuser"})
+        return self.token
 
 
 class TokenVerifier(BaseTokenVerifier):
