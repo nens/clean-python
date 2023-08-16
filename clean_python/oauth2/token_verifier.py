@@ -66,7 +66,9 @@ class TokenVerifier(BaseTokenVerifier):
     # allow 2 minutes leeway for verifying token expiry:
     LEEWAY = 120
 
-    def __init__(self, settings: TokenVerifierSettings):
+    def __init__(
+        self, settings: TokenVerifierSettings, logger: Optional[logging.Logger] = None
+    ):
         self.settings = settings
         self.jwk_client = PyJWKClient(f"{settings.issuer}/.well-known/jwks.json")
 

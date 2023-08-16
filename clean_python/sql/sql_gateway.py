@@ -58,7 +58,6 @@ class SQLGateway(Gateway):
         self,
         provider_override: Optional[SQLProvider] = None,
         nested: bool = False,
-        multitenant: bool = False,
     ):
         self.provider_override = provider_override
         self.nested = nested
@@ -92,9 +91,7 @@ class SQLGateway(Gateway):
             yield self
         else:
             async with self.provider.transaction() as provider:
-                yield self.__class__(
-                    provider, nested=True, multitenant=self.multitenant
-                )
+                yield self.__class__(provider, nested=True)
 
     @property
     def current_tenant(self) -> Optional[int]:

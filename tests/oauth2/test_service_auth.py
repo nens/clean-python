@@ -17,14 +17,27 @@ class FooResource(Resource, version=v(1), name="testing"):
     def testing(self):
         return "ok"
 
+    @get("/bar", scope="admin")
+    def scoped(self):
+        return "ok"
 
-@pytest.fixture
-def app(settings: TokenVerifierSettings):
+
+@pytest.fixture(params=["noclient", "client"])
+def app(request, settings: TokenVerifierSettings):
+    if request.param == "noclient":
+        auth_client = None
+    elif request.param == "client":
+        auth_client = OAuth2SPAClientSettings(
+            client_id="123",
+            token_url="https://server/token",
+            authorization_url="https://server/token",
+        )
     return Service(FooResource()).create_app(
         title="test",
         description="testing",
         hostname="testserver",
         auth=settings,
+        auth_client=auth_client,
         access_logger_gateway=InMemoryGateway([]),
     )
 
@@ -51,39 +64,21 @@ def test_ok(app, client: TestClient, token_generator):
     assert response.status_code == HTTPStatus.OK
 
 
-@pytest.fixture
-def app2(settings: TokenVerifierSettings):
-    return Service(FooResource()).create_app(
-        title="test",
-        description="testing",
-        hostname="testserver",
-        auth=settings,
-        auth_client=OAuth2SPAClientSettings(
-            client_id="123",
-            token_url="https://server/token",
-            authorization_url="https://server/token",
-        ),
-        access_logger_gateway=InMemoryGateway([]),
-    )
-
-
-@pytest.fixture
-def client2(app):
-    return TestClient(app)
-
-
 @pytest.mark.usefixtures("jwk_patched")
-def test_no_header2(app2, client2: TestClient):
-    response = client2.get(app2.url_path_for("v1/testing"))
-
-    assert response.status_code == HTTPStatus.UNAUTHORIZED
-
-
-@pytest.mark.usefixtures("jwk_patched")
-def test_ok2(app2, client2: TestClient, token_generator):
-    response = client2.get(
-        app2.url_path_for("v1/testing"),
-        headers={"Authorization": "Bearer " + token_generator()},
+def test_scoped_ok(app, client: TestClient, token_generator):
+    response = client.get(
+        app.url_path_for("v1/scoped"),
+        headers={"Authorization": "Bearer " + token_generator(scope="user admin")},
     )
 
     assert response.status_code == HTTPStatus.OK
+
+
+@pytest.mark.usefixtures("jwk_patched")
+def test_scoped_forbidden(app, client: TestClient, token_generator):
+    response = client.get(
+        app.url_path_for("v1/scoped"),
+        headers={"Authorization": "Bearer " + token_generator(scope="user")},
+    )
+
+    assert response.status_code == HTTPStatus.FORBIDDEN

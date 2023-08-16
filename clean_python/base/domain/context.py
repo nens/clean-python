@@ -30,14 +30,22 @@ class Tenant(ValueObject):
 
 
 class Context:
+    """"""
+
     def __init__(self):
         self._path_value: ContextVar[AnyUrl] = ContextVar(
-            "path_value", default=FileUrl(os.getcwd())
+            "path_value",
+            default=FileUrl.build(scheme="file", host="/", path=os.getcwd()),
         )
         self._user_value: ContextVar[User] = ContextVar("user_value", default=anonymous)
         self._tenant_value: ContextVar[Optional[Tenant]] = ContextVar(
             "tenant_value", default=None
         )
+
+    def reset(self):
+        self._path_value.reset()
+        self._user_value.reset()
+        self._tenant_value.reset()
 
     @property
     def path(self) -> AnyUrl:

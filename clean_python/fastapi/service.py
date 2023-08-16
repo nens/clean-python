@@ -1,6 +1,5 @@
 # (c) Nelen & Schuurmans
 
-import logging
 from typing import Any
 from typing import Callable
 from typing import List
@@ -40,8 +39,6 @@ from .security import get_token
 from .security import JWTBearerTokenSchema
 from .security import OAuth2SPAClientSchema
 from .security import set_verifier
-
-logger = logging.getLogger(__name__)
 
 __all__ = ["Service"]
 
