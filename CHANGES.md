@@ -1,7 +1,7 @@
 # Changelog of clean-python
 
 
-0.3.1 (unreleased)
+0.3.1 (2023-08-16)
 ------------------
 
 - Added `TokenVerifier.force()` for testing purposes.
