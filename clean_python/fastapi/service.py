@@ -1,32 +1,27 @@
 # (c) Nelen & Schuurmans
 
-import logging
 from typing import Any
 from typing import Callable
 from typing import List
 from typing import Optional
 from typing import Set
 
-from asgiref.sync import sync_to_async
 from fastapi import Depends
 from fastapi import FastAPI
 from fastapi import Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.security import HTTPBearer
-from fastapi.security import OAuth2AuthorizationCodeBearer
 from starlette.types import ASGIApp
 
 from clean_python import Conflict
+from clean_python import ctx
 from clean_python import DoesNotExist
 from clean_python import Gateway
 from clean_python import PermissionDenied
 from clean_python import Unauthorized
 from clean_python.oauth2 import OAuth2SPAClientSettings
-from clean_python.oauth2 import TokenVerifier
+from clean_python.oauth2 import Token
 from clean_python.oauth2 import TokenVerifierSettings
 
-from .context import ctx
-from .context import RequestMiddleware
 from .error_responses import BadRequest
 from .error_responses import conflict_handler
 from .error_responses import DefaultErrorResponse
@@ -40,69 +35,36 @@ from .fastapi_access_logger import FastAPIAccessLogger
 from .resource import APIVersion
 from .resource import clean_resources
 from .resource import Resource
-
-logger = logging.getLogger(__name__)
+from .security import get_token
+from .security import JWTBearerTokenSchema
+from .security import OAuth2SPAClientSchema
+from .security import set_verifier
 
 __all__ = ["Service"]
 
 
-class OAuth2WithClientDependable(OAuth2AuthorizationCodeBearer):
-    """A fastapi 'dependable' configuring OAuth2.
-
-    This does two things:
-    - Verify the token in each request
-    - (through FastAPI magic) add the scheme to the OpenAPI spec
-    """
-
-    def __init__(
-        self, settings: TokenVerifierSettings, client: OAuth2SPAClientSettings
-    ):
-        self.verifier = sync_to_async(TokenVerifier(settings), thread_sensitive=False)
-        super().__init__(
-            scheme_name="OAuth2 Authorization Code Flow with PKCE",
-            authorizationUrl=str(client.authorization_url),
-            tokenUrl=str(client.token_url),
-        )
-
-    async def __call__(self, request: Request) -> None:
-        ctx.claims = await self.verifier(request.headers.get("Authorization"))
-
-
-class OAuth2WithoutClientDependable(HTTPBearer):
-    """A fastapi 'dependable' configuring OAuth2.
-
-    This does one thing:
-    - Verify the token in each request
-    """
-
-    def __init__(self, settings: TokenVerifierSettings):
-        self.verifier = sync_to_async(TokenVerifier(settings), thread_sensitive=False)
-        super().__init__(scheme_name="JWT Bearer token", bearerFormat="JWT")
-
-    async def __call__(self, request: Request) -> None:
-        ctx.claims = await self.verifier(request.headers.get("Authorization"))
-
-
-def get_auth_kwargs(
-    auth: Optional[TokenVerifierSettings],
-    auth_client: Optional[OAuth2SPAClientSettings],
-) -> None:
-    if auth is None:
-        return {}
+def get_auth_kwargs(auth_client: Optional[OAuth2SPAClientSettings]) -> None:
     if auth_client is None:
         return {
-            "dependencies": [Depends(OAuth2WithoutClientDependable(settings=auth))],
+            "dependencies": [Depends(JWTBearerTokenSchema()), Depends(set_context)],
         }
     else:
         return {
             "dependencies": [
-                Depends(OAuth2WithClientDependable(settings=auth, client=auth_client))
+                Depends(OAuth2SPAClientSchema(client=auth_client)),
+                Depends(set_context),
             ],
             "swagger_ui_init_oauth": {
                 "clientId": auth_client.client_id,
                 "usePkceWithAuthorizationCodeGrant": True,
             },
         }
+
+
+async def set_context(request: Request, token: Token = Depends(get_token)) -> None:
+    ctx.path = request.url
+    ctx.user = token.user
+    ctx.tenant = token.tenant
 
 
 async def health_check():
@@ -143,7 +105,6 @@ class Service:
                 hostname=hostname, gateway_override=access_logger_gateway
             )
         )
-        app.add_middleware(RequestMiddleware)
         app.get("/health", include_in_schema=False)(health_check)
         return app
 
@@ -186,6 +147,7 @@ class Service:
         on_startup: Optional[List[Callable[[], Any]]] = None,
         access_logger_gateway: Optional[Gateway] = None,
     ) -> ASGIApp:
+        set_verifier(auth)
         app = self._create_root_app(
             title=title,
             description=description,
@@ -196,7 +158,7 @@ class Service:
         kwargs = {
             "title": title,
             "description": description,
-            **get_auth_kwargs(auth, auth_client),
+            **get_auth_kwargs(auth_client),
         }
         versioned_apps = {
             v: self._create_versioned_app(v, **kwargs) for v in self.versions

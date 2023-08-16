@@ -44,6 +44,7 @@ def jwk_patched(public_key):
 def token_generator(private_key):
     default_claims = {
         "sub": "foo",
+        "username": "piet",
         "iss": "https://some/auth/server",
         "scope": "user",
         "token_use": "access",

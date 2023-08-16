@@ -3,6 +3,7 @@ from fastapi.routing import APIRouter
 
 from clean_python.fastapi import APIVersion
 from clean_python.fastapi import get
+from clean_python.fastapi import RequiresScope
 from clean_python.fastapi import Resource
 from clean_python.fastapi import Stability
 from clean_python.fastapi import v
@@ -54,6 +55,7 @@ def test_get_router():
     assert route.name == "v1/get_test"
     assert route.tags == ["testing"]
     assert route.methods == {"GET"}
+    assert len(route.dependencies) == 0
     # 'self' is missing from the parameters
     assert list(route.param_convertors.keys()) == ["id"]
 
@@ -134,3 +136,21 @@ def test_get_less_stable_no_subclass():
 
     with pytest.raises(RuntimeError):
         resources[v(1)].get_less_stable(resources)
+
+
+def test_get_router_with_scope():
+    class TestResource(Resource, version=v(1), name="testing"):
+        @get("/foo/{id}", scope="foo")
+        def get_test(self, id: int):
+            return "ok"
+
+    resource = TestResource()
+
+    router = resource.get_router(v(1))
+
+    assert len(router.routes) == 1
+
+    route = router.routes[0]
+    (dep,) = route.dependencies
+    assert isinstance(dep.dependency, RequiresScope)
+    assert dep.dependency.scope == "foo"

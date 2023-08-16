@@ -4,7 +4,13 @@
 0.2.3 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Add `scope` kwarg to http_method decorators (get, post, etc.)
+
+- Moved the `Context` (`ctx`) to `clean_python.base` and changed its attributes to
+  `path`, `user` and `tenant`.
+
+- The `SQLGateway` can now be constructed with `multitenant=True` which makes it
+  automatically filter the `tenant` column with the current `ctx.tenant`.
 
 
 0.2.2 (2023-08-03)

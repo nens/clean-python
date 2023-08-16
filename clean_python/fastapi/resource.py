@@ -10,9 +10,12 @@ from typing import Optional
 from typing import Sequence
 from typing import Type
 
+from fastapi import Depends
 from fastapi.routing import APIRouter
 
 from clean_python import ValueObject
+
+from .security import RequiresScope
 
 __all__ = [
     "Resource",
@@ -71,12 +74,12 @@ class APIVersion(ValueObject):
         return APIVersion(version=self.version, stability=self.stability.decrease())
 
 
-def http_method(path: str, **route_options):
+def http_method(path: str, scope: Optional[str] = None, **route_options):
     def wrapper(unbound_method: Callable[..., Any]):
         setattr(
             unbound_method,
             "http_method",
-            (path, route_options),
+            (path, scope, route_options),
         )
         return unbound_method
 
@@ -160,7 +163,7 @@ class Resource:
         router = APIRouter()
         operation_ids = set()
         for endpoint in self._endpoints():
-            path, route_options = endpoint.http_method
+            path, scope, route_options = endpoint.http_method
             operation_id = endpoint.__name__
             if operation_id in operation_ids:
                 raise RuntimeError(
@@ -170,6 +173,10 @@ class Resource:
             # The 'name' is used for reverse lookups (request.path_for): include the
             # version prefix so that we can uniquely refer to an operation.
             name = version.prefix + "/" + endpoint.__name__
+            # 'scope' is implemented using FastAPI's dependency injection system
+            if scope is not None:
+                route_options.setdefault("dependencies", [])
+                route_options["dependencies"].append(Depends(RequiresScope(scope)))
             router.add_api_route(
                 path,
                 endpoint,

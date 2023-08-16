@@ -1,2 +1,2 @@
-from .claims import *  # NOQA
-from .oauth2 import *  # NOQA
+from .token import *  # NOQA
+from .token_verifier import *  # NOQA
