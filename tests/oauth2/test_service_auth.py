@@ -3,6 +3,7 @@ from http import HTTPStatus
 import pytest
 from fastapi.testclient import TestClient
 
+from clean_python import ctx
 from clean_python import InMemoryGateway
 from clean_python.fastapi import get
 from clean_python.fastapi import Resource
@@ -20,6 +21,14 @@ class FooResource(Resource, version=v(1), name="testing"):
     @get("/bar", scope="admin")
     def scoped(self):
         return "ok"
+
+    @get("/context")
+    def context(self):
+        return {
+            "path": str(ctx.path),
+            "user": ctx.user,
+            "tenant": ctx.tenant,
+        }
 
 
 @pytest.fixture(params=["noclient", "client"])
@@ -82,3 +91,22 @@ def test_scoped_forbidden(app, client: TestClient, token_generator):
     )
 
     assert response.status_code == HTTPStatus.FORBIDDEN
+
+
+@pytest.mark.usefixtures("jwk_patched")
+def test_context(app, client: TestClient, token_generator):
+    response = client.get(
+        app.url_path_for("v1/context"),
+        headers={
+            "Authorization": "Bearer " + token_generator(tenant=2, tenant_name="bar")
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == {
+        "path": "http://testserver/v1/context",
+        "user": {"id": "foo", "name": "piet"},
+        "tenant": {"id": 2, "name": "bar"},
+    }
+    assert ctx.user.id != "foo"
+    assert ctx.tenant is None
