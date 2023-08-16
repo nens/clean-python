@@ -1,3 +1,4 @@
+from .context import *  # NOQA
 from .domain_event import *  # NOQA
 from .domain_service import *  # NOQA
 from .exceptions import *  # NOQA
@@ -7,6 +8,5 @@ from .json import *  # NOQA
 from .pagination import *  # NOQA
 from .repository import *  # NOQA
 from .root_entity import *  # NOQA
-from .user import *  # NOQA
 from .value import *  # NOQA
 from .value_object import *  # NOQA

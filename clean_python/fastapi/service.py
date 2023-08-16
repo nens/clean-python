@@ -9,18 +9,20 @@ from typing import Set
 
 from fastapi import Depends
 from fastapi import FastAPI
+from fastapi import Request
 from fastapi.exceptions import RequestValidationError
 from starlette.types import ASGIApp
 
 from clean_python import Conflict
+from clean_python import ctx
 from clean_python import DoesNotExist
 from clean_python import Gateway
 from clean_python import PermissionDenied
 from clean_python import Unauthorized
 from clean_python.oauth2 import OAuth2SPAClientSettings
+from clean_python.oauth2 import Token
 from clean_python.oauth2 import TokenVerifierSettings
 
-from .context import RequestMiddleware
 from .error_responses import BadRequest
 from .error_responses import conflict_handler
 from .error_responses import DefaultErrorResponse
@@ -34,6 +36,7 @@ from .fastapi_access_logger import FastAPIAccessLogger
 from .resource import APIVersion
 from .resource import clean_resources
 from .resource import Resource
+from .security import get_token
 from .security import JWTBearerTokenSchema
 from .security import OAuth2SPAClientSchema
 from .security import set_verifier
@@ -46,16 +49,25 @@ __all__ = ["Service"]
 def get_auth_kwargs(auth_client: Optional[OAuth2SPAClientSettings]) -> None:
     if auth_client is None:
         return {
-            "dependencies": [Depends(JWTBearerTokenSchema())],
+            "dependencies": [Depends(JWTBearerTokenSchema()), Depends(set_context)],
         }
     else:
         return {
-            "dependencies": [Depends(OAuth2SPAClientSchema(client=auth_client))],
+            "dependencies": [
+                Depends(OAuth2SPAClientSchema(client=auth_client)),
+                Depends(set_context),
+            ],
             "swagger_ui_init_oauth": {
                 "clientId": auth_client.client_id,
                 "usePkceWithAuthorizationCodeGrant": True,
             },
         }
+
+
+async def set_context(request: Request, token: Token = Depends(get_token)) -> None:
+    ctx.path = request.url
+    ctx.user = token.user
+    ctx.tenant = token.tenant
 
 
 async def health_check():
@@ -96,7 +108,6 @@ class Service:
                 hostname=hostname, gateway_override=access_logger_gateway
             )
         )
-        app.add_middleware(RequestMiddleware)
         app.get("/health", include_in_schema=False)(health_check)
         return app
 

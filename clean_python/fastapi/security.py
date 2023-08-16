@@ -6,8 +6,6 @@ from fastapi.security import HTTPBearer
 from fastapi.security import OAuth2AuthorizationCodeBearer
 
 from clean_python import PermissionDenied
-from clean_python import Tenant
-from clean_python import User
 from clean_python.oauth2 import BaseTokenVerifier
 from clean_python.oauth2 import NoAuthTokenVerifier
 from clean_python.oauth2 import OAuth2SPAClientSettings
@@ -15,12 +13,7 @@ from clean_python.oauth2 import Token
 from clean_python.oauth2 import TokenVerifier
 from clean_python.oauth2 import TokenVerifierSettings
 
-__all__ = [
-    "get_token",
-    "get_user",
-    "get_tenant",
-    "RequiresScope",
-]
+__all__ = ["get_token", "RequiresScope"]
 
 verifier: Optional[BaseTokenVerifier] = None
 
@@ -48,16 +41,6 @@ def get_token(request: Request) -> Token:
     return verifier(request.headers.get("Authorization"))
 
 
-async def get_user(token: Token = Depends(get_token)) -> User:
-    return token.user
-
-
-async def get_tenant(token: Token = Depends(get_token)) -> Tenant:
-    if token.tenant is None:
-        raise PermissionDenied("this operation requires a tenant-scoped token")
-    return token.tenant
-
-
 class RequiresScope:
     def __init__(self, scope: str):
         assert scope.replace(" ", "") == scope, "spaces are not allowed in a scope"
@@ -82,7 +65,7 @@ class OAuth2SPAClientSchema(OAuth2AuthorizationCodeBearer):
             tokenUrl=str(client.token_url),
         )
 
-    async def __call__(self, token: Optional[Token] = Depends(get_token)) -> None:
+    async def __call__(self) -> None:
         pass
 
 
@@ -95,5 +78,5 @@ class JWTBearerTokenSchema(HTTPBearer):
     def __init__(self):
         super().__init__(scheme_name="JWT Bearer token", bearerFormat="JWT")
 
-    async def __call__(self, token: Optional[Token] = Depends(get_token)) -> None:
+    async def __call__(self) -> None:
         pass
