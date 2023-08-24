@@ -27,6 +27,7 @@ auth = ["pyjwt[crypto]==2.6.0"]
 celery = ["pika"]
 fluentbit = ["fluent-logger"]
 sql = ["sqlalchemy==2.*", "asyncpg"]
+s3 = ["boto3"]
 
 [project.urls]
 homepage = "https://github.com/nens/clean-python"

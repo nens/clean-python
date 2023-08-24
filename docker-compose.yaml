@@ -9,3 +9,14 @@ services:
     # command: ["postgres", "-c", "log_connections=all", "-c", "log_disconnections=all", "-c", "log_statement=all", "-c", "log_destination=stderr"]
     ports:
       - "5432:5432"
+
+  minio:
+    image: minio/minio:latest
+    command: minio server --console-address ":9001" /data
+    environment:
+      MINIO_DOMAIN: localhost # virtual hosted-style access
+      MINIO_ROOT_USER: cleanpython
+      MINIO_ROOT_PASSWORD: cleanpython
+    ports:
+      - "9000:9000"
+      - "9001:9001"
