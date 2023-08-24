@@ -33,13 +33,17 @@ jobs:
         image: postgres:14-alpine
         env:
           POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
 
       s3:
         image: minio/minio:edge-cicd
         env:
-          MINIO_DOMAIN: s3  # virtual hosted-style access
+          MINIO_DOMAIN: localhost  # virtual hosted-style access
           MINIO_ROOT_USER: cleanpython
           MINIO_ROOT_PASSWORD: cleanpython
+        ports:
+          - 9000:9000
 
     steps:
       - uses: actions/checkout@v3
@@ -61,11 +65,11 @@ jobs:
       - name: Wait for postgres
         run: scripts/wait-for-postgres.sh
         env:
-          POSTGRES_URL: 'postgres:postgres@postgres:5432'
+          POSTGRES_URL: 'postgres:postgres@localhost:5432'
         timeout-minutes: 1
 
       - name: Run integration tests
         run: pytest integration_tests
         env:
-          POSTGRES_URL: 'postgres:postgres@postgres:5432'
-          S3_URL: 'http://s3:9000'
+          POSTGRES_URL: 'postgres:postgres@localhost:5432'
+          S3_URL: 'http://localhost:9000'

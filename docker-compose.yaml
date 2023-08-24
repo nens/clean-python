@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
 
-  db:
+  postgres:
     image: postgres:14-alpine
     environment:
       POSTGRES_PASSWORD: "postgres"
@@ -10,7 +10,7 @@ services:
     ports:
       - "5432:5432"
 
-  minio:
+  s3:
     image: minio/minio:edge-cicd
     environment:
       MINIO_DOMAIN: localhost # virtual hosted-style access
