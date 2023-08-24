@@ -36,6 +36,15 @@ jobs:
         ports:
           - 5432:5432
 
+      minio:
+        image: minio/minio:latest
+        env:
+          MINIO_DOMAIN: localhost # virtual hosted-style access
+          MINIO_ROOT_USER: cleanpython
+          MINIO_ROOT_PASSWORD: cleanpython
+        ports:
+          - 9000:9000
+
     steps:
       - uses: actions/checkout@v3
 
@@ -63,3 +72,4 @@ jobs:
         run: pytest integration_tests
         env:
           POSTGRES_URL: 'postgres:postgres@localhost:5432'
+          S3_URL: 'http://localhost:9000'
