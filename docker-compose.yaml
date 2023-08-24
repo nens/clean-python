@@ -11,12 +11,10 @@ services:
       - "5432:5432"
 
   minio:
-    image: minio/minio:latest
-    command: minio server --console-address ":9001" /data
+    image: minio/minio:edge-cicd
     environment:
       MINIO_DOMAIN: localhost # virtual hosted-style access
       MINIO_ROOT_USER: cleanpython
       MINIO_ROOT_PASSWORD: cleanpython
     ports:
       - "9000:9000"
-      - "9001:9001"
