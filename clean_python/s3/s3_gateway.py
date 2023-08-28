@@ -30,6 +30,19 @@ logger = logging.getLogger(__name__)
 
 
 class S3Gateway(Gateway):
+    """The interface to S3 Buckets.
+
+    The standard Gateway interface is only partially implemented:
+
+    - get() and filter() return metadata
+    - add(), update(), upsert() are not implemented
+    - remove() works as expected
+
+    For actually getting the object data either use the download_file()
+    or upload_file() or create a presigned url and hand that over to
+    the client.
+    """
+
     def __init__(self, provider_override: Optional[S3BucketProvider] = None):
         self.provider_override = provider_override
 
