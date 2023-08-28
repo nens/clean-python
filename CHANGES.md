@@ -1,7 +1,7 @@
 # Changelog of clean-python
 
 
-0.3.3 (unreleased)
+## 0.3.3 (2023-08-28)
 ------------------
 
 - fixed typo in SQL query for creating extensions.
