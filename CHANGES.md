@@ -4,6 +4,12 @@
 0.3.2 (unreleased)
 ------------------
 
+- fixed typo in SQL query for creating extensions.
+
+
+## 0.3.2 (2023-08-28)
+------------------
+
 - Added `SQLDatabase.create_extension()`.
 
 
