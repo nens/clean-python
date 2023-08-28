@@ -71,7 +71,9 @@ class SQLDatabase(SQLProvider):
         await self._execute_autocommit(text(f"CREATE DATABASE {name}"))
 
     async def create_extension(self, name: str) -> None:
-        await self._execute_autocommit(text(f"CREATE DATABASE EXTENSION IF NOT EXISTS {name}"))
+        await self._execute_autocommit(
+            text(f"CREATE DATABASE EXTENSION IF NOT EXISTS {name}")
+        )
 
     async def drop_database(self, name: str) -> None:
         await self._execute_autocommit(text(f"DROP DATABASE IF EXISTS {name}"))
