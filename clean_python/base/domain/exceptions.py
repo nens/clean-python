@@ -22,7 +22,7 @@ __all__ = [
 
 
 class DoesNotExist(Exception):
-    def __init__(self, name: str, id: Optional[int] = None):
+    def __init__(self, name: str, id: Union[int, str, None] = None):
         super().__init__()
         self.name = name
         self.id = id

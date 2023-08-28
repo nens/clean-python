@@ -29,6 +29,7 @@ from clean_python import ctx
 from clean_python import DoesNotExist
 from clean_python import Filter
 from clean_python import Gateway
+from clean_python import Id
 from clean_python import Json
 from clean_python import PageOptions
 
@@ -152,7 +153,7 @@ class SQLGateway(Gateway):
             await transaction.set_related(item, result[0])
         return result[0]
 
-    async def _select_for_update(self, id: int) -> Json:
+    async def _select_for_update(self, id: Id) -> Json:
         async with self.transaction() as transaction:
             result = await transaction.execute(
                 select(self.table).with_for_update().where(self._id_filter_to_sql(id)),
@@ -162,7 +163,7 @@ class SQLGateway(Gateway):
             await transaction.get_related(result)
         return result[0]
 
-    async def update_transactional(self, id: int, func: Callable[[Json], Json]) -> Json:
+    async def update_transactional(self, id: Id, func: Callable[[Json], Json]) -> Json:
         async with self.transaction() as transaction:
             existing = await transaction._select_for_update(id)
             updated = func(existing)
@@ -186,7 +187,7 @@ class SQLGateway(Gateway):
             await transaction.set_related(item, result[0])
         return result[0]
 
-    async def remove(self, id) -> bool:
+    async def remove(self, id: Id) -> bool:
         query = (
             delete(self.table)
             .where(self._id_filter_to_sql(id))
@@ -214,7 +215,7 @@ class SQLGateway(Gateway):
             qs.append(self.table.c.tenant == self.current_tenant)
         return and_(*qs)
 
-    def _id_filter_to_sql(self, id: int) -> ColumnElement:
+    def _id_filter_to_sql(self, id: Id) -> ColumnElement:
         return self._filters_to_sql([Filter(field="id", values=[id])])
 
     async def filter(

@@ -3,11 +3,15 @@
 
 import logging
 from typing import Optional
+from typing import TYPE_CHECKING
 
 import aioboto3
 from botocore.client import Config
 
 from clean_python import ValueObject
+
+if TYPE_CHECKING:
+    from types_aiobotocore_s3.client import S3Client
 
 __all__ = ["S3BucketOptions", "S3BucketProvider"]
 
@@ -30,7 +34,8 @@ class S3BucketProvider:
     def bucket(self) -> str:
         return self.options.bucket
 
-    async def get_client(self):
+    @property
+    def client(self) -> "S3Client":
         session = aioboto3.Session()
         return session.client(
             "s3",
