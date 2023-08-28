@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 
 class S3Gateway(Gateway):
-    def __init__(self, provider_override: S3BucketProvider | None = None):
+    def __init__(self, provider_override: Optional[S3BucketProvider] = None):
         self.provider_override = provider_override
 
     @property

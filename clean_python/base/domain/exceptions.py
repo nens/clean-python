@@ -9,6 +9,8 @@ from typing import Union
 from pydantic import create_model
 from pydantic import ValidationError
 
+from .types import Id
+
 __all__ = [
     "AlreadyExists",
     "Conflict",
@@ -22,7 +24,7 @@ __all__ = [
 
 
 class DoesNotExist(Exception):
-    def __init__(self, name: str, id: Union[int, str, None] = None):
+    def __init__(self, name: str, id: Optional[Id] = None):
         super().__init__()
         self.name = name
         self.id = id
