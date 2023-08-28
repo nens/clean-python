@@ -26,7 +26,7 @@ class Gateway(ABC):
     async def exists(self, filters: List[Filter]) -> bool:
         return len(await self.filter(filters, params=PageOptions(limit=1))) > 0
 
-    async def get(self, id: int) -> Optional[Json]:
+    async def get(self, id: int | str) -> Optional[Json]:
         result = await self.filter([Filter(field="id", values=[id])], params=None)
         return result[0] if result else None
 
@@ -38,7 +38,9 @@ class Gateway(ABC):
     ) -> Json:
         raise NotImplementedError()
 
-    async def update_transactional(self, id: int, func: Callable[[Json], Json]) -> Json:
+    async def update_transactional(
+        self, id: int | str, func: Callable[[Json], Json]
+    ) -> Json:
         existing = await self.get(id)
         if existing is None:
             raise DoesNotExist("record", id)
@@ -52,5 +54,5 @@ class Gateway(ABC):
         except DoesNotExist:
             return await self.add(item)
 
-    async def remove(self, id: int) -> bool:
+    async def remove(self, id: int | str) -> bool:
         raise NotImplementedError()
