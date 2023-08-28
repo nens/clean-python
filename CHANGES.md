@@ -1,7 +1,7 @@
 # Changelog of clean-python
 
 
-0.3.2 (unreleased)
+## 0.3.2 (2023-08-28)
 ------------------
 
 - Added `SQLDatabase.create_extension()`.
