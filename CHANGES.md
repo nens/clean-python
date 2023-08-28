@@ -4,7 +4,7 @@
 0.3.2 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Added `SQLDatabase.create_extension()`.
 
 
 0.3.1 (2023-08-16)
@@ -56,9 +56,6 @@
 ------------------
 
 - Added py.typed marker.
-
-
-
 
 
 0.1.1 (2023-07-31)
