@@ -4,7 +4,7 @@
 ## 0.3.4 (unreleased)
 ---------------------
 
-- Nothing changed yet.
+- Fixed linting errors.
 
 
 ## 0.3.3 (2023-08-28)
