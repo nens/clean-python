@@ -1,8 +1,8 @@
 # Changelog of clean-python
 
 
-## 0.3.5 (unreleased)
----------------------
+0.4.0 (2023-08-29)
+------------------
 
 - Don't use environment variables in setup_debugger.
 
