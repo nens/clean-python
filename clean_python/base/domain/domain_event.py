@@ -1,8 +1,7 @@
 # (c) Nelen & Schuurmans
-
-from abc import ABC
 from typing import Awaitable
 from typing import Callable
+from typing import Type
 from typing import TypeVar
 
 import blinker
@@ -10,17 +9,18 @@ import blinker
 __all__ = ["DomainEvent"]
 
 
-TDomainEvent = TypeVar("TDomainEvent", bound="DomainEvent")
-TEventHandler = Callable[[TDomainEvent], Awaitable[None]]
+T = TypeVar("T", bound="DomainEvent")
 
 
-class DomainEvent(ABC):
+class DomainEvent:
     @classmethod
     def _signal(cls) -> blinker.Signal:
         return blinker.signal(cls.__name__)
 
     @classmethod
-    def register_handler(cls, receiver: TEventHandler) -> TEventHandler:
+    def register_handler(
+        cls: Type[T], receiver: Callable[[T], Awaitable[None]]
+    ) -> Callable[[T], Awaitable[None]]:
         return cls._signal().connect(receiver)
 
     async def send_async(self) -> None:

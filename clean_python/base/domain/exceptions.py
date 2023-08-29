@@ -62,7 +62,7 @@ class BadRequest(Exception):
         self._internal_error = err_or_msg
         super().__init__(err_or_msg)
 
-    def errors(self) -> List[Dict]:
+    def errors(self) -> List[Dict[str, Any]]:
         if isinstance(self._internal_error, ValidationError):
             return [dict() for x in self._internal_error.errors()]
         return [{"error": self}]

@@ -1,6 +1,7 @@
 # (c) Nelen & Schuurmans
 
 import logging
+from typing import Any
 from typing import Dict
 from typing import FrozenSet
 from typing import List
@@ -134,7 +135,7 @@ class TokenVerifier(BaseTokenVerifier):
         """Return the JSON Web KEY (JWK) corresponding to kid."""
         return self.jwk_client.get_signing_key_from_jwt(token)
 
-    def verify_token_use(self, claims: Dict) -> None:
+    def verify_token_use(self, claims: Dict[str, Any]) -> None:
         """Check the token_use claim."""
         if claims["token_use"] != "access":
             logger.info("Token has invalid token_use claim: %s", claims["token_use"])

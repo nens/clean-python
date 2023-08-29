@@ -44,7 +44,7 @@ from .security import set_verifier
 __all__ = ["Service"]
 
 
-def get_auth_kwargs(auth_client: Optional[OAuth2SPAClientSettings]) -> Dict:
+def get_auth_kwargs(auth_client: Optional[OAuth2SPAClientSettings]) -> Dict[str, Any]:
     if auth_client is None:
         return {
             "dependencies": [Depends(JWTBearerTokenSchema()), Depends(set_context)],

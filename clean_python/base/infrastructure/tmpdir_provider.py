@@ -10,5 +10,5 @@ class TmpDirProvider:
     def __init__(self, dir: Optional[str] = None):
         self.dir = dir
 
-    def __call__(self) -> TemporaryDirectory:
+    def __call__(self) -> TemporaryDirectory[str]:
         return TemporaryDirectory(dir=self.dir)

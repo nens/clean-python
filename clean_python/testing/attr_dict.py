@@ -1,9 +1,11 @@
 # (c) Nelen & Schuurmans
+from typing import Any
+from typing import Dict
 
 __all__ = ["AttrDict"]
 
 
-class AttrDict(dict):
+class AttrDict(Dict[str, Any]):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.__dict__ = self
