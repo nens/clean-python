@@ -10,6 +10,8 @@
 
 - Added S3Gateway.
 
+- Reinstate static type linter (mypy).
+
 
 ## 0.3.4 (2023-08-28)
 ---------------------
