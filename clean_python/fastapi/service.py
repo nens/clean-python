@@ -2,6 +2,7 @@
 
 from typing import Any
 from typing import Callable
+from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Set
@@ -12,6 +13,7 @@ from fastapi import Request
 from fastapi.exceptions import RequestValidationError
 from starlette.types import ASGIApp
 
+from clean_python import BadRequest
 from clean_python import Conflict
 from clean_python import ctx
 from clean_python import DoesNotExist
@@ -22,7 +24,6 @@ from clean_python.oauth2 import OAuth2SPAClientSettings
 from clean_python.oauth2 import Token
 from clean_python.oauth2 import TokenVerifierSettings
 
-from .error_responses import BadRequest
 from .error_responses import conflict_handler
 from .error_responses import DefaultErrorResponse
 from .error_responses import not_found_handler
@@ -43,7 +44,7 @@ from .security import set_verifier
 __all__ = ["Service"]
 
 
-def get_auth_kwargs(auth_client: Optional[OAuth2SPAClientSettings]) -> None:
+def get_auth_kwargs(auth_client: Optional[OAuth2SPAClientSettings]) -> Dict:
     if auth_client is None:
         return {
             "dependencies": [Depends(JWTBearerTokenSchema()), Depends(set_context)],

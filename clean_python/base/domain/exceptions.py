@@ -64,17 +64,17 @@ class BadRequest(Exception):
 
     def errors(self) -> List[Dict]:
         if isinstance(self._internal_error, ValidationError):
-            return self._internal_error.errors()
+            return [dict() for x in self._internal_error.errors()]
         return [{"error": self}]
 
     def __str__(self) -> str:
         error = self._internal_error
         if isinstance(error, ValidationError):
-            error = error.errors()[0]
-            loc = "'" + ",".join([str(x) for x in error["loc"]]) + "' "
+            details = error.errors()[0]
+            loc = "'" + ",".join([str(x) for x in details["loc"]]) + "' "
             if loc == "'*' ":
                 loc = ""
-            return f"validation error: {loc}{error['msg']}"
+            return f"validation error: {loc}{details['msg']}"
         return f"validation error: {super().__str__()}"
 
 

@@ -90,22 +90,22 @@ class TokenVerifier(BaseTokenVerifier):
         if authorization is None:
             logger.info("Missing Authorization header")
             raise Unauthorized()
-        token = authorization[7:] if authorization.startswith("Bearer") else None
-        if token is None:
+        jwt_str = authorization[7:] if authorization.startswith("Bearer") else None
+        if jwt_str is None:
             logger.info("Authorization does not start with 'Bearer '")
             raise Unauthorized()
 
         # Step 1: Confirm the structure of the JWT. This check is part of get_kid since
         # jwt.get_unverified_header will raise a JWTError if the structure is wrong.
         try:
-            key = self.get_key(token)  # JSON Web Key
+            key = self.get_key(jwt_str)  # JSON Web Key
         except PyJWTError as e:
             logger.info("Token is invalid: %s", e)
             raise Unauthorized()
         # Step 2: Validate the JWT signature and standard claims
         try:
             claims = jwt.decode(
-                token,
+                jwt_str,
                 key.key,
                 algorithms=self.settings.algorithms,
                 issuer=self.settings.issuer,
