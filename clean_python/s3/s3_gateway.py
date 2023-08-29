@@ -10,6 +10,7 @@ import inject
 from botocore.exceptions import ClientError
 from pydantic import AnyHttpUrl
 
+from clean_python import ctx
 from clean_python import DoesNotExist
 from clean_python import Filter
 from clean_python import Gateway
@@ -43,18 +44,33 @@ class S3Gateway(Gateway):
     the client.
     """
 
-    def __init__(self, provider_override: Optional[S3BucketProvider] = None):
+    def __init__(
+        self,
+        provider_override: Optional[S3BucketProvider] = None,
+        multitenant: bool = False,
+    ):
         self.provider_override = provider_override
+        self.multitenant = multitenant
 
     @property
     def provider(self):
         return self.provider_override or inject.instance(S3BucketProvider)
 
+    def _id_to_key(self, id: Id) -> str:
+        if not self.multitenant:
+            return str(id)
+        if ctx.tenant is None:
+            raise RuntimeError(f"{self.__class__} requires a tenant in the context")
+        return f"tenant-{ctx.tenant.id}/{id}"
+
+    def _key_to_id(self, key: str) -> Id:
+        return key.split("/", 1)[1] if self.multitenant else key
+
     async def get(self, id: Id) -> Optional[Json]:
         async with self.provider.client as client:
             try:
                 result = await client.head_object(
-                    Bucket=self.provider.bucket, Key=str(id)
+                    Bucket=self.provider.bucket, Key=self._id_to_key(id)
                 )
             except ClientError as e:
                 if e.response["Error"]["Code"] == "404":
@@ -86,8 +102,10 @@ class S3Gateway(Gateway):
                 (kwargs["Prefix"],) = filter.values
             else:
                 raise NotImplementedError(f"Unsupported filter field '{filter.field}'")
+        if self.multitenant:
+            kwargs["Prefix"] = self._id_to_key(kwargs.get("Prefix", ""))
         if params.cursor is not None:
-            kwargs["StartAfter"] = params.cursor
+            kwargs["StartAfter"] = self._id_to_key(params.cursor)
         async with self.provider.client as client:
             result = await client.list_objects_v2(**kwargs)
         # Example response:
@@ -101,7 +119,7 @@ class S3Gateway(Gateway):
         #     }
         return [
             {
-                "id": x["Key"],
+                "id": self._key_to_id(x["Key"]),
                 "last_modified": x["LastModified"],
                 "etag": x["ETag"].strip('"'),
                 "size": x["Size"],
@@ -113,7 +131,7 @@ class S3Gateway(Gateway):
         async with self.provider.client as client:
             await client.delete_object(
                 Bucket=self.provider.bucket,
-                Key=str(id),
+                Key=self._id_to_key(id),
             )
         # S3 doesn't tell us if the object was there in the first place
         return True
@@ -124,24 +142,29 @@ class S3Gateway(Gateway):
         async with self.provider.client as client:
             await client.delete_objects(
                 Bucket=self.provider.bucket,
-                Delete={"Objects": [{"Key": x} for x in ids], "Quiet": True},
+                Delete={
+                    "Objects": [{"Key": self._id_to_key(x)} for x in ids],
+                    "Quiet": True,
+                },
             )
 
     async def _create_presigned_url(
-        self, client_method: str, object_name: str
+        self,
+        id: Id,
+        client_method: str,
     ) -> AnyHttpUrl:
         async with self.provider.client as client:
             return await client.generate_presigned_url(
                 client_method,
-                Params={"Bucket": self.provider.bucket, "Key": object_name},
+                Params={"Bucket": self.provider.bucket, "Key": self._id_to_key(id)},
                 ExpiresIn=DEFAULT_EXPIRY,
             )
 
     async def create_download_url(self, id: Id) -> AnyHttpUrl:
-        return await self._create_presigned_url("get_object", str(id))
+        return await self._create_presigned_url(id, "get_object")
 
     async def create_upload_url(self, id: Id) -> AnyHttpUrl:
-        return await self._create_presigned_url("put_object", str(id))
+        return await self._create_presigned_url(id, "put_object")
 
     async def download_file(self, id: Id, file_path: Path) -> None:
         if file_path.exists():
@@ -150,7 +173,7 @@ class S3Gateway(Gateway):
             async with self.provider.client as client:
                 await client.download_file(
                     Bucket=self.provider.bucket,
-                    Key=str(id),
+                    Key=self._id_to_key(id),
                     Filename=str(file_path),
                 )
         except ClientError as e:
@@ -166,6 +189,6 @@ class S3Gateway(Gateway):
         async with self.provider.client as client:
             await client.upload_file(
                 Bucket=self.provider.bucket,
-                Key=str(id),
+                Key=self._id_to_key(id),
                 Filename=str(file_path),
             )
