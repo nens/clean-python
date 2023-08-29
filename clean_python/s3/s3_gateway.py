@@ -139,6 +139,7 @@ class S3Gateway(Gateway):
     async def remove_multiple(self, ids: List[Id]) -> None:
         if len(ids) == 0:
             return
+        assert len(ids) <= AWS_LIMIT, f"max {AWS_LIMIT} keys for S3Gateway"
         async with self.provider.client as client:
             await client.delete_objects(
                 Bucket=self.provider.bucket,
