@@ -23,7 +23,7 @@ class RequestQuery(ValueObject):
     def validate_order_by_enum(cls, v, _):
         # the 'enum' parameter doesn't actually do anthing in validation
         # See: https://github.com/tiangolo/fastapi/issues/2910
-        allowed = cls.model_fields["order_by"].json_schema_extra["enum"]
+        allowed = cls.model_json_schema()["properties"]["order_by"]["enum"]
         if v not in allowed:
             raise ValueError(f"'order_by' must be one of {allowed}")
         return v

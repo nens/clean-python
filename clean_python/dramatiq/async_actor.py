@@ -171,7 +171,7 @@ class AsyncActor(dramatiq.Actor):
     def send_async_with_options(
         self,
         *,
-        args: tuple = (),
+        args: tuple = (),  # type: ignore
         kwargs: Optional[Dict[str, Any]] = None,
         delay: Optional[int] = None,
         **options,

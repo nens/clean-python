@@ -46,11 +46,6 @@ class Context:
             "tenant_value", default=None
         )
 
-    def reset(self):
-        self._path_value.reset()
-        self._user_value.reset()
-        self._tenant_value.reset()
-
     @property
     def path(self) -> AnyUrl:
         return self._path_value.get()

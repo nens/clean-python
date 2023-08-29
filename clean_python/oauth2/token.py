@@ -27,7 +27,7 @@ class Token(ValueObject):
 
     @property
     def user(self) -> User:
-        return User(id=self.claims["sub"], name=self.claims.get("username"))
+        return User(id=self.claims["sub"], name=self.claims["username"])
 
     @property
     def scope(self) -> Scope:
@@ -36,6 +36,6 @@ class Token(ValueObject):
     @property
     def tenant(self) -> Optional[Tenant]:
         if self.claims.get("tenant"):
-            return Tenant(id=self.claims["tenant"], name=self.claims.get("tenant_name"))
+            return Tenant(id=self.claims["tenant"], name=self.claims["tenant_name"])
         else:
             return None
