@@ -4,7 +4,7 @@
 ## 0.3.5 (unreleased)
 ---------------------
 
-- Nothing changed yet.
+- Don't use environment variables in setup_debugger.
 
 
 ## 0.3.4 (2023-08-28)
