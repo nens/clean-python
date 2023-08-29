@@ -1,10 +1,28 @@
 # Changelog of clean-python
 
 
-0.3.2 (unreleased)
+## 0.3.5 (unreleased)
+---------------------
+
+- Don't use environment variables in setup_debugger.
+
+
+## 0.3.4 (2023-08-28)
+---------------------
+
+- Fixed linting errors.
+
+
+## 0.3.3 (2023-08-28)
 ------------------
 
-- Nothing changed yet.
+- fixed typo in SQL query for creating extensions.
+
+
+0.3.2 (2023-08-28)
+------------------
+
+- Added `SQLDatabase.create_extension()`.
 
 
 0.3.1 (2023-08-16)
@@ -56,9 +74,6 @@
 ------------------
 
 - Added py.typed marker.
-
-
-
 
 
 0.1.1 (2023-07-31)
