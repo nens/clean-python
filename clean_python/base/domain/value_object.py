@@ -9,6 +9,7 @@ from pydantic import ConfigDict
 from pydantic import ValidationError
 
 from .exceptions import BadRequest
+from .types import Id
 
 __all__ = ["ValueObject", "ValueObjectWithId"]
 
@@ -46,7 +47,7 @@ K = TypeVar("K", bound="ValueObjectWithId")
 
 
 class ValueObjectWithId(ValueObject):
-    id: Optional[int] = None
+    id: Optional[Id] = None
 
     def update(self: K, **values) -> K:
         if "id" in values and self.id is not None and values["id"] != self.id:

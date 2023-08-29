@@ -4,9 +4,9 @@ from .domain_service import *  # NOQA
 from .exceptions import *  # NOQA
 from .filter import *  # NOQA
 from .gateway import *  # NOQA
-from .json import *  # NOQA
 from .pagination import *  # NOQA
 from .repository import *  # NOQA
 from .root_entity import *  # NOQA
+from .types import *  # NOQA
 from .value import *  # NOQA
 from .value_object import *  # NOQA

@@ -11,10 +11,11 @@ from typing import Union
 from .exceptions import DoesNotExist
 from .filter import Filter
 from .gateway import Gateway
-from .json import Json
 from .pagination import Page
 from .pagination import PageOptions
 from .root_entity import RootEntity
+from .types import Id
+from .types import Json
 
 __all__ = ["Repository"]
 
@@ -58,7 +59,7 @@ class Repository(Generic[T]):
             items=[self.entity(**x) for x in records],
         )
 
-    async def get(self, id: int) -> T:
+    async def get(self, id: Id) -> T:
         res = await self.gateway.get(id)
         if res is None:
             raise DoesNotExist("object", id)
@@ -71,7 +72,7 @@ class Repository(Generic[T]):
         created = await self.gateway.add(item.model_dump())
         return self.entity(**created)
 
-    async def update(self, id: int, values: Json) -> T:
+    async def update(self, id: Id, values: Json) -> T:
         if not values:
             return await self.get(id)
         updated = await self.gateway.update_transactional(
@@ -84,7 +85,7 @@ class Repository(Generic[T]):
         upserted = await self.gateway.upsert(values)
         return self.entity(**upserted)
 
-    async def remove(self, id: int) -> bool:
+    async def remove(self, id: Id) -> bool:
         return await self.gateway.remove(id)
 
     async def count(self, filters: List[Filter]) -> int:

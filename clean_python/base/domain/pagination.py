@@ -17,6 +17,7 @@ class PageOptions(BaseModel):
     offset: int = 0
     order_by: str = "id"
     ascending: bool = True
+    cursor: Optional[str] = None
 
 
 class Page(BaseModel, Generic[T]):

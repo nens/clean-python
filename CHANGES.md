@@ -6,6 +6,10 @@
 
 - Don't use environment variables in setup_debugger.
 
+- Add Id type (replaces int), it can also be a string.
+
+- Added S3Gateway.
+
 
 ## 0.3.4 (2023-08-28)
 ---------------------

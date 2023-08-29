@@ -10,6 +10,7 @@ from clean_python.base.domain import Conflict
 from clean_python.base.domain import DoesNotExist
 from clean_python.base.domain import Filter
 from clean_python.base.domain import Gateway
+from clean_python.base.domain import Id
 from clean_python.base.domain import Json
 from clean_python.base.domain import PageOptions
 
@@ -74,7 +75,7 @@ class InMemoryGateway(Gateway):
         existing.update(item)
         return deepcopy(existing)
 
-    async def remove(self, id: int) -> bool:
+    async def remove(self, id: Id) -> bool:
         if id not in self.data:
             return False
         del self.data[id]

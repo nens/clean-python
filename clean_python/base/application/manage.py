@@ -8,6 +8,7 @@ from typing import Type
 from typing import TypeVar
 
 from clean_python.base.domain import Filter
+from clean_python.base.domain import Id
 from clean_python.base.domain import Json
 from clean_python.base.domain import Page
 from clean_python.base.domain import PageOptions
@@ -35,16 +36,16 @@ class Manage(Generic[T]):
         super().__init_subclass__()
         cls.entity = entity
 
-    async def retrieve(self, id: int) -> T:
+    async def retrieve(self, id: Id) -> T:
         return await self.repo.get(id)
 
     async def create(self, values: Json) -> T:
         return await self.repo.add(values)
 
-    async def update(self, id: int, values: Json) -> T:
+    async def update(self, id: Id, values: Json) -> T:
         return await self.repo.update(id, values)
 
-    async def destroy(self, id: int) -> bool:
+    async def destroy(self, id: Id) -> bool:
         return await self.repo.remove(id)
 
     async def list(self, params: Optional[PageOptions] = None) -> Page[T]:

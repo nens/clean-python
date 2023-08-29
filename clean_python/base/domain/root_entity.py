@@ -7,6 +7,7 @@ from typing import Type
 from typing import TypeVar
 
 from .exceptions import BadRequest
+from .types import Id
 from .value_object import ValueObject
 
 __all__ = ["RootEntity", "now"]
@@ -21,7 +22,7 @@ T = TypeVar("T", bound="RootEntity")
 
 
 class RootEntity(ValueObject):
-    id: Optional[int] = None
+    id: Optional[Id] = None
     created_at: datetime
     updated_at: datetime
 

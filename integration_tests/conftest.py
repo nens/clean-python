@@ -34,3 +34,8 @@ def event_loop(request):
 @pytest.fixture(scope="session")
 async def postgres_url():
     return os.environ.get("POSTGRES_URL", "postgres:postgres@localhost:5432")
+
+
+@pytest.fixture(scope="session")
+async def s3_url():
+    return os.environ.get("S3_URL", "http://localhost:9000")
