@@ -21,7 +21,7 @@ class FakeSQLDatabase(SQLProvider):
         self.result = mock.Mock(return_value=[])
 
     async def execute(
-        self, query: Executable, _: Optional[Dict[str, Any]]
+        self, query: Executable, _: Optional[Dict[str, Any]] = None
     ) -> List[Json]:
         self.queries.append([query])
         return self.result()
@@ -39,7 +39,7 @@ class FakeSQLTransaction(SQLProvider):
         self.result = result
 
     async def execute(
-        self, query: Executable, _: Optional[Dict[str, Any]]
+        self, query: Executable, _: Optional[Dict[str, Any]] = None
     ) -> List[Json]:
         self.queries.append(query)
         return self.result()
