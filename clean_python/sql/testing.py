@@ -1,6 +1,9 @@
 from contextlib import asynccontextmanager
+from typing import Any
 from typing import AsyncIterator
+from typing import Dict
 from typing import List
+from typing import Optional
 from unittest import mock
 
 from sqlalchemy.dialects import postgresql
@@ -17,7 +20,9 @@ class FakeSQLDatabase(SQLProvider):
         self.queries: List[List[Executable]] = []
         self.result = mock.Mock(return_value=[])
 
-    async def execute(self, query: Executable) -> List[Json]:
+    async def execute(
+        self, query: Executable, _: Optional[Dict[str, Any]]
+    ) -> List[Json]:
         self.queries.append([query])
         return self.result()
 
@@ -33,7 +38,9 @@ class FakeSQLTransaction(SQLProvider):
         self.queries: List[Executable] = []
         self.result = result
 
-    async def execute(self, query: Executable) -> List[Json]:
+    async def execute(
+        self, query: Executable, _: Optional[Dict[str, Any]]
+    ) -> List[Json]:
         self.queries.append(query)
         return self.result()
 
