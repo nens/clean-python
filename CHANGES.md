@@ -4,7 +4,8 @@
 ## 0.3.5 (unreleased)
 ---------------------
 
-- Nothing changed yet.
+- Added optional bind parameters for `execute` in `SQLProvider`,
+  `SQLDatabase` and `SQLTransaction`.
 
 
 ## 0.3.4 (2023-08-28)
