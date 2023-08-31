@@ -1,7 +1,7 @@
 # Changelog of clean-python
 
 
-0.4.1 (unreleased)
+## 0.4.1 (2023-08-31)
 ------------------
 
 - Added optional bind parameters for `execute` in `SQLProvider`,
