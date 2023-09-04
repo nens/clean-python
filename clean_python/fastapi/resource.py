@@ -177,6 +177,11 @@ class Resource:
             if scope is not None:
                 route_options.setdefault("dependencies", [])
                 route_options["dependencies"].append(Depends(RequiresScope(scope)))
+
+            # Update responses with route_options responses or use latter if not set
+            if "responses" in route_options:
+                responses = {**(responses or {}), **route_options.pop("responses")}
+
             router.add_api_route(
                 path,
                 endpoint,
