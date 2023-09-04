@@ -4,7 +4,7 @@
 ## 0.4.2 (unreleased)
 ---------------------
 
-- Nothing changed yet.
+- Support adding/changing `responses` via route_options.
 
 
 ## 0.4.1 (2023-08-31)
