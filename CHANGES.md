@@ -1,7 +1,7 @@
 # Changelog of clean-python
 
 
-0.4.3 (unreleased)
+0.4.3 (2023-09-11)
 ------------------
 
 - Added `InternalGateway.update`.
