@@ -10,6 +10,7 @@ from clean_python.base.application.manage import Manage
 from clean_python.base.domain import BadRequest
 from clean_python.base.domain import DoesNotExist
 from clean_python.base.domain import Filter
+from clean_python.base.domain import Json
 from clean_python.base.domain import PageOptions
 from clean_python.base.domain import RootEntity
 from clean_python.base.domain import ValueObject
@@ -60,3 +61,14 @@ class InternalGateway(Generic[E, T]):
 
     async def exists(self, filters: List[Filter]) -> bool:
         return await self.manage.exists(filters)
+
+    async def update(self, values: Json) -> T:
+        values = values.copy()
+        id_ = values.pop("id", None)
+        if id_ is None:
+            raise DoesNotExist("item", id_)
+        try:
+            updated = await self.manage.update(id_, values)
+        except BadRequest as e:
+            raise ValueError(e)
+        return self._map(updated)
