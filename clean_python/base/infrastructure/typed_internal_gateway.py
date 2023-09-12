@@ -1,7 +1,6 @@
 # (c) Nelen & Schuurmans
 from abc import abstractmethod
 from abc import abstractproperty
-from datetime import datetime
 from typing import Generic
 from typing import List
 from typing import Optional
@@ -11,44 +10,50 @@ from clean_python.base.application.manage import Manage
 from clean_python.base.domain import BadRequest
 from clean_python.base.domain import DoesNotExist
 from clean_python.base.domain import Filter
-from clean_python.base.domain import Gateway
-from clean_python.base.domain import Id
 from clean_python.base.domain import Json
 from clean_python.base.domain import PageOptions
 from clean_python.base.domain import RootEntity
+from clean_python.base.domain import ValueObject
 
-__all__ = ["InternalGateway"]
-
-
-T = TypeVar("T", bound=RootEntity)  # External
+__all__ = ["TypedInternalGateway"]
 
 
-class InternalGateway(Gateway, Generic[T]):
+E = TypeVar("E", bound=RootEntity)  # External
+T = TypeVar("T", bound=ValueObject)  # Internal
+
+
+# don't subclass Gateway; Gateway makes Json objects
+class TypedInternalGateway(Generic[E, T]):
     @abstractproperty
-    def manage(self) -> Manage[T]:
+    def manage(self) -> Manage[E]:
         raise NotImplementedError()
 
     @abstractmethod
-    def to_internal(self, obj: T) -> Json:
+    def _map(self, obj: E) -> T:
         raise NotImplementedError()
 
-    def to_external(self, values: Json) -> Json:
-        return values
+    async def get(self, id: int) -> Optional[T]:
+        try:
+            result = await self.manage.retrieve(id)
+        except DoesNotExist:
+            return None
+        else:
+            return self._map(result)
 
     async def filter(
         self, filters: List[Filter], params: Optional[PageOptions] = None
-    ) -> List[Json]:
+    ) -> List[T]:
         page = await self.manage.filter(filters, params)
-        return [self.to_internal(x) for x in page.items]
+        return [self._map(x) for x in page.items]
 
-    async def add(self, item: Json) -> Json:
+    async def add(self, item: T) -> T:
         try:
-            created = await self.manage.create(self.to_external(item))
+            created = await self.manage.create(item.model_dump())
         except BadRequest as e:
             raise ValueError(e)
-        return self.to_internal(created)
+        return self._map(created)
 
-    async def remove(self, id: Id) -> bool:
+    async def remove(self, id) -> bool:
         return await self.manage.destroy(id)
 
     async def count(self, filters: List[Filter]) -> int:
@@ -57,11 +62,8 @@ class InternalGateway(Gateway, Generic[T]):
     async def exists(self, filters: List[Filter]) -> bool:
         return await self.manage.exists(filters)
 
-    async def update(
-        self, item: Json, if_unmodified_since: Optional[datetime] = None
-    ) -> Json:
-        assert if_unmodified_since is None  # unsupported
-        values = self.to_external(item)
+    async def update(self, values: Json) -> T:
+        values = values.copy()
         id_ = values.pop("id", None)
         if id_ is None:
             raise DoesNotExist("item", id_)
@@ -69,4 +71,4 @@ class InternalGateway(Gateway, Generic[T]):
             updated = await self.manage.update(id_, values)
         except BadRequest as e:
             raise ValueError(e)
-        return self.to_internal(updated)
+        return self._map(updated)

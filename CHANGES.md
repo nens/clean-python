@@ -1,10 +1,12 @@
 # Changelog of clean-python
 
 
-0.4.4 (unreleased)
+0.5.0 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Adapt `InternalGateway` so that it derives from `Gateway`.
+
+- Renamed the old `InternalGateway` to `TypedInternalGateway`.
 
 
 0.4.3 (2023-09-11)
