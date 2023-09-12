@@ -8,6 +8,8 @@
 
 - Renamed the old `InternalGateway` to `TypedInternalGateway`.
 
+- Added `SQLDatabase.truncate_tables()`.
+
 
 0.4.3 (2023-09-11)
 ------------------
