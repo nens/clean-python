@@ -1,6 +1,12 @@
 # Changelog of clean-python
 
 
+0.5.1 (unreleased)
+------------------
+
+- Nothing changed yet.
+
+
 0.5.0 (2023-09-12)
 ------------------
 
