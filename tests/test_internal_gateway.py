@@ -1,5 +1,3 @@
-from typing import cast
-
 import pytest
 from pydantic import Field
 
@@ -13,7 +11,6 @@ from clean_python import Json
 from clean_python import Manage
 from clean_python import Repository
 from clean_python import RootEntity
-from clean_python import ValueObject
 
 
 # domain - other module
@@ -36,16 +33,10 @@ class ManageUser(Manage[User]):
         return await self.repo.update(id, values)
 
 
-# domain - this module
-class UserObj(ValueObject):
-    id: int
-    name: str
-
-
 # infrastructure - this module
 
 
-class UserGateway(InternalGateway[User, UserObj]):
+class UserGateway(InternalGateway[User]):
     def __init__(self, manage: ManageUser):
         self._manage = manage
 
@@ -53,8 +44,8 @@ class UserGateway(InternalGateway[User, UserObj]):
     def manage(self) -> ManageUser:
         return self._manage
 
-    def _map(self, obj: User) -> UserObj:
-        return UserObj(id=cast(int, obj.id), name=obj.name)
+    def to_internal(self, obj: User) -> Json:
+        return dict(id=obj.id, name=obj.name)
 
 
 @pytest.fixture
@@ -67,23 +58,23 @@ async def test_get_not_existing(internal_gateway: UserGateway):
 
 
 async def test_add(internal_gateway: UserGateway):
-    actual = await internal_gateway.add(UserObj(id=12, name="foo"))
+    actual = await internal_gateway.add(dict(id=12, name="foo"))
 
-    assert actual == UserObj(id=12, name="foo")
+    assert actual == dict(id=12, name="foo")
 
 
 @pytest.fixture
 async def internal_gateway_with_record(internal_gateway):
-    await internal_gateway.add(UserObj(id=12, name="foo"))
+    await internal_gateway.add(dict(id=12, name="foo"))
     return internal_gateway
 
 
 async def test_get(internal_gateway_with_record):
-    assert await internal_gateway_with_record.get(12) == UserObj(id=12, name="foo")
+    assert await internal_gateway_with_record.get(12) == dict(id=12, name="foo")
 
 
 async def test_filter(internal_gateway_with_record: UserGateway):
-    assert await internal_gateway_with_record.filter([]) == [UserObj(id=12, name="foo")]
+    assert await internal_gateway_with_record.filter([]) == [dict(id=12, name="foo")]
 
 
 async def test_filter_2(internal_gateway_with_record: UserGateway):
@@ -107,7 +98,7 @@ async def test_add_bad_request(internal_gateway: UserGateway):
     # a 'bad request' should be reraised as a ValueError; errors in gateways
     # are an internal affair.
     with pytest.raises(ValueError):
-        await internal_gateway.add(UserObj(id=12, name=""))
+        await internal_gateway.add(dict(id=12, name=""))
 
 
 async def test_count(internal_gateway_with_record: UserGateway):
@@ -134,7 +125,7 @@ async def test_exists_2(internal_gateway_with_record: UserGateway):
 async def test_update(internal_gateway_with_record):
     updated = await internal_gateway_with_record.update({"id": 12, "name": "bar"})
 
-    assert updated == UserObj(id=12, name="bar")
+    assert updated == dict(id=12, name="bar")
 
 
 @pytest.mark.parametrize(
