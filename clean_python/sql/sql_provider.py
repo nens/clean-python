@@ -83,6 +83,10 @@ class SQLDatabase(SQLProvider):
     async def drop_database(self, name: str) -> None:
         await self._execute_autocommit(text(f"DROP DATABASE IF EXISTS {name}"))
 
+    async def truncate_tables(self, names: list[str]) -> None:
+        quoted = [f'"{x}"' for x in names]
+        await self._execute_autocommit(text(f"TRUNCATE TABLE {', '.join(quoted)}"))
+
 
 class SQLTransaction(SQLProvider):
     def __init__(self, connection: AsyncConnection):

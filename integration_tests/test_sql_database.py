@@ -59,10 +59,10 @@ async def database(postgres_url):
 
 
 @pytest.fixture
-async def database_with_cleanup(database):
-    await database.execute(text("DELETE FROM test_model WHERE TRUE RETURNING id"))
+async def database_with_cleanup(database: SQLDatabase):
+    await database.truncate_tables(["test_model"])
     yield database
-    await database.execute(text("DELETE FROM test_model WHERE TRUE RETURNING id"))
+    await database.truncate_tables(["test_model"])
 
 
 @pytest.fixture
@@ -367,3 +367,11 @@ async def test_count(filters, expected, sql_gateway, obj_in_db, obj2_in_db):
 async def test_exists(filters, expected, sql_gateway, obj_in_db, obj2_in_db):
     actual = await sql_gateway.exists(filters)
     assert actual == expected
+
+
+async def test_truncate(database: SQLDatabase, obj):
+    gateway = TstSQLGateway(database)
+    await gateway.add(obj)
+    assert await gateway.exists([])
+    await database.truncate_tables(["test_model"])
+    assert not await gateway.exists([])
