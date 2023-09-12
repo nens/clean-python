@@ -1,7 +1,7 @@
 # Changelog of clean-python
 
 
-0.5.0 (unreleased)
+0.5.0 (2023-09-12)
 ------------------
 
 - Adapt `InternalGateway` so that it derives from `Gateway`.
