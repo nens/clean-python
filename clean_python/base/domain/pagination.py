@@ -7,6 +7,8 @@ from typing import TypeVar
 
 from pydantic import BaseModel
 
+from .types import Id
+
 __all__ = ["Page", "PageOptions"]
 
 T = TypeVar("T")
@@ -17,7 +19,7 @@ class PageOptions(BaseModel):
     offset: int = 0
     order_by: str = "id"
     ascending: bool = True
-    cursor: Optional[str] = None
+    cursor: Optional[Id] = None
 
 
 class Page(BaseModel, Generic[T]):

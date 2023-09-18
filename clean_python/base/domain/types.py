@@ -2,10 +2,11 @@
 
 from typing import Any
 from typing import Dict
+from typing import Tuple
 from typing import Union
 
 __all__ = ["Json", "Id"]
 
 
 Json = Dict[str, Any]
-Id = Union[int, str]
+Id = Union[int, str, Tuple[Union[int, str]]]
