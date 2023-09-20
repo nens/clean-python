@@ -8,11 +8,9 @@ import boto3
 import pytest
 from botocore.exceptions import ClientError
 
-from clean_python import ctx
 from clean_python import DoesNotExist
 from clean_python import Filter
 from clean_python import PageOptions
-from clean_python import Tenant
 from clean_python.s3 import S3BucketOptions
 from clean_python.s3 import S3BucketProvider
 from clean_python.s3 import S3Gateway
@@ -203,100 +201,3 @@ async def test_get(s3_gateway: S3Gateway, object_in_s3):
 async def test_get_does_not_exist(s3_gateway: S3Gateway):
     actual = await s3_gateway.get("non-existing")
     assert actual is None
-
-
-def test_format_key(s3_gateway: S3Gateway):
-    assert s3_gateway.format_key("foo") == "foo"
-
-
-def test_format_prefix(s3_gateway: S3Gateway):
-    assert s3_gateway.format_prefix(()) == ""
-
-
-def test_parse_key(s3_gateway: S3Gateway):
-    assert s3_gateway.parse_key("foo") == "foo"
-
-
-class MultitenantS3Gateway(S3Gateway, multitenant=True):
-    pass
-
-
-@pytest.fixture
-def multitenant_s3_gateway(s3_provider):
-    ctx.tenant = Tenant(id=2, name="test-s3")
-    yield MultitenantS3Gateway(s3_provider)
-    ctx.tenant = None
-
-
-def test_format_key_multitenant(multitenant_s3_gateway: S3Gateway):
-    assert multitenant_s3_gateway.format_key("foo") == "tenant-2/foo"
-
-
-def test_format_prefix_multitenant(multitenant_s3_gateway: S3Gateway):
-    assert multitenant_s3_gateway.format_prefix(()) == "tenant-2/"
-
-
-def test_parse_key_multitenant(multitenant_s3_gateway: S3Gateway):
-    assert multitenant_s3_gateway.parse_key("tenant-2/foo") == "foo"
-
-
-class PrefixedS3Gateway(S3Gateway, prefix_format="raster-{}"):
-    pass
-
-
-@pytest.fixture
-def prefixed_s3_gateway(s3_provider):
-    return PrefixedS3Gateway(s3_provider)
-
-
-def test_format_key_prefixed(prefixed_s3_gateway: S3Gateway):
-    assert prefixed_s3_gateway.format_key((3, "foo")) == "raster-3/foo"
-
-
-def test_format_prefix_prefixed(prefixed_s3_gateway: S3Gateway):
-    assert prefixed_s3_gateway.format_prefix((3,)) == "raster-3/"
-
-
-def test_parse_key_prefixed(prefixed_s3_gateway: S3Gateway):
-    assert prefixed_s3_gateway.parse_key("raster-3/foo") == ("3", "foo")
-
-
-class PrefixedMultitenantS3Gateway(
-    S3Gateway, multitenant=True, prefix_format="objects/{}/files"
-):
-    pass
-
-
-@pytest.fixture
-def prefixed_multitenant_s3_gateway(s3_provider):
-    ctx.tenant = Tenant(id=2, name="test-s3")
-    yield PrefixedMultitenantS3Gateway(s3_provider)
-    ctx.tenant = None
-
-
-def test_format_key_prefixed_multitenant(prefixed_multitenant_s3_gateway: S3Gateway):
-    assert (
-        prefixed_multitenant_s3_gateway.format_key((3, "foo"))
-        == "tenant-2/objects/3/files/foo"
-    )
-
-
-def test_format_prefix_prefixed_multitenant(prefixed_multitenant_s3_gateway: S3Gateway):
-    assert (
-        prefixed_multitenant_s3_gateway.format_prefix((3,))
-        == "tenant-2/objects/3/files/"
-    )
-
-
-def test_parse_key_prefixed_multitenant(prefixed_multitenant_s3_gateway: S3Gateway):
-    assert prefixed_multitenant_s3_gateway.parse_key(
-        "tenant-2/objects/3/files/foo"
-    ) == ("3", "foo")
-
-
-async def test_filter_prefix_id(prefixed_s3_gateway: S3Gateway, multiple_objects):
-    result = await prefixed_s3_gateway.filter([Filter(field="prefix_id", values=[1])])
-    assert len(result) == 1
-
-    result = await prefixed_s3_gateway.filter([Filter(field="prefix_id", values=[2])])
-    assert len(result) == 3

@@ -2,9 +2,7 @@
 # (c) Nelen & Schuurmans
 
 import logging
-import re
 from pathlib import Path
-from typing import ClassVar
 from typing import List
 from typing import Optional
 
@@ -12,7 +10,6 @@ import inject
 from botocore.exceptions import ClientError
 from pydantic import AnyHttpUrl
 
-from clean_python import ctx
 from clean_python import DoesNotExist
 from clean_python import Filter
 from clean_python import Gateway
@@ -20,6 +17,7 @@ from clean_python import Id
 from clean_python import Json
 from clean_python import PageOptions
 
+from .key_mapper import KeyMapper
 from .s3_provider import S3BucketProvider
 
 DEFAULT_EXPIRY = 3600  # in seconds
@@ -52,90 +50,35 @@ class S3Gateway(Gateway):
     id=(2, "file.zip") will get key "tenant-22/objects/2/files/file.zip".
     """
 
-    multitenant: ClassVar[bool] = False
-    prefix_format: ClassVar[str] = ""
+    mapper: KeyMapper = KeyMapper()
 
-    def __init__(
-        self,
-        provider_override: Optional[S3BucketProvider] = None,
-    ):
+    def __init__(self, provider_override: Optional[S3BucketProvider] = None):
         self.provider_override = provider_override
-
-    def __init_subclass__(
-        cls, prefix_format: str = "", multitenant: bool = False
-    ) -> None:
-        cls.multitenant = multitenant
-        assert not prefix_format.startswith("/")
-        assert not prefix_format.endswith("/")
-        cls.prefix_format = prefix_format
-        super().__init_subclass__()
 
     @property
     def provider(self):
         return self.provider_override or inject.instance(S3BucketProvider)
 
-    @classmethod
-    def get_prefix_format(cls) -> str:
-        # this is quite tedious because of the slashes
-        # clearest way to do it is just write it out:
-        if not cls.multitenant and not cls.prefix_format:
-            return ""
-        elif cls.multitenant and not cls.prefix_format:
-            return "tenant-{}/"
-        elif not cls.multitenant and cls.prefix_format:
-            return cls.prefix_format + "/"
-        elif cls.multitenant and cls.prefix_format:
-            return "tenant-{}/" + cls.prefix_format + "/"
-        else:
-            raise NotImplementedError()
-
-    @classmethod
-    def format_prefix(cls, prefix: Id) -> str:
-        if not isinstance(prefix, tuple):
-            prefix = (prefix,)
-        if cls.multitenant:
-            if ctx.tenant is None:
-                raise RuntimeError(f"{cls} requires a tenant in the context")
-            prefix = (ctx.tenant.id,) + prefix
-        prefix_format = cls.get_prefix_format()
-        assert prefix_format.count("{}") == len(prefix)
-        return cls.get_prefix_format().format(*prefix)
-
-    @classmethod
-    def format_key(cls, id: Id) -> str:
-        if not isinstance(id, tuple):
-            id = (id,)
-        assert len(id) > 0
-        return f"{cls.format_prefix(id[:-1])}{id[-1]}"
-
-    @classmethod
-    def parse_key(cls, key: str) -> Id:
-        regex = "^" + cls.get_prefix_format().replace("{}", "(.+)") + "(.+)$"
-        id = re.fullmatch(regex, key).groups()
-        if cls.multitenant:
-            id = id[1:]
-        if len(id) == 1:
-            id = id[0]
-        return id
-
-    @classmethod
-    def filters_to_prefix(cls, filters: List[Filter]) -> str:
+    def _filters_to_prefix(cls, filters: List[Filter]) -> str:
         if len(filters) == 0:
             return ""
         elif len(filters) > 1:
             raise NotImplementedError("More than 1 filter is not supported")
         (filter,) = filters
-        if filter.field == "prefix":
-            assert len(filter.values) == 1
+        if filter.field == "prefix_ids":
             return filter.values[0]
-        elif filter.field == "prefix_id":
-            return cls.format_prefix(tuple(filter.values))
+        elif filter.field == "prefix":
+            return cls.mapper.to_key_prefix(*filter.values)
+        else:
+            raise NotImplementedError(
+                f"Filtering by '{filter.field}' is not implemented"
+            )
 
     async def get(self, id: Id) -> Optional[Json]:
         async with self.provider.client as client:
             try:
                 result = await client.head_object(
-                    Bucket=self.provider.bucket, Key=self.format_key(id)
+                    Bucket=self.provider.bucket, Key=self.mapper.to_key(id)
                 )
             except ClientError as e:
                 if e.response["Error"]["Code"] == "404":
@@ -161,10 +104,10 @@ class S3Gateway(Gateway):
         kwargs = {
             "Bucket": self.provider.bucket,
             "MaxKeys": params.limit,
-            "Prefix": self.filters_to_prefix(filters),
+            "Prefix": self._filters_to_prefix(filters),
         }
         if params.cursor is not None:
-            kwargs["StartAfter"] = self.format_key(params.cursor)
+            kwargs["StartAfter"] = self.mapper.to_key(params.cursor)
         async with self.provider.client as client:
             result = await client.list_objects_v2(**kwargs)
         # Example response:
@@ -178,7 +121,7 @@ class S3Gateway(Gateway):
         #     }
         return [
             {
-                "id": self.parse_key(x["Key"]),
+                "id": self.mapper.from_key(x["Key"]),
                 "last_modified": x["LastModified"],
                 "etag": x["ETag"].strip('"'),
                 "size": x["Size"],
@@ -190,7 +133,7 @@ class S3Gateway(Gateway):
         kwargs = {
             "Bucket": self.provider.bucket,
             "MaxKeys": AWS_LIMIT,
-            "Prefix": self.filters_to_prefix(filters),
+            "Prefix": self._filters_to_prefix(filters),
         }
         async with self.provider.client as client:
             while True:
@@ -212,7 +155,7 @@ class S3Gateway(Gateway):
         async with self.provider.client as client:
             await client.delete_object(
                 Bucket=self.provider.bucket,
-                Key=self.format_key(id),
+                Key=self.mapper.to_key(id),
             )
         # S3 doesn't tell us if the object was there in the first place
         return True
@@ -225,7 +168,7 @@ class S3Gateway(Gateway):
             await client.delete_objects(
                 Bucket=self.provider.bucket,
                 Delete={
-                    "Objects": [{"Key": self.format_key(x)} for x in ids],
+                    "Objects": [{"Key": self.mapper.to_key(x)} for x in ids],
                     "Quiet": True,
                 },
             )
@@ -238,7 +181,7 @@ class S3Gateway(Gateway):
         async with self.provider.client as client:
             return await client.generate_presigned_url(
                 client_method,
-                Params={"Bucket": self.provider.bucket, "Key": self.format_key(id)},
+                Params={"Bucket": self.provider.bucket, "Key": self.mapper.to_key(id)},
                 ExpiresIn=DEFAULT_EXPIRY,
             )
 
@@ -255,7 +198,7 @@ class S3Gateway(Gateway):
             async with self.provider.client as client:
                 await client.download_file(
                     Bucket=self.provider.bucket,
-                    Key=self.format_key(id),
+                    Key=self.mapper.to_key(id),
                     Filename=str(file_path),
                 )
         except ClientError as e:
@@ -271,6 +214,6 @@ class S3Gateway(Gateway):
         async with self.provider.client as client:
             await client.upload_file(
                 Bucket=self.provider.bucket,
-                Key=self.format_key(id),
+                Key=self.mapper.to_key(id),
                 Filename=str(file_path),
             )
