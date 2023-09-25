@@ -1,7 +1,7 @@
 # Changelog of clean-python
 
 
-0.5.1 (unreleased)
+0.5.1 (2023-09-25)
 ------------------
 
 - Added `S3Gateway.remove_filtered`.
