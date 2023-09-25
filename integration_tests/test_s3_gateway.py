@@ -3,6 +3,7 @@
 
 import io
 from datetime import datetime
+from unittest import mock
 
 import boto3
 import pytest
@@ -150,6 +151,30 @@ async def test_remove_multiple(s3_gateway: S3Gateway, multiple_objects):
 
 async def test_remove_multiple_empty_list(s3_gateway: S3Gateway, s3_bucket):
     await s3_gateway.remove_multiple([])
+
+
+async def test_remove_filtered_all(s3_gateway: S3Gateway, multiple_objects):
+    await s3_gateway.remove_filtered([])
+
+    for key in multiple_objects:
+        assert await s3_gateway.get(key) is None
+
+
+async def test_remove_filtered_prefix(s3_gateway: S3Gateway, multiple_objects):
+    await s3_gateway.remove_filtered([Filter(field="prefix", values=["raster-2/"])])
+
+    assert await s3_gateway.get(multiple_objects[0]) is not None
+    for key in multiple_objects[1:]:
+        assert await s3_gateway.get(key) is None
+
+
+@mock.patch("clean_python.s3.s3_gateway.AWS_LIMIT", new=1)
+async def test_remove_filtered_pagination(s3_gateway: S3Gateway, multiple_objects):
+    await s3_gateway.remove_filtered([Filter(field="prefix", values=["raster-2/"])])
+
+    assert await s3_gateway.get(multiple_objects[0]) is not None
+    for key in multiple_objects[1:]:
+        assert await s3_gateway.get(key) is None
 
 
 async def test_filter(s3_gateway: S3Gateway, multiple_objects):
