@@ -180,3 +180,27 @@ async def test_get_multitenant(s3_gateway: S3Gateway, object_in_s3):
 async def test_get_other_tenant(s3_gateway: S3Gateway, object_in_s3_other_tenant):
     actual = await s3_gateway.get(object_in_s3_other_tenant)
     assert actual is None
+
+
+async def test_remove_filtered_all(s3_gateway: S3Gateway, multiple_objects):
+    await s3_gateway.remove_filtered([])
+
+    # tenant 22 is completely wiped
+    for i in (0, 2, 3):
+        assert await s3_gateway.get(multiple_objects[i]) is None
+
+    # object of tenant 222 is still there
+    ctx.tenant = Tenant(id=222, name="other")
+    await s3_gateway.get("raster-2/bla") is not None
+
+
+async def test_remove_filtered_prefix(s3_gateway: S3Gateway, multiple_objects):
+    await s3_gateway.remove_filtered([Filter(field="prefix", values=["raster-2/"])])
+
+    assert await s3_gateway.get("raster-1/bla") is not None
+    assert await s3_gateway.get("raster-2/foo") is None
+    assert await s3_gateway.get("raster-2/bz") is None
+
+    # object of tenant 222 is still there
+    ctx.tenant = Tenant(id=222, name="other")
+    await s3_gateway.get("raster-2/bla") is not None

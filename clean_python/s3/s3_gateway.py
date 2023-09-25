@@ -96,14 +96,8 @@ class S3Gateway(Gateway):
         kwargs = {
             "Bucket": self.provider.bucket,
             "MaxKeys": params.limit,
+            "Prefix": self.filters_to_prefix(filters),
         }
-        for filter in filters:
-            if filter.field == "prefix":
-                (kwargs["Prefix"],) = filter.values
-            else:
-                raise NotImplementedError(f"Unsupported filter field '{filter.field}'")
-        if self.multitenant:
-            kwargs["Prefix"] = self._id_to_key(kwargs.get("Prefix", ""))
         if params.cursor is not None:
             kwargs["StartAfter"] = self._id_to_key(params.cursor)
         async with self.provider.client as client:
@@ -193,3 +187,37 @@ class S3Gateway(Gateway):
                 Key=self._id_to_key(id),
                 Filename=str(file_path),
             )
+
+    def filters_to_prefix(self, filters: List[Filter]) -> str:
+        if len(filters) == 0:
+            return self._id_to_key("")
+        elif len(filters) > 1:
+            raise NotImplementedError("More than 1 filter is not supported")
+        (filter,) = filters
+        if filter.field == "prefix":
+            assert len(filter.values) == 1
+            return self._id_to_key(filter.values[0])
+        else:
+            raise NotImplementedError(f"Unsupported filter '{filter.field}'")
+
+    async def remove_filtered(self, filters: List[Filter]) -> None:
+        kwargs = {
+            "Bucket": self.provider.bucket,
+            "MaxKeys": AWS_LIMIT,
+            "Prefix": self.filters_to_prefix(filters),
+        }
+        async with self.provider.client as client:
+            while True:
+                result = await client.list_objects_v2(**kwargs)
+                contents = result.get("Contents", [])
+                if contents:
+                    await client.delete_objects(
+                        Bucket=self.provider.bucket,
+                        Delete={
+                            "Objects": [{"Key": x["Key"]} for x in contents],
+                            "Quiet": True,
+                        },
+                    )
+                if len(contents) < AWS_LIMIT:
+                    break
+                kwargs["StartAfter"] = contents[-1]["Key"]
