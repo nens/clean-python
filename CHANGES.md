@@ -4,7 +4,9 @@
 0.5.1 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Added `S3Gateway.remove_filtered`.
+
+- Added `clean_python.s3.KeyMapper`.
 
 
 0.5.0 (2023-09-12)
