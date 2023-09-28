@@ -4,7 +4,7 @@
 0.5.2 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Added `SyncGateway`, `SyncRepository`, and `InMemorySyncGateway`.
 
 
 0.5.1 (2023-09-25)
