@@ -8,6 +8,8 @@
 
 - Added optional `api_client` subpackage (based on `urllib3`).
 
+- Added `fastapi_profiler` and renamed existing `profiler` to `dramatiq_profiler`.
+
 
 0.5.1 (2023-09-25)
 ------------------

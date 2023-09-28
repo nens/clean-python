@@ -29,6 +29,8 @@ fluentbit = ["fluent-logger"]
 sql = ["sqlalchemy==2.*", "asyncpg"]
 s3 = ["aioboto3", "boto3"]
 api_client = ["urllib3"]
+profiler = ["yappi"]
+debugger = ["debugpy"]
 
 [project.urls]
 homepage = "https://github.com/nens/clean-python"
