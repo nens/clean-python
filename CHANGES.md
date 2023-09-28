@@ -1,7 +1,7 @@
 # Changelog of clean-python
 
 
-0.5.2 (unreleased)
+## 0.6.0 (2023-09-28)
 ------------------
 
 - Added `SyncGateway`, `SyncRepository`, and `InMemorySyncGateway`.
