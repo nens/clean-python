@@ -120,7 +120,7 @@ def test_404(api_provider: SyncApiProvider, response):
     assert actual is None
 
 
-@pytest.mark.parametrize("status", [HTTPStatus.BAD_REQUEST, HTTPStatus.IM_A_TEAPOT])
+@pytest.mark.parametrize("status", [HTTPStatus.BAD_REQUEST, HTTPStatus.FORBIDDEN])
 def test_error_response(api_provider: SyncApiProvider, response, status):
     response.status = int(status)
 
