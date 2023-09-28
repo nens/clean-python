@@ -1,3 +1,5 @@
+from typing import Optional
+
 import inject
 
 from clean_python import Id
@@ -12,7 +14,7 @@ __all__ = ["SyncApiGateway"]
 class SyncApiGateway(SyncGateway):
     path: str
 
-    def __init__(self, provider_override: SyncApiProvider | None = None):
+    def __init__(self, provider_override: Optional[SyncApiProvider] = None):
         self.provider_override = provider_override
 
     def __init_subclass__(cls, path: str) -> None:
@@ -25,7 +27,7 @@ class SyncApiGateway(SyncGateway):
     def provider(self) -> SyncApiProvider:
         return self.provider_override or inject.instance(SyncApiProvider)
 
-    def get(self, id: Id) -> Json | None:
+    def get(self, id: Id) -> Optional[Json]:
         return self.provider.request("GET", self.path.format(id=id))
 
     def add(self, item: Json) -> Json:
