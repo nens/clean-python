@@ -6,6 +6,8 @@
 
 - Added `SyncGateway`, `SyncRepository`, and `InMemorySyncGateway`.
 
+- Added optional `api_client` subpackage (based on `urllib3`).
+
 
 0.5.1 (2023-09-25)
 ------------------
