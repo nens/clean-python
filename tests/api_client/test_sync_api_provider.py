@@ -14,7 +14,8 @@ MODULE = "clean_python.api_client.api_provider"
 @pytest.fixture
 def tenant() -> Tenant:
     ctx.tenant = Tenant(id=2, name="")
-    return ctx.tenant
+    yield ctx.tenant
+    ctx.tenant = None
 
 
 @pytest.fixture
@@ -131,7 +132,7 @@ def test_error_response(api_provider: SyncApiProvider, response, status):
 
 
 @mock.patch(MODULE + ".PoolManager", new=mock.Mock())
-def test_no_token(response):
+def test_no_token(response, tenant):
     api_provider = SyncApiProvider(
         url="http://testserver/foo/", fetch_token=lambda a, b: None
     )
