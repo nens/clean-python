@@ -103,7 +103,13 @@ def test_unexpected_content_type(api_provider: SyncApiProvider, response, status
         api_provider.request("GET", "bar")
 
     assert e.value.status is status
-    assert str(e.value) == "Unexpected content type 'text/plain'"
+    assert str(e.value) == f"{status}: Unexpected content type 'text/plain'"
+
+
+def test_json_variant_content_type(api_provider: SyncApiProvider, response):
+    response.headers["Content-Type"] = "application/something+json"
+    actual = api_provider.request("GET", "bar")
+    assert actual == response.json.return_value
 
 
 def test_no_content(api_provider: SyncApiProvider, response):
@@ -111,16 +117,10 @@ def test_no_content(api_provider: SyncApiProvider, response):
     response.headers = {}
 
     actual = api_provider.request("DELETE", "bar/2")
-    assert actual is not None
-
-
-def test_404(api_provider: SyncApiProvider, response):
-    response.status = int(HTTPStatus.NOT_FOUND)
-    actual = api_provider.request("GET", "bar")
     assert actual is None
 
 
-@pytest.mark.parametrize("status", [HTTPStatus.BAD_REQUEST, HTTPStatus.FORBIDDEN])
+@pytest.mark.parametrize("status", [HTTPStatus.BAD_REQUEST, HTTPStatus.NOT_FOUND])
 def test_error_response(api_provider: SyncApiProvider, response, status):
     response.status = int(status)
 
@@ -128,7 +128,7 @@ def test_error_response(api_provider: SyncApiProvider, response, status):
         api_provider.request("GET", "bar")
 
     assert e.value.status is status
-    assert str(e.value) == str(response.json())
+    assert str(e.value) == f"{status}: {response.json()}"
 
 
 @mock.patch(MODULE + ".PoolManager", new=mock.Mock())

@@ -1,9 +1,11 @@
 # (c) Nelen & Schuurmans
 
 import asyncio
+import multiprocessing
 import os
 
 import pytest
+import uvicorn
 
 
 def pytest_sessionstart(session):
@@ -39,3 +41,13 @@ async def postgres_url():
 @pytest.fixture(scope="session")
 async def s3_url():
     return os.environ.get("S3_URL", "http://localhost:9000")
+
+
+@pytest.fixture(scope="session")
+async def fastapi_example_app():
+    port = int(os.environ.get("API_PORT", "8005"))
+    config = uvicorn.Config("fastapi_example:app", host="0.0.0.0", port=port)
+    p = multiprocessing.Process(target=uvicorn.Server(config).run)
+    p.start()
+    yield f"http://localhost:{port}"
+    p.terminate()

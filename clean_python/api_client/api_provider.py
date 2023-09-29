@@ -1,3 +1,4 @@
+import re
 from http import HTTPStatus
 from typing import Callable
 from typing import Optional
@@ -19,6 +20,15 @@ __all__ = ["SyncApiProvider"]
 def is_success(status: HTTPStatus) -> bool:
     """Returns True on 2xx status"""
     return (int(status) // 100) == 2
+
+
+JSON_CONTENT_TYPE_REGEX = re.compile(r"^application\/[^+]*[+]?(json);?.*$")
+
+
+def is_json_content_type(content_type: Optional[str]) -> bool:
+    if not content_type:
+        return False
+    return bool(JSON_CONTENT_TYPE_REGEX.match(content_type))
 
 
 def join(url: str, path: str) -> str:
@@ -86,16 +96,14 @@ class SyncApiProvider:
         )
         status = HTTPStatus(response.status)
         content_type = response.headers.get("Content-Type")
-        if content_type is None and status is HTTPStatus.NO_CONTENT:
-            return {"status": int(status)}  # we have to return something...
-        if content_type != "application/json":
+        if status is HTTPStatus.NO_CONTENT:
+            return None
+        if not is_json_content_type(content_type):
             raise ApiException(
                 f"Unexpected content type '{content_type}'", status=status
             )
         body = response.json()
-        if status is HTTPStatus.NOT_FOUND:
-            return None
-        elif is_success(status):
+        if is_success(status):
             return body
         else:
             raise ApiException(body, status=status)

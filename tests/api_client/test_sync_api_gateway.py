@@ -1,7 +1,9 @@
+from http import HTTPStatus
 from unittest import mock
 
 import pytest
 
+from clean_python.api_client import ApiException
 from clean_python.api_client import SyncApiGateway
 from clean_python.api_client import SyncApiProvider
 
@@ -46,6 +48,8 @@ def test_remove(api_gateway: SyncApiGateway):
 
 
 def test_remove_does_not_exist(api_gateway: SyncApiGateway):
-    api_gateway.provider.request.return_value = None
+    api_gateway.provider.request.side_effect = ApiException(
+        {}, status=HTTPStatus.NOT_FOUND
+    )
     actual = api_gateway.remove(2)
     assert actual is False

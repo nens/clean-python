@@ -22,13 +22,13 @@ test = [
     "httpx",
 ]
 dramatiq = ["dramatiq"]
-fastapi = ["fastapi"]
+fastapi = ["uvicorn", "fastapi"]
 auth = ["pyjwt[crypto]==2.6.0"]
 celery = ["pika"]
 fluentbit = ["fluent-logger"]
 sql = ["sqlalchemy==2.*", "asyncpg"]
 s3 = ["aioboto3", "boto3"]
-api_client = ["urllib3"]
+api_client = ["urllib3==2.*"]
 profiler = ["yappi"]
 debugger = ["debugpy"]
 
