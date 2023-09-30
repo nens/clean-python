@@ -20,9 +20,11 @@ test = [
     "pytest-asyncio",
     "debugpy",
     "httpx",
+    "uvicorn",
+    "python-multipart"
 ]
 dramatiq = ["dramatiq"]
-fastapi = ["uvicorn", "fastapi"]
+fastapi = ["fastapi"]
 auth = ["pyjwt[crypto]==2.6.0"]
 celery = ["pika"]
 fluentbit = ["fluent-logger"]

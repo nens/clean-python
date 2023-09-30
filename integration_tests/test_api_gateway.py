@@ -7,7 +7,7 @@ from clean_python.api_client import SyncApiGateway
 from clean_python.api_client import SyncApiProvider
 
 
-class BooksGateway(SyncApiGateway, path="v1-alpha/books/{id}"):
+class BooksGateway(SyncApiGateway, path="v1/books/{id}"):
     pass
 
 

@@ -2,7 +2,9 @@ from http import HTTPStatus
 from typing import Optional
 
 from fastapi import Depends
+from fastapi import Form
 from fastapi import Response
+from fastapi import UploadFile
 
 from clean_python import DoesNotExist
 from clean_python import Page
@@ -58,3 +60,11 @@ class V1Books(Resource, version=v(1), name="books"):
     @get("/text")
     async def text(self):
         return Response("foo", media_type="text/plain")
+
+    @post("/form", response_model=Author)
+    async def form(self, name: str = Form()):
+        return {"name": name}
+
+    @post("/file")
+    async def file(self, file: UploadFile):
+        return {file.filename: (await file.read()).decode()}
