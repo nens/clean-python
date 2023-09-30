@@ -1,3 +1,4 @@
+import json as json_lib
 import re
 from http import HTTPStatus
 from typing import Callable
@@ -81,19 +82,24 @@ class SyncApiProvider:
         timeout: float = 5.0,
     ) -> Optional[Json]:
         assert ctx.tenant is not None
-        url = join(self._url, path)
-        token = self._fetch_token(self._pool, ctx.tenant.id)
         headers = {}
+        request_kwargs = {
+            "method": method,
+            "url": add_query_params(join(self._url, path), params),
+            "timeout": timeout,
+        }
+        # for urllib3<2, we dump json ourselves
+        if json is not None and fields is not None:
+            raise ValueError("Cannot both specify 'json' and 'fields'")
+        elif json is not None:
+            request_kwargs["body"] = json_lib.dumps(json).encode()
+            headers["Content-Type"] = "application/json"
+        elif fields is not None:
+            request_kwargs["fields"] = fields
+        token = self._fetch_token(self._pool, ctx.tenant.id)
         if token is not None:
             headers["Authorization"] = f"Bearer {token}"
-        response = self._pool.request(
-            method=method,
-            url=add_query_params(url, params),
-            json=json,
-            fields=fields,
-            headers=headers,
-            timeout=timeout,
-        )
+        response = self._pool.request(headers=headers, **request_kwargs)
         status = HTTPStatus(response.status)
         content_type = response.headers.get("Content-Type")
         if status is HTTPStatus.NO_CONTENT:
@@ -102,7 +108,7 @@ class SyncApiProvider:
             raise ApiException(
                 f"Unexpected content type '{content_type}'", status=status
             )
-        body = response.json()
+        body = json_lib.loads(response.data.decode())
         if is_success(status):
             return body
         else:

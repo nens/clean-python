@@ -23,6 +23,7 @@ def response():
     response = mock.Mock()
     response.status = int(HTTPStatus.OK)
     response.headers = {"Content-Type": "application/json"}
+    response.data = b'{"foo": 2}'
     return response
 
 
@@ -44,12 +45,10 @@ def test_get(api_provider: SyncApiProvider, response):
     assert api_provider._pool.request.call_args[1] == dict(
         method="GET",
         url="http://testserver/foo",
-        json=None,
-        fields=None,
         headers={"Authorization": "Bearer tenant-2"},
         timeout=5.0,
     )
-    assert actual == response.json.return_value
+    assert actual == {"foo": 2}
 
 
 def test_post_json(api_provider: SyncApiProvider, response):
@@ -62,12 +61,14 @@ def test_post_json(api_provider: SyncApiProvider, response):
     assert api_provider._pool.request.call_args[1] == dict(
         method="POST",
         url="http://testserver/foo/bar",
-        json={"foo": 2},
-        fields=None,
-        headers={"Authorization": "Bearer tenant-2"},
+        body=b'{"foo": 2}',
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": "Bearer tenant-2",
+        },
         timeout=5.0,
     )
-    assert actual == response.json.return_value
+    assert actual == {"foo": 2}
 
 
 @pytest.mark.parametrize(
@@ -109,7 +110,7 @@ def test_unexpected_content_type(api_provider: SyncApiProvider, response, status
 def test_json_variant_content_type(api_provider: SyncApiProvider, response):
     response.headers["Content-Type"] = "application/something+json"
     actual = api_provider.request("GET", "bar")
-    assert actual == response.json.return_value
+    assert actual == {"foo": 2}
 
 
 def test_no_content(api_provider: SyncApiProvider, response):
@@ -128,7 +129,7 @@ def test_error_response(api_provider: SyncApiProvider, response, status):
         api_provider.request("GET", "bar")
 
     assert e.value.status is status
-    assert str(e.value) == f"{status}: {response.json()}"
+    assert str(e.value) == str(int(status)) + ": {'foo': 2}"
 
 
 @mock.patch(MODULE + ".PoolManager", new=mock.Mock())
