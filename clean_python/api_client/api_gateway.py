@@ -1,8 +1,10 @@
+from datetime import datetime
 from http import HTTPStatus
 from typing import Optional
 
 import inject
 
+from clean_python import DoesNotExist
 from clean_python import Id
 from clean_python import Json
 
@@ -51,3 +53,21 @@ class SyncApiGateway(SyncGateway):
             raise e
         else:
             return True
+
+    def update(
+        self, item: Json, if_unmodified_since: Optional[datetime] = None
+    ) -> Json:
+        if if_unmodified_since is not None:
+            raise NotImplementedError("if_unmodified_since not implemented")
+        item = item.copy()
+        id_ = item.pop("id", None)
+        if id_ is None:
+            raise DoesNotExist("resource", id_)
+        try:
+            result = self.provider.request("PATCH", self.path.format(id=id_), json=item)
+            assert result is not None
+            return result
+        except ApiException as e:
+            if e.status is HTTPStatus.NOT_FOUND:
+                raise DoesNotExist("resource", id_)
+            raise e
