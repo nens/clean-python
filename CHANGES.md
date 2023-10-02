@@ -4,7 +4,7 @@
 0.6.2 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Encode url paths in `SyncApiProvider`.
 
 
 0.6.1 (2023-10-02)
