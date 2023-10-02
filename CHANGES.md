@@ -1,7 +1,7 @@
 # Changelog of clean-python
 
 
-0.6.2 (unreleased)
+0.6.2 (2023-10-02)
 ------------------
 
 - Encode url paths in `SyncApiProvider`.
