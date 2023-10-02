@@ -1,3 +1,5 @@
+import json as json_lib
+import re
 from http import HTTPStatus
 from typing import Callable
 from typing import Optional
@@ -19,6 +21,15 @@ __all__ = ["SyncApiProvider"]
 def is_success(status: HTTPStatus) -> bool:
     """Returns True on 2xx status"""
     return (int(status) // 100) == 2
+
+
+JSON_CONTENT_TYPE_REGEX = re.compile(r"^application\/[^+]*[+]?(json);?.*$")
+
+
+def is_json_content_type(content_type: Optional[str]) -> bool:
+    if not content_type:
+        return False
+    return bool(JSON_CONTENT_TYPE_REGEX.match(content_type))
 
 
 def join(url: str, path: str) -> str:
@@ -71,31 +82,34 @@ class SyncApiProvider:
         timeout: float = 5.0,
     ) -> Optional[Json]:
         assert ctx.tenant is not None
-        url = join(self._url, path)
-        token = self._fetch_token(self._pool, ctx.tenant.id)
         headers = {}
+        request_kwargs = {
+            "method": method,
+            "url": add_query_params(join(self._url, path), params),
+            "timeout": timeout,
+        }
+        # for urllib3<2, we dump json ourselves
+        if json is not None and fields is not None:
+            raise ValueError("Cannot both specify 'json' and 'fields'")
+        elif json is not None:
+            request_kwargs["body"] = json_lib.dumps(json).encode()
+            headers["Content-Type"] = "application/json"
+        elif fields is not None:
+            request_kwargs["fields"] = fields
+        token = self._fetch_token(self._pool, ctx.tenant.id)
         if token is not None:
             headers["Authorization"] = f"Bearer {token}"
-        response = self._pool.request(
-            method=method,
-            url=add_query_params(url, params),
-            json=json,
-            fields=fields,
-            headers=headers,
-            timeout=timeout,
-        )
+        response = self._pool.request(headers=headers, **request_kwargs)
         status = HTTPStatus(response.status)
         content_type = response.headers.get("Content-Type")
-        if content_type is None and status is HTTPStatus.NO_CONTENT:
-            return {"status": int(status)}  # we have to return something...
-        if content_type != "application/json":
+        if status is HTTPStatus.NO_CONTENT:
+            return None
+        if not is_json_content_type(content_type):
             raise ApiException(
                 f"Unexpected content type '{content_type}'", status=status
             )
-        body = response.json()
-        if status is HTTPStatus.NOT_FOUND:
-            return None
-        elif is_success(status):
+        body = json_lib.loads(response.data.decode())
+        if is_success(status):
             return body
         else:
             raise ApiException(body, status=status)

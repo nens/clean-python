@@ -20,6 +20,8 @@ test = [
     "pytest-asyncio",
     "debugpy",
     "httpx",
+    "uvicorn",
+    "python-multipart"
 ]
 dramatiq = ["dramatiq"]
 fastapi = ["fastapi"]
