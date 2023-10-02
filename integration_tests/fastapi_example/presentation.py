@@ -13,6 +13,7 @@ from clean_python.fastapi import delete
 from clean_python.fastapi import get
 from clean_python.fastapi import patch
 from clean_python.fastapi import post
+from clean_python.fastapi import put
 from clean_python.fastapi import RequestQuery
 from clean_python.fastapi import Resource
 from clean_python.fastapi import v
@@ -68,3 +69,7 @@ class V1Books(Resource, version=v(1), name="books"):
     @post("/file")
     async def file(self, file: UploadFile):
         return {file.filename: (await file.read()).decode()}
+
+    @put("/urlencode/{name}", response_model=Author)
+    async def urlencode(self, name: str):
+        return {"name": name}

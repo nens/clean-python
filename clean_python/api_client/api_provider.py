@@ -3,6 +3,7 @@ import re
 from http import HTTPStatus
 from typing import Callable
 from typing import Optional
+from urllib.parse import quote
 from urllib.parse import urlencode
 from urllib.parse import urljoin
 
@@ -85,7 +86,7 @@ class SyncApiProvider:
         headers = {}
         request_kwargs = {
             "method": method,
-            "url": add_query_params(join(self._url, path), params),
+            "url": add_query_params(join(self._url, quote(path)), params),
             "timeout": timeout,
         }
         # for urllib3<2, we dump json ourselves

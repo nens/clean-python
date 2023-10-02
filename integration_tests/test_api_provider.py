@@ -82,3 +82,10 @@ def test_no_json_response(provider: SyncApiProvider):
         provider.request("GET", "v1/text")
 
     assert e.value.args[0] == "Unexpected content type 'text/plain; charset=utf-8'"
+
+
+def test_urlencode(provider: SyncApiProvider):
+    response = provider.request("PUT", "v1/urlencode/x?")
+
+    assert isinstance(response, dict)
+    assert response["name"] == "x?"
