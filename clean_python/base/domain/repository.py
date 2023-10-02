@@ -32,7 +32,6 @@ class Repository(Generic[T]):
     def __init_subclass__(cls) -> None:
         (base,) = cls.__orig_bases__  # type: ignore
         (entity,) = base.__args__
-        assert issubclass(entity, RootEntity)
         super().__init_subclass__()
         cls.entity = entity
 
@@ -108,7 +107,6 @@ class SyncRepository(Generic[T]):
     def __init_subclass__(cls) -> None:
         (base,) = cls.__orig_bases__  # type: ignore
         (entity,) = base.__args__
-        assert issubclass(entity, RootEntity)
         super().__init_subclass__()
         cls.entity = entity
 
