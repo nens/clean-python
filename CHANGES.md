@@ -1,8 +1,8 @@
 # Changelog of clean-python
 
 
-## 0.6.1 (unreleased)
----------------------
+0.6.1 (2023-10-02)
+------------------
 
 - Added tests for `SyncApiGateway` and made it compatible with `urllib==1.*`.
 
