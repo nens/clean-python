@@ -4,7 +4,7 @@
 ## 0.6.1 (unreleased)
 ---------------------
 
-- Nothing changed yet.
+- Added tests for `SyncApiGateway` and made it compatible with `urllib==1.*`.
 
 
 ## 0.6.0 (2023-09-28)
