@@ -7,6 +7,7 @@ import inject
 from clean_python import DoesNotExist
 from clean_python import Id
 from clean_python import Json
+from clean_python import Mapper
 
 from .. import SyncGateway
 from .api_provider import SyncApiProvider
@@ -17,6 +18,7 @@ __all__ = ["SyncApiGateway"]
 
 class SyncApiGateway(SyncGateway):
     path: str
+    mapper = Mapper()
 
     def __init__(self, provider_override: Optional[SyncApiProvider] = None):
         self.provider_override = provider_override
@@ -33,16 +35,19 @@ class SyncApiGateway(SyncGateway):
 
     def get(self, id: Id) -> Optional[Json]:
         try:
-            return self.provider.request("GET", self.path.format(id=id))
+            result = self.provider.request("GET", self.path.format(id=id))
+            assert result is not None
+            return self.mapper.to_internal(result)
         except ApiException as e:
             if e.status is HTTPStatus.NOT_FOUND:
                 return None
             raise e
 
     def add(self, item: Json) -> Json:
+        item = self.mapper.to_external(item)
         result = self.provider.request("POST", self.path.format(id=""), json=item)
         assert result is not None
-        return result
+        return self.mapper.to_internal(result)
 
     def remove(self, id: Id) -> bool:
         try:
@@ -59,14 +64,14 @@ class SyncApiGateway(SyncGateway):
     ) -> Json:
         if if_unmodified_since is not None:
             raise NotImplementedError("if_unmodified_since not implemented")
-        item = item.copy()
+        item = self.mapper.to_external(item)
         id_ = item.pop("id", None)
         if id_ is None:
             raise DoesNotExist("resource", id_)
         try:
             result = self.provider.request("PATCH", self.path.format(id=id_), json=item)
             assert result is not None
-            return result
+            return self.mapper.to_internal(result)
         except ApiException as e:
             if e.status is HTTPStatus.NOT_FOUND:
                 raise DoesNotExist("resource", id_)

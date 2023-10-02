@@ -4,7 +4,7 @@
 0.6.3 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Add `Mapper` type use it in `SyncApiGateway.mapper`.
 
 
 0.6.2 (2023-10-02)
