@@ -4,6 +4,8 @@ from unittest import mock
 import pytest
 
 from clean_python import DoesNotExist
+from clean_python import Json
+from clean_python import Mapper
 from clean_python.api_client import ApiException
 from clean_python.api_client import SyncApiGateway
 from clean_python.api_client import SyncApiProvider
@@ -78,3 +80,54 @@ def test_update_does_not_exist(api_gateway: SyncApiGateway):
     )
     with pytest.raises(DoesNotExist):
         api_gateway.update({"id": 2, "foo": "bar"})
+
+
+class TstMapper(Mapper):
+    def to_external(self, internal: Json) -> Json:
+        result = {}
+        if internal.get("id") is not None:
+            result["id"] = internal["id"]
+        if internal.get("name") is not None:
+            result["name"] = internal["name"].upper()
+        return result
+
+    def to_internal(self, external: Json) -> Json:
+        return {"id": external["id"], "name": external["name"].lower()}
+
+
+class TstMappedSyncApiGateway(SyncApiGateway, path="foo/{id}"):
+    mapper = TstMapper()
+
+
+@pytest.fixture
+def mapped_api_gateway(api_provider) -> SyncApiGateway:
+    return TstMappedSyncApiGateway(api_provider)
+
+
+def test_get_with_mapper(mapped_api_gateway: SyncApiGateway):
+    mapped_api_gateway.provider.request.return_value = {"id": 14, "name": "FOO"}
+
+    assert mapped_api_gateway.get(14) == {"id": 14, "name": "foo"}
+
+
+def test_add_with_mapper(mapped_api_gateway: SyncApiGateway):
+    mapped_api_gateway.provider.request.return_value = {"id": 3, "name": "FOO"}
+
+    assert mapped_api_gateway.add({"name": "foo"}) == {"id": 3, "name": "foo"}
+
+    mapped_api_gateway.provider.request.assert_called_once_with(
+        "POST", "foo/", json={"name": "FOO"}
+    )
+
+
+def test_update_with_mapper(mapped_api_gateway: SyncApiGateway):
+    mapped_api_gateway.provider.request.return_value = {"id": 2, "name": "BAR"}
+
+    assert mapped_api_gateway.update({"id": 2, "name": "bar"}) == {
+        "id": 2,
+        "name": "bar",
+    }
+
+    mapped_api_gateway.provider.request.assert_called_once_with(
+        "PATCH", "foo/2", json={"name": "BAR"}
+    )
