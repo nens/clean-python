@@ -1,7 +1,7 @@
 # Changelog of clean-python
 
 
-0.6.3 (unreleased)
+0.6.3 (2023-10-02)
 ------------------
 
 - Add `Mapper` type use it in `SyncApiGateway.mapper`.
