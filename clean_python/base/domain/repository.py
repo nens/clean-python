@@ -14,13 +14,13 @@ from .gateway import Gateway
 from .gateway import SyncGateway
 from .pagination import Page
 from .pagination import PageOptions
-from .root_entity import RootEntity
 from .types import Id
 from .types import Json
+from .value_object import ValueObject
 
 __all__ = ["Repository", "SyncRepository"]
 
-T = TypeVar("T", bound=RootEntity)
+T = TypeVar("T", bound=ValueObject)
 
 
 class Repository(Generic[T]):
@@ -32,7 +32,6 @@ class Repository(Generic[T]):
     def __init_subclass__(cls) -> None:
         (base,) = cls.__orig_bases__  # type: ignore
         (entity,) = base.__args__
-        assert issubclass(entity, RootEntity)
         super().__init_subclass__()
         cls.entity = entity
 
@@ -108,7 +107,6 @@ class SyncRepository(Generic[T]):
     def __init_subclass__(cls) -> None:
         (base,) = cls.__orig_bases__  # type: ignore
         (entity,) = base.__args__
-        assert issubclass(entity, RootEntity)
         super().__init_subclass__()
         cls.entity = entity
 

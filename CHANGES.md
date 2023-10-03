@@ -4,7 +4,7 @@
 0.6.4 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Allow value objects for `Repository` subclasses.
 
 
 0.6.3 (2023-10-02)
