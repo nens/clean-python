@@ -1,7 +1,7 @@
 # Changelog of clean-python
 
 
-0.6.6 (unreleased)
+0.6.6 (2023-10-04)
 ------------------
 
 - Fix blocking behaviour of `fetch_token` in `ApiProvider`.
