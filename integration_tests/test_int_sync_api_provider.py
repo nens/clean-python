@@ -1,3 +1,5 @@
+# This module is a copy paste of test_int_api_provider.py
+
 from http import HTTPStatus
 
 import pytest
@@ -89,3 +91,11 @@ def test_urlencode(provider: SyncApiProvider):
 
     assert isinstance(response, dict)
     assert response["name"] == "x?"
+
+
+def test_request_raw(provider: SyncApiProvider, book):
+    response = provider.request_raw("GET", f"v1/books/{book['id']}")
+
+    assert response.status is HTTPStatus.OK
+    assert len(response.data) > 0
+    assert response.content_type == "application/json"

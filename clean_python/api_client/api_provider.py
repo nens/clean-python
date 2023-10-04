@@ -1,4 +1,4 @@
-import json as json_lib
+import asyncio
 import re
 from http import HTTPStatus
 from typing import Callable
@@ -7,16 +7,21 @@ from urllib.parse import quote
 from urllib.parse import urlencode
 from urllib.parse import urljoin
 
+import aiohttp
+from aiohttp import ClientResponse
+from aiohttp import ClientSession
 from pydantic import AnyHttpUrl
-from urllib3 import PoolManager
-from urllib3 import Retry
 
 from clean_python import ctx
 from clean_python import Json
 
 from .exceptions import ApiException
+from .response import Response
 
-__all__ = ["SyncApiProvider"]
+__all__ = ["ApiProvider"]
+
+
+RETRY_STATUSES = frozenset({413, 429, 503})  # like in urllib3
 
 
 def is_success(status: HTTPStatus) -> bool:
@@ -49,7 +54,7 @@ def add_query_params(url: str, params: Optional[Json]) -> str:
     return url + "?" + urlencode(params, doseq=True)
 
 
-class SyncApiProvider:
+class ApiProvider:
     """Basic JSON API provider with retry policy and bearer tokens.
 
     The default retry policy has 3 retries with 1, 2, 4 second intervals.
@@ -64,16 +69,59 @@ class SyncApiProvider:
     def __init__(
         self,
         url: AnyHttpUrl,
-        fetch_token: Callable[[PoolManager, int], Optional[str]],
+        fetch_token: Callable[[ClientSession, int], Optional[str]],
         retries: int = 3,
         backoff_factor: float = 1.0,
     ):
         self._url = str(url)
         assert self._url.endswith("/")
         self._fetch_token = fetch_token
-        self._pool = PoolManager(retries=Retry(retries, backoff_factor=backoff_factor))
+        assert retries > 0
+        self._retries = retries
+        self._backoff_factor = backoff_factor
+        self._session = ClientSession()
 
-    def request(
+    async def _request_with_retry(
+        self,
+        method: str,
+        path: str,
+        params: Optional[Json],
+        json: Optional[Json],
+        fields: Optional[Json],
+        timeout: float,
+    ) -> ClientResponse:
+        assert ctx.tenant is not None
+        headers = {}
+        request_kwargs = {
+            "method": method,
+            "url": add_query_params(join(self._url, quote(path)), params),
+            "timeout": timeout,
+            "json": json,
+            "data": fields,
+        }
+        token = self._fetch_token(self._session, ctx.tenant.id)
+        if token is not None:
+            headers["Authorization"] = f"Bearer {token}"
+        for attempt in range(self._retries):
+            if attempt > 0:
+                backoff = self._backoff_factor * 2 ** (attempt - 1)
+                await asyncio.sleep(backoff)
+
+            try:
+                response = await self._session.request(
+                    headers=headers, **request_kwargs
+                )
+                await response.read()
+            except (aiohttp.ClientError, asyncio.exceptions.TimeoutError):
+                if attempt == self._retries - 1:
+                    raise  # propagate ClientError in case no retries left
+            else:
+                if response.status not in RETRY_STATUSES:
+                    return response  # on all non-retry statuses: return response
+
+        return response  # retries exceeded; return the (possibly error) response
+
+    async def request(
         self,
         method: str,
         path: str,
@@ -82,25 +130,9 @@ class SyncApiProvider:
         fields: Optional[Json] = None,
         timeout: float = 5.0,
     ) -> Optional[Json]:
-        assert ctx.tenant is not None
-        headers = {}
-        request_kwargs = {
-            "method": method,
-            "url": add_query_params(join(self._url, quote(path)), params),
-            "timeout": timeout,
-        }
-        # for urllib3<2, we dump json ourselves
-        if json is not None and fields is not None:
-            raise ValueError("Cannot both specify 'json' and 'fields'")
-        elif json is not None:
-            request_kwargs["body"] = json_lib.dumps(json).encode()
-            headers["Content-Type"] = "application/json"
-        elif fields is not None:
-            request_kwargs["fields"] = fields
-        token = self._fetch_token(self._pool, ctx.tenant.id)
-        if token is not None:
-            headers["Authorization"] = f"Bearer {token}"
-        response = self._pool.request(headers=headers, **request_kwargs)
+        response = await self._request_with_retry(
+            method, path, params, json, fields, timeout
+        )
         status = HTTPStatus(response.status)
         content_type = response.headers.get("Content-Type")
         if status is HTTPStatus.NO_CONTENT:
@@ -109,8 +141,26 @@ class SyncApiProvider:
             raise ApiException(
                 f"Unexpected content type '{content_type}'", status=status
             )
-        body = json_lib.loads(response.data.decode())
+        body = await response.json()
         if is_success(status):
             return body
         else:
             raise ApiException(body, status=status)
+
+    async def request_raw(
+        self,
+        method: str,
+        path: str,
+        params: Optional[Json] = None,
+        json: Optional[Json] = None,
+        fields: Optional[Json] = None,
+        timeout: float = 5.0,
+    ) -> Response:
+        response = await self._request_with_retry(
+            method, path, params, json, fields, timeout
+        )
+        return Response(
+            status=response.status,
+            data=await response.read(),
+            content_type=response.headers.get("Content-Type"),
+        )

@@ -4,7 +4,9 @@
 0.6.5 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Added async `ApiProvider` and `ApiGateway`.
+
+- Added `request_raw` to `ApiProvider` for handling arbitrary responses.
 
 
 0.6.4 (2023-10-03)
