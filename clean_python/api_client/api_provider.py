@@ -1,6 +1,7 @@
 import asyncio
 import re
 from http import HTTPStatus
+from typing import Awaitable
 from typing import Callable
 from typing import Optional
 from urllib.parse import quote
@@ -69,7 +70,7 @@ class ApiProvider:
     def __init__(
         self,
         url: AnyHttpUrl,
-        fetch_token: Callable[[ClientSession, int], Optional[str]],
+        fetch_token: Callable[[ClientSession, int], Awaitable[Optional[str]]],
         retries: int = 3,
         backoff_factor: float = 1.0,
     ):
@@ -99,7 +100,7 @@ class ApiProvider:
             "json": json,
             "data": fields,
         }
-        token = self._fetch_token(self._session, ctx.tenant.id)
+        token = await self._fetch_token(self._session, ctx.tenant.id)
         if token is not None:
             headers["Authorization"] = f"Bearer {token}"
         for attempt in range(self._retries):

@@ -12,10 +12,14 @@ class BooksGateway(ApiGateway, path="v1/books/{id}"):
     pass
 
 
+async def fake_token(a, b):
+    return "token"
+
+
 @pytest.fixture
 def provider(fastapi_example_app) -> ApiProvider:
     ctx.tenant = Tenant(id=2, name="")
-    yield ApiProvider(fastapi_example_app + "/", lambda a, b: "token")
+    yield ApiProvider(fastapi_example_app + "/", fake_token)
     ctx.tenant = None
 
 

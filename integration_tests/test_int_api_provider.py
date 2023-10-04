@@ -8,10 +8,14 @@ from clean_python.api_client import ApiException
 from clean_python.api_client import ApiProvider
 
 
+async def fake_token(a, b):
+    return "token"
+
+
 @pytest.fixture
 def provider(fastapi_example_app) -> ApiProvider:
     ctx.tenant = Tenant(id=2, name="")
-    yield ApiProvider(fastapi_example_app + "/", lambda a, b: "token")
+    yield ApiProvider(fastapi_example_app + "/", fake_token)
     ctx.tenant = None
 
 
