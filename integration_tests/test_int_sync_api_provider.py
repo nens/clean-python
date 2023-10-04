@@ -1,3 +1,5 @@
+# This module is a copy paste of test_int_api_provider.py
+
 from http import HTTPStatus
 
 import pytest

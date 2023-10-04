@@ -4,7 +4,7 @@
 0.6.5 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Added async `ApiProvider` and `ApiGateway`.
 
 
 0.6.4 (2023-10-03)

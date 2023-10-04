@@ -4,6 +4,7 @@ from http import HTTPStatus
 from typing import Callable
 from typing import Optional
 from urllib.parse import quote
+from urllib.parse import urlencode
 from urllib.parse import urljoin
 
 import aiohttp
@@ -44,6 +45,12 @@ def join(url: str, path: str) -> str:
     if result.endswith("/"):
         result = result[:-1]
     return result
+
+
+def add_query_params(url: str, params: Optional[Json]) -> str:
+    if params is None:
+        return url
+    return url + "?" + urlencode(params, doseq=True)
 
 
 class ApiProvider:
@@ -101,20 +108,18 @@ class ApiProvider:
         timeout: float = 5.0,
     ) -> Optional[Json]:
         assert ctx.tenant is not None
-        if fields is not None:
-            raise NotImplementedError()
         headers = {}
         request_kwargs = {
             "method": method,
-            "url": join(self._url, quote(path)),
-            "params": params,
+            "url": add_query_params(join(self._url, quote(path)), params),
             "timeout": timeout,
             "json": json,
+            "data": fields,
         }
         token = self._fetch_token(self._session, ctx.tenant.id)
         if token is not None:
             headers["Authorization"] = f"Bearer {token}"
-        response = await self._request_with_retry(**request_kwargs)
+        response = await self._request_with_retry(headers=headers, **request_kwargs)
         status = HTTPStatus(response.status)
         content_type = response.headers.get("Content-Type")
         if status is HTTPStatus.NO_CONTENT:
@@ -123,7 +128,7 @@ class ApiProvider:
             raise ApiException(
                 f"Unexpected content type '{content_type}'", status=status
             )
-        body = response.json()
+        body = await response.json()
         if is_success(status):
             return body
         else:

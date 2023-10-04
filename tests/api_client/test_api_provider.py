@@ -1,16 +1,15 @@
-# This module is a copy paste of test_api_provider.py
-
 from http import HTTPStatus
 from unittest import mock
 
 import pytest
+from aiohttp import ClientSession
 
 from clean_python import ctx
 from clean_python import Tenant
 from clean_python.api_client import ApiException
-from clean_python.api_client import SyncApiProvider
+from clean_python.api_client import ApiProvider
 
-MODULE = "clean_python.api_client.sync_api_provider"
+MODULE = "clean_python.api_client.api_provider"
 
 
 @pytest.fixture
@@ -22,50 +21,55 @@ def tenant() -> Tenant:
 
 @pytest.fixture
 def response():
+    # this mocks the aiohttp.ClientResponse:
     response = mock.Mock()
     response.status = int(HTTPStatus.OK)
     response.headers = {"Content-Type": "application/json"}
-    response.data = b'{"foo": 2}'
+    response.json = mock.AsyncMock(return_value={"foo": 2})
+    response.read = mock.AsyncMock()
     return response
 
 
 @pytest.fixture
-def api_provider(tenant, response) -> SyncApiProvider:
-    with mock.patch(MODULE + ".PoolManager"):
-        api_provider = SyncApiProvider(
+def api_provider(tenant, response) -> ApiProvider:
+    request = mock.AsyncMock()
+    with mock.patch.object(ClientSession, "request", new=request):
+        api_provider = ApiProvider(
             url="http://testserver/foo/",
             fetch_token=lambda a, b: f"tenant-{b}",
         )
-        api_provider._pool.request.return_value = response
+        api_provider._session.request.return_value = response
         yield api_provider
 
 
-def test_get(api_provider: SyncApiProvider, response):
-    actual = api_provider.request("GET", "")
+async def test_get(api_provider: ApiProvider, response):
+    actual = await api_provider.request("GET", "")
 
-    assert api_provider._pool.request.call_count == 1
-    assert api_provider._pool.request.call_args[1] == dict(
+    assert api_provider._session.request.call_count == 1
+    assert api_provider._session.request.call_args[1] == dict(
         method="GET",
         url="http://testserver/foo",
         headers={"Authorization": "Bearer tenant-2"},
         timeout=5.0,
+        data=None,
+        json=None,
     )
     assert actual == {"foo": 2}
 
 
-def test_post_json(api_provider: SyncApiProvider, response):
+async def test_post_json(api_provider: ApiProvider, response):
     response.status == int(HTTPStatus.CREATED)
-    api_provider._pool.request.return_value = response
-    actual = api_provider.request("POST", "bar", json={"foo": 2})
+    api_provider._session.request.return_value = response
+    actual = await api_provider.request("POST", "bar", json={"foo": 2})
 
-    assert api_provider._pool.request.call_count == 1
+    assert api_provider._session.request.call_count == 1
 
-    assert api_provider._pool.request.call_args[1] == dict(
+    assert api_provider._session.request.call_args[1] == dict(
         method="POST",
         url="http://testserver/foo/bar",
-        body=b'{"foo": 2}',
+        data=None,
+        json={"foo": 2},
         headers={
-            "Content-Type": "application/json",
             "Authorization": "Bearer tenant-2",
         },
         timeout=5.0,
@@ -86,59 +90,55 @@ def test_post_json(api_provider: SyncApiProvider, response):
         ("", {"a": 1, "b": "foo"}, "http://testserver/foo?a=1&b=foo"),
     ],
 )
-def test_url(api_provider: SyncApiProvider, path, params, expected_url):
-    api_provider.request("GET", path, params=params)
-    assert api_provider._pool.request.call_args[1]["url"] == expected_url
+async def test_url(api_provider: ApiProvider, path, params, expected_url):
+    await api_provider.request("GET", path, params=params)
+    assert api_provider._session.request.call_args[1]["url"] == expected_url
 
 
-def test_timeout(api_provider: SyncApiProvider):
-    api_provider.request("POST", "bar", timeout=2.1)
-    assert api_provider._pool.request.call_args[1]["timeout"] == 2.1
+async def test_timeout(api_provider: ApiProvider):
+    await api_provider.request("POST", "bar", timeout=2.1)
+    assert api_provider._session.request.call_args[1]["timeout"] == 2.1
 
 
 @pytest.mark.parametrize(
     "status", [HTTPStatus.OK, HTTPStatus.NOT_FOUND, HTTPStatus.INTERNAL_SERVER_ERROR]
 )
-def test_unexpected_content_type(api_provider: SyncApiProvider, response, status):
+async def test_unexpected_content_type(api_provider: ApiProvider, response, status):
     response.status = int(status)
     response.headers["Content-Type"] = "text/plain"
     with pytest.raises(ApiException) as e:
-        api_provider.request("GET", "bar")
+        await api_provider.request("GET", "bar")
 
     assert e.value.status is status
     assert str(e.value) == f"{status}: Unexpected content type 'text/plain'"
 
 
-def test_json_variant_content_type(api_provider: SyncApiProvider, response):
+async def test_json_variant_content_type(api_provider: ApiProvider, response):
     response.headers["Content-Type"] = "application/something+json"
-    actual = api_provider.request("GET", "bar")
+    actual = await api_provider.request("GET", "bar")
     assert actual == {"foo": 2}
 
 
-def test_no_content(api_provider: SyncApiProvider, response):
+async def test_no_content(api_provider: ApiProvider, response):
     response.status = int(HTTPStatus.NO_CONTENT)
     response.headers = {}
 
-    actual = api_provider.request("DELETE", "bar/2")
+    actual = await api_provider.request("DELETE", "bar/2")
     assert actual is None
 
 
 @pytest.mark.parametrize("status", [HTTPStatus.BAD_REQUEST, HTTPStatus.NOT_FOUND])
-def test_error_response(api_provider: SyncApiProvider, response, status):
+async def test_error_response(api_provider: ApiProvider, response, status):
     response.status = int(status)
 
     with pytest.raises(ApiException) as e:
-        api_provider.request("GET", "bar")
+        await api_provider.request("GET", "bar")
 
     assert e.value.status is status
     assert str(e.value) == str(int(status)) + ": {'foo': 2}"
 
 
-@mock.patch(MODULE + ".PoolManager", new=mock.Mock())
-def test_no_token(response, tenant):
-    api_provider = SyncApiProvider(
-        url="http://testserver/foo/", fetch_token=lambda a, b: None
-    )
-    api_provider._pool.request.return_value = response
-    api_provider.request("GET", "")
-    assert api_provider._pool.request.call_args[1]["headers"] == {}
+async def test_no_token(api_provider: ApiProvider):
+    api_provider._fetch_token = lambda a, b: None
+    await api_provider.request("GET", "")
+    assert api_provider._session.request.call_args[1]["headers"] == {}
