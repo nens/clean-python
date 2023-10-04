@@ -16,6 +16,7 @@ from clean_python import ctx
 from clean_python import Json
 
 from .exceptions import ApiException
+from .response import Response
 
 __all__ = ["ApiProvider"]
 
@@ -80,14 +81,36 @@ class ApiProvider:
         self._backoff_factor = backoff_factor
         self._session = ClientSession()
 
-    async def _request_with_retry(self, *args, **kwargs) -> ClientResponse:
+    async def _request_with_retry(
+        self,
+        method: str,
+        path: str,
+        params: Optional[Json],
+        json: Optional[Json],
+        fields: Optional[Json],
+        timeout: float,
+    ) -> ClientResponse:
+        assert ctx.tenant is not None
+        headers = {}
+        request_kwargs = {
+            "method": method,
+            "url": add_query_params(join(self._url, quote(path)), params),
+            "timeout": timeout,
+            "json": json,
+            "data": fields,
+        }
+        token = self._fetch_token(self._session, ctx.tenant.id)
+        if token is not None:
+            headers["Authorization"] = f"Bearer {token}"
         for attempt in range(self._retries):
             if attempt > 0:
                 backoff = self._backoff_factor * 2 ** (attempt - 1)
                 await asyncio.sleep(backoff)
 
             try:
-                response = await self._session.request(*args, **kwargs)
+                response = await self._session.request(
+                    headers=headers, **request_kwargs
+                )
                 await response.read()
             except (aiohttp.ClientError, asyncio.exceptions.TimeoutError):
                 if attempt == self._retries - 1:
@@ -107,19 +130,9 @@ class ApiProvider:
         fields: Optional[Json] = None,
         timeout: float = 5.0,
     ) -> Optional[Json]:
-        assert ctx.tenant is not None
-        headers = {}
-        request_kwargs = {
-            "method": method,
-            "url": add_query_params(join(self._url, quote(path)), params),
-            "timeout": timeout,
-            "json": json,
-            "data": fields,
-        }
-        token = self._fetch_token(self._session, ctx.tenant.id)
-        if token is not None:
-            headers["Authorization"] = f"Bearer {token}"
-        response = await self._request_with_retry(headers=headers, **request_kwargs)
+        response = await self._request_with_retry(
+            method, path, params, json, fields, timeout
+        )
         status = HTTPStatus(response.status)
         content_type = response.headers.get("Content-Type")
         if status is HTTPStatus.NO_CONTENT:
@@ -133,3 +146,21 @@ class ApiProvider:
             return body
         else:
             raise ApiException(body, status=status)
+
+    async def request_raw(
+        self,
+        method: str,
+        path: str,
+        params: Optional[Json] = None,
+        json: Optional[Json] = None,
+        fields: Optional[Json] = None,
+        timeout: float = 5.0,
+    ) -> Response:
+        response = await self._request_with_retry(
+            method, path, params, json, fields, timeout
+        )
+        return Response(
+            status=response.status,
+            data=await response.read(),
+            content_type=response.headers.get("Content-Type"),
+        )

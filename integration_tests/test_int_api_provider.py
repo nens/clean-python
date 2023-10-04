@@ -93,3 +93,11 @@ async def test_urlencode(provider: ApiProvider):
 
     assert isinstance(response, dict)
     assert response["name"] == "x?"
+
+
+async def test_request_raw(provider: ApiProvider, book):
+    response = await provider.request_raw("GET", f"v1/books/{book['id']}")
+
+    assert response.status is HTTPStatus.OK
+    assert len(response.data) > 0
+    assert response.content_type == "application/json"

@@ -16,6 +16,7 @@ from .api_provider import is_json_content_type
 from .api_provider import is_success
 from .api_provider import join
 from .exceptions import ApiException
+from .response import Response
 
 __all__ = ["SyncApiProvider"]
 
@@ -44,15 +45,15 @@ class SyncApiProvider:
         self._fetch_token = fetch_token
         self._pool = PoolManager(retries=Retry(retries, backoff_factor=backoff_factor))
 
-    def request(
+    def _request(
         self,
         method: str,
         path: str,
-        params: Optional[Json] = None,
-        json: Optional[Json] = None,
-        fields: Optional[Json] = None,
-        timeout: float = 5.0,
-    ) -> Optional[Json]:
+        params: Optional[Json],
+        json: Optional[Json],
+        fields: Optional[Json],
+        timeout: float,
+    ):
         assert ctx.tenant is not None
         headers = {}
         request_kwargs = {
@@ -71,7 +72,18 @@ class SyncApiProvider:
         token = self._fetch_token(self._pool, ctx.tenant.id)
         if token is not None:
             headers["Authorization"] = f"Bearer {token}"
-        response = self._pool.request(headers=headers, **request_kwargs)
+        return self._pool.request(headers=headers, **request_kwargs)
+
+    def request(
+        self,
+        method: str,
+        path: str,
+        params: Optional[Json] = None,
+        json: Optional[Json] = None,
+        fields: Optional[Json] = None,
+        timeout: float = 5.0,
+    ) -> Optional[Json]:
+        response = self._request(method, path, params, json, fields, timeout)
         status = HTTPStatus(response.status)
         content_type = response.headers.get("Content-Type")
         if status is HTTPStatus.NO_CONTENT:
@@ -85,3 +97,19 @@ class SyncApiProvider:
             return body
         else:
             raise ApiException(body, status=status)
+
+    def request_raw(
+        self,
+        method: str,
+        path: str,
+        params: Optional[Json] = None,
+        json: Optional[Json] = None,
+        fields: Optional[Json] = None,
+        timeout: float = 5.0,
+    ) -> Response:
+        response = self._request(method, path, params, json, fields, timeout)
+        return Response(
+            status=response.status,
+            data=response.data,
+            content_type=response.headers.get("Content-Type"),
+        )
