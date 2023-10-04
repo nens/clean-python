@@ -4,7 +4,9 @@
 0.6.6 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Fix blocking behaviour of `fetch_token` in `ApiProvider`.
+
+- Fix missing `api_client.Response`.
 
 
 0.6.5 (2023-10-04)

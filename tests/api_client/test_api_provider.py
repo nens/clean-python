@@ -12,6 +12,14 @@ from clean_python.api_client import ApiProvider
 MODULE = "clean_python.api_client.api_provider"
 
 
+async def fake_token(a, b):
+    return f"tenant-{b}"
+
+
+async def no_token(a, b):
+    return None
+
+
 @pytest.fixture
 def tenant() -> Tenant:
     ctx.tenant = Tenant(id=2, name="")
@@ -36,7 +44,7 @@ def api_provider(tenant, response) -> ApiProvider:
     with mock.patch.object(ClientSession, "request", new=request):
         api_provider = ApiProvider(
             url="http://testserver/foo/",
-            fetch_token=lambda a, b: f"tenant-{b}",
+            fetch_token=fake_token,
         )
         api_provider._session.request.return_value = response
         yield api_provider
@@ -139,6 +147,6 @@ async def test_error_response(api_provider: ApiProvider, response, status):
 
 
 async def test_no_token(api_provider: ApiProvider):
-    api_provider._fetch_token = lambda a, b: None
+    api_provider._fetch_token = no_token
     await api_provider.request("GET", "")
     assert api_provider._session.request.call_args[1]["headers"] == {}
