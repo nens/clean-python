@@ -1,7 +1,7 @@
 # Changelog of clean-python
 
 
-0.6.5 (unreleased)
+0.6.5 (2023-10-04)
 ------------------
 
 - Added async `ApiProvider` and `ApiGateway`.
