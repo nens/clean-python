@@ -3,6 +3,7 @@ import re
 from http import HTTPStatus
 from typing import Awaitable
 from typing import Callable
+from typing import Dict
 from typing import Optional
 from urllib.parse import quote
 from urllib.parse import urlencode
@@ -69,7 +70,7 @@ class ApiProvider:
     def __init__(
         self,
         url: AnyHttpUrl,
-        fetch_token: Callable[[], Awaitable[dict[str, str]]],
+        fetch_token: Callable[[], Awaitable[Dict[str, str]]],
         retries: int = 3,
         backoff_factor: float = 1.0,
     ):

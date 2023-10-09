@@ -1,6 +1,7 @@
 import json as json_lib
 from http import HTTPStatus
 from typing import Callable
+from typing import Dict
 from typing import Optional
 from urllib.parse import quote
 
@@ -35,7 +36,7 @@ class SyncApiProvider:
     def __init__(
         self,
         url: AnyHttpUrl,
-        fetch_token: Callable[[], dict[str, str]],
+        fetch_token: Callable[[], Dict[str, str]],
         retries: int = 3,
         backoff_factor: float = 1.0,
     ):
