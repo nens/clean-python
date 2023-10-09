@@ -1,3 +1,6 @@
+import base64
+import json
+import time
 from http import HTTPStatus
 from typing import Optional
 
@@ -5,6 +8,9 @@ from fastapi import Depends
 from fastapi import Form
 from fastapi import Response
 from fastapi import UploadFile
+from fastapi.responses import JSONResponse
+from fastapi.security import HTTPBasic
+from fastapi.security import HTTPBasicCredentials
 
 from clean_python import DoesNotExist
 from clean_python import Page
@@ -31,6 +37,9 @@ class BookCreate(ValueObject):
 class BookUpdate(ValueObject):
     author: Optional[Author] = None
     title: Optional[str] = None
+
+
+basic = HTTPBasic()
 
 
 class V1Books(Resource, version=v(1), name="books"):
@@ -73,3 +82,27 @@ class V1Books(Resource, version=v(1), name="books"):
     @put("/urlencode/{name}", response_model=Author)
     async def urlencode(self, name: str):
         return {"name": name}
+
+    @post("/token")
+    def token(
+        self,
+        grant_type: str = Form(),
+        scope: str = Form(),
+        credentials: HTTPBasicCredentials = Depends(basic),
+    ):
+        """For testing client credentials grant"""
+        if grant_type != "client_credentials":
+            return JSONResponse({"error": "invalid_grant"})
+        if credentials.username != "testclient":
+            return JSONResponse({"error": "invalid_client"})
+        if credentials.password != "supersecret":
+            return JSONResponse({"error": "invalid_client"})
+        if scope != "all":
+            return JSONResponse({"error": "invalid_grant"})
+        claims = {"user": "foo", "exp": int(time.time()) + 3600}
+        payload = base64.b64encode(json.dumps(claims).encode()).decode()
+        return {
+            "access_token": f"header.{payload}.signature",
+            "token_type": "Bearer",
+            "expires_in": 3600,
+        }

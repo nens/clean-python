@@ -13,7 +13,9 @@ from clean_python.api_client import SyncApiProvider
 @pytest.fixture
 def provider(fastapi_example_app) -> SyncApiProvider:
     ctx.tenant = Tenant(id=2, name="")
-    yield SyncApiProvider(fastapi_example_app + "/", lambda a, b: "token")
+    yield SyncApiProvider(
+        fastapi_example_app + "/", lambda: {"Authorization": "Bearer token"}
+    )
     ctx.tenant = None
 
 

@@ -8,7 +8,6 @@ from pydantic import AnyHttpUrl
 from urllib3 import PoolManager
 from urllib3 import Retry
 
-from clean_python import ctx
 from clean_python import Json
 
 from .api_provider import add_query_params
@@ -36,12 +35,13 @@ class SyncApiProvider:
     def __init__(
         self,
         url: AnyHttpUrl,
-        fetch_token: Callable[[PoolManager, int], Optional[str]],
+        fetch_token: Callable[[], dict[str, str]],
         retries: int = 3,
         backoff_factor: float = 1.0,
     ):
         self._url = str(url)
-        assert self._url.endswith("/")
+        if not self._url.endswith("/"):
+            self._url += "/"
         self._fetch_token = fetch_token
         self._pool = PoolManager(retries=Retry(retries, backoff_factor=backoff_factor))
 
@@ -54,7 +54,6 @@ class SyncApiProvider:
         fields: Optional[Json],
         timeout: float,
     ):
-        assert ctx.tenant is not None
         headers = {}
         request_kwargs = {
             "method": method,
@@ -69,9 +68,7 @@ class SyncApiProvider:
             headers["Content-Type"] = "application/json"
         elif fields is not None:
             request_kwargs["fields"] = fields
-        token = self._fetch_token(self._pool, ctx.tenant.id)
-        if token is not None:
-            headers["Authorization"] = f"Bearer {token}"
+        headers.update(self._fetch_token())
         return self._pool.request(headers=headers, **request_kwargs)
 
     def request(

@@ -13,7 +13,6 @@ from aiohttp import ClientResponse
 from aiohttp import ClientSession
 from pydantic import AnyHttpUrl
 
-from clean_python import ctx
 from clean_python import Json
 
 from .exceptions import ApiException
@@ -62,7 +61,7 @@ class ApiProvider:
 
     Args:
         url: The url of the API (with trailing slash)
-        fetch_token: Callable that returns a token for a tenant id
+        fetch_token: Coroutine that returns headers for authorization
         retries: Total number of retries per request
         backoff_factor: Multiplier for retry delay times (1, 2, 4, ...)
     """
@@ -70,12 +69,13 @@ class ApiProvider:
     def __init__(
         self,
         url: AnyHttpUrl,
-        fetch_token: Callable[[ClientSession, int], Awaitable[Optional[str]]],
+        fetch_token: Callable[[], Awaitable[dict[str, str]]],
         retries: int = 3,
         backoff_factor: float = 1.0,
     ):
         self._url = str(url)
-        assert self._url.endswith("/")
+        if not self._url.endswith("/"):
+            self._url += "/"
         self._fetch_token = fetch_token
         assert retries > 0
         self._retries = retries
@@ -91,27 +91,21 @@ class ApiProvider:
         fields: Optional[Json],
         timeout: float,
     ) -> ClientResponse:
-        assert ctx.tenant is not None
-        headers = {}
         request_kwargs = {
             "method": method,
             "url": add_query_params(join(self._url, quote(path)), params),
             "timeout": timeout,
             "json": json,
             "data": fields,
+            "headers": await self._fetch_token(),
         }
-        token = await self._fetch_token(self._session, ctx.tenant.id)
-        if token is not None:
-            headers["Authorization"] = f"Bearer {token}"
         for attempt in range(self._retries):
             if attempt > 0:
                 backoff = self._backoff_factor * 2 ** (attempt - 1)
                 await asyncio.sleep(backoff)
 
             try:
-                response = await self._session.request(
-                    headers=headers, **request_kwargs
-                )
+                response = await self._session.request(**request_kwargs)
                 await response.read()
             except (aiohttp.ClientError, asyncio.exceptions.TimeoutError):
                 if attempt == self._retries - 1:

@@ -12,12 +12,12 @@ from clean_python.api_client import ApiProvider
 MODULE = "clean_python.api_client.api_provider"
 
 
-async def fake_token(a, b):
-    return f"tenant-{b}"
+async def fake_token():
+    return {"Authorization": f"Bearer tenant-{ctx.tenant.id}"}
 
 
-async def no_token(a, b):
-    return None
+async def no_token():
+    return {}
 
 
 @pytest.fixture

@@ -12,8 +12,8 @@ class BooksGateway(ApiGateway, path="v1/books/{id}"):
     pass
 
 
-async def fake_token(a, b):
-    return "token"
+async def fake_token():
+    return {"Authorization": "Bearer token"}
 
 
 @pytest.fixture

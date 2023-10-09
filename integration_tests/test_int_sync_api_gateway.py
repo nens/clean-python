@@ -17,7 +17,9 @@ class BooksGateway(SyncApiGateway, path="v1/books/{id}"):
 @pytest.fixture
 def provider(fastapi_example_app) -> SyncApiProvider:
     ctx.tenant = Tenant(id=2, name="")
-    yield SyncApiProvider(fastapi_example_app + "/", lambda a, b: "token")
+    yield SyncApiProvider(
+        fastapi_example_app + "/", lambda: {"Authorization": "Bearer token"}
+    )
     ctx.tenant = None
 
 

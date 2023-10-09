@@ -34,7 +34,7 @@ def api_provider(tenant, response) -> SyncApiProvider:
     with mock.patch(MODULE + ".PoolManager"):
         api_provider = SyncApiProvider(
             url="http://testserver/foo/",
-            fetch_token=lambda a, b: f"tenant-{b}",
+            fetch_token=lambda: {"Authorization": f"Bearer tenant-{ctx.tenant.id}"},
         )
         api_provider._pool.request.return_value = response
         yield api_provider
@@ -136,9 +136,7 @@ def test_error_response(api_provider: SyncApiProvider, response, status):
 
 @mock.patch(MODULE + ".PoolManager", new=mock.Mock())
 def test_no_token(response, tenant):
-    api_provider = SyncApiProvider(
-        url="http://testserver/foo/", fetch_token=lambda a, b: None
-    )
+    api_provider = SyncApiProvider(url="http://testserver/foo/", fetch_token=lambda: {})
     api_provider._pool.request.return_value = response
     api_provider.request("GET", "")
     assert api_provider._pool.request.call_args[1]["headers"] == {}
