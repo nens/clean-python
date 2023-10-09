@@ -8,8 +8,8 @@ from clean_python.api_client import ApiException
 from clean_python.api_client import ApiProvider
 
 
-async def fake_token(a, b):
-    return "token"
+async def fake_token():
+    return {"Authorization": "Bearer token"}
 
 
 @pytest.fixture

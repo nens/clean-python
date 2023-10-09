@@ -4,7 +4,9 @@
 0.6.7 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Adapt call signature of the `fetch_token` callable in `ApiProvicer`.
+
+- Add `clean_python.oauth.client_credentials`.
 
 
 0.6.6 (2023-10-04)
