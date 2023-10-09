@@ -1,7 +1,7 @@
 # Changelog of clean-python
 
 
-0.6.7 (unreleased)
+0.6.7 (2023-10-09)
 ------------------
 
 - Adapt call signature of the `fetch_token` callable in `ApiProvicer`.
