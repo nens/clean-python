@@ -1,7 +1,7 @@
 # Changelog of clean-python
 
 
-0.6.8 (unreleased)
+0.6.8 (2023-10-10)
 ------------------
 
 - Add `trailing_slash` option to `ApiProvider`.
