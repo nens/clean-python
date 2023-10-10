@@ -49,6 +49,7 @@ def test_get(api_provider: SyncApiProvider, response):
         url="http://testserver/foo",
         headers={"Authorization": "Bearer tenant-2"},
         timeout=5.0,
+        encode_multipart=False,
     )
     assert actual == {"foo": 2}
 
@@ -69,6 +70,7 @@ def test_post_json(api_provider: SyncApiProvider, response):
             "Authorization": "Bearer tenant-2",
         },
         timeout=5.0,
+        encode_multipart=False,
     )
     assert actual == {"foo": 2}
 

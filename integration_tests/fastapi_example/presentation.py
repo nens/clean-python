@@ -6,6 +6,7 @@ from typing import Optional
 
 from fastapi import Depends
 from fastapi import Form
+from fastapi import Request
 from fastapi import Response
 from fastapi import UploadFile
 from fastapi.responses import JSONResponse
@@ -86,19 +87,30 @@ class V1Books(Resource, version=v(1), name="books"):
     @post("/token")
     def token(
         self,
+        request: Request,
         grant_type: str = Form(),
         scope: str = Form(),
         credentials: HTTPBasicCredentials = Depends(basic),
     ):
         """For testing client credentials grant"""
+        if request.headers["Content-Type"] != "application/x-www-form-urlencoded":
+            return Response(status_code=HTTPStatus.METHOD_NOT_ALLOWED)
         if grant_type != "client_credentials":
-            return JSONResponse({"error": "invalid_grant"})
+            return JSONResponse(
+                {"error": "invalid_grant"}, status_code=HTTPStatus.BAD_REQUEST
+            )
         if credentials.username != "testclient":
-            return JSONResponse({"error": "invalid_client"})
+            return JSONResponse(
+                {"error": "invalid_client"}, status_code=HTTPStatus.BAD_REQUEST
+            )
         if credentials.password != "supersecret":
-            return JSONResponse({"error": "invalid_client"})
+            return JSONResponse(
+                {"error": "invalid_client"}, status_code=HTTPStatus.BAD_REQUEST
+            )
         if scope != "all":
-            return JSONResponse({"error": "invalid_grant"})
+            return JSONResponse(
+                {"error": "invalid_grant"}, status_code=HTTPStatus.BAD_REQUEST
+            )
         claims = {"user": "foo", "exp": int(time.time()) + 3600}
         payload = base64.b64encode(json.dumps(claims).encode()).decode()
         return {

@@ -4,7 +4,7 @@
 0.6.9 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Disable multpart encoding in `SyncApiProvider`.
 
 
 0.6.8 (2023-10-10)
@@ -16,7 +16,7 @@
 0.6.7 (2023-10-09)
 ------------------
 
-- Adapt call signature of the `fetch_token` callable in `ApiProvicer`.
+- Adapt call signature of the `fetch_token` callable in `ApiProvider`.
 
 - Add `clean_python.oauth.client_credentials`.
 

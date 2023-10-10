@@ -74,7 +74,9 @@ class SyncApiProvider:
         elif fields is not None:
             request_kwargs["fields"] = fields
         headers.update(self._fetch_token())
-        return self._pool.request(headers=headers, **request_kwargs)
+        return self._pool.request(
+            headers=headers, encode_multipart=False, **request_kwargs
+        )
 
     def request(
         self,
