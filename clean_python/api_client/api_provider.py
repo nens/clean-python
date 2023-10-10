@@ -39,12 +39,14 @@ def is_json_content_type(content_type: Optional[str]) -> bool:
     return bool(JSON_CONTENT_TYPE_REGEX.match(content_type))
 
 
-def join(url: str, path: str) -> str:
+def join(url: str, path: str, trailing_slash: bool = False) -> str:
     """Results in a full url without trailing slash"""
     assert url.endswith("/")
     assert not path.startswith("/")
     result = urljoin(url, path)
-    if result.endswith("/"):
+    if trailing_slash and not result.endswith("/"):
+        result = result + "/"
+    elif not trailing_slash and result.endswith("/"):
         result = result[:-1]
     return result
 
@@ -73,6 +75,7 @@ class ApiProvider:
         fetch_token: Callable[[], Awaitable[Dict[str, str]]],
         retries: int = 3,
         backoff_factor: float = 1.0,
+        trailing_slash: bool = False,
     ):
         self._url = str(url)
         if not self._url.endswith("/"):
@@ -81,6 +84,7 @@ class ApiProvider:
         assert retries > 0
         self._retries = retries
         self._backoff_factor = backoff_factor
+        self._trailing_slash = trailing_slash
         self._session = ClientSession()
 
     async def _request_with_retry(
@@ -94,7 +98,9 @@ class ApiProvider:
     ) -> ClientResponse:
         request_kwargs = {
             "method": method,
-            "url": add_query_params(join(self._url, quote(path)), params),
+            "url": add_query_params(
+                join(self._url, quote(path), self._trailing_slash), params
+            ),
             "timeout": timeout,
             "json": json,
             "data": fields,

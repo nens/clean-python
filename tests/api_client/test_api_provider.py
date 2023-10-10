@@ -150,3 +150,24 @@ async def test_no_token(api_provider: ApiProvider):
     api_provider._fetch_token = no_token
     await api_provider.request("GET", "")
     assert api_provider._session.request.call_args[1]["headers"] == {}
+
+
+@pytest.mark.parametrize(
+    "path,trailing_slash,expected",
+    [
+        ("bar", False, "bar"),
+        ("bar", True, "bar/"),
+        ("bar/", False, "bar"),
+        ("bar/", True, "bar/"),
+    ],
+)
+async def test_trailing_slash(
+    api_provider: ApiProvider, path, trailing_slash, expected
+):
+    api_provider._trailing_slash = trailing_slash
+    await api_provider.request("GET", path)
+
+    assert (
+        api_provider._session.request.call_args[1]["url"]
+        == "http://testserver/foo/" + expected
+    )

@@ -4,7 +4,7 @@
 0.6.8 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Add `trailing_slash` option to `ApiProvider`.
 
 
 0.6.7 (2023-10-09)

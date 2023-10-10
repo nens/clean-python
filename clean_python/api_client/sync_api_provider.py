@@ -39,12 +39,14 @@ class SyncApiProvider:
         fetch_token: Callable[[], Dict[str, str]],
         retries: int = 3,
         backoff_factor: float = 1.0,
+        trailing_slash: bool = False,
     ):
         self._url = str(url)
         if not self._url.endswith("/"):
             self._url += "/"
         self._fetch_token = fetch_token
         self._pool = PoolManager(retries=Retry(retries, backoff_factor=backoff_factor))
+        self._trailing_slash = trailing_slash
 
     def _request(
         self,
@@ -58,7 +60,9 @@ class SyncApiProvider:
         headers = {}
         request_kwargs = {
             "method": method,
-            "url": add_query_params(join(self._url, quote(path)), params),
+            "url": add_query_params(
+                join(self._url, quote(path), self._trailing_slash), params
+            ),
             "timeout": timeout,
         }
         # for urllib3<2, we dump json ourselves
