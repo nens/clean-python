@@ -1,6 +1,8 @@
 import asyncio
 import re
 from http import HTTPStatus
+from io import BytesIO
+from typing import Any
 from typing import Awaitable
 from typing import Callable
 from typing import Dict
@@ -13,13 +15,15 @@ import aiohttp
 from aiohttp import ClientResponse
 from aiohttp import ClientSession
 from pydantic import AnyHttpUrl
+from pydantic import field_validator
 
 from clean_python import Json
+from clean_python import ValueObject
 
 from .exceptions import ApiException
 from .response import Response
 
-__all__ = ["ApiProvider"]
+__all__ = ["ApiProvider", "FileFormPost"]
 
 
 RETRY_STATUSES = frozenset({413, 429, 503})  # like in urllib3
@@ -55,6 +59,21 @@ def add_query_params(url: str, params: Optional[Json]) -> str:
     if params is None:
         return url
     return url + "?" + urlencode(params, doseq=True)
+
+
+class FileFormPost(ValueObject):
+    file_name: str
+    file: Any  # typing of BinaryIO / BytesIO is hard!
+    field_name: str = "file"
+    content_type: str = "application/octet-stream"
+
+    @field_validator("file")
+    @classmethod
+    def validate_file(cls, v):
+        if isinstance(v, bytes):
+            return BytesIO(v)
+        assert hasattr(v, "read")  # poor-mans BinaryIO validation
+        return v
 
 
 class ApiProvider:
@@ -94,8 +113,11 @@ class ApiProvider:
         params: Optional[Json],
         json: Optional[Json],
         fields: Optional[Json],
+        file: Optional[FileFormPost],
         timeout: float,
     ) -> ClientResponse:
+        if file is not None:
+            raise NotImplementedError("ApiProvider doesn't yet support file uploads")
         request_kwargs = {
             "method": method,
             "url": add_query_params(
@@ -130,10 +152,11 @@ class ApiProvider:
         params: Optional[Json] = None,
         json: Optional[Json] = None,
         fields: Optional[Json] = None,
+        file: Optional[FileFormPost] = None,
         timeout: float = 5.0,
     ) -> Optional[Json]:
         response = await self._request_with_retry(
-            method, path, params, json, fields, timeout
+            method, path, params, json, fields, file, timeout
         )
         status = HTTPStatus(response.status)
         content_type = response.headers.get("Content-Type")
@@ -156,10 +179,11 @@ class ApiProvider:
         params: Optional[Json] = None,
         json: Optional[Json] = None,
         fields: Optional[Json] = None,
+        file: Optional[FileFormPost] = None,
         timeout: float = 5.0,
     ) -> Response:
         response = await self._request_with_retry(
-            method, path, params, json, fields, timeout
+            method, path, params, json, fields, file, timeout
         )
         return Response(
             status=response.status,

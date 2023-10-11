@@ -8,6 +8,7 @@ import pytest
 from clean_python import ctx
 from clean_python import Tenant
 from clean_python.api_client import ApiException
+from clean_python.api_client import FileFormPost
 from clean_python.api_client import SyncApiProvider
 
 MODULE = "clean_python.api_client.sync_api_provider"
@@ -158,4 +159,47 @@ def test_trailing_slash(api_provider: SyncApiProvider, path, trailing_slash, exp
     assert (
         api_provider._pool.request.call_args[1]["url"]
         == "http://testserver/foo/" + expected
+    )
+
+
+def test_post_file(api_provider: SyncApiProvider):
+    api_provider.request(
+        "POST",
+        "bar",
+        file=FileFormPost(file_name="test.zip", file=b"foo", field_name="x"),
+    )
+
+    assert api_provider._pool.request.call_count == 1
+
+    assert api_provider._pool.request.call_args[1] == dict(
+        method="POST",
+        url="http://testserver/foo/bar",
+        fields={"x": ("test.zip", b"foo", "application/octet-stream")},
+        headers={
+            "Authorization": "Bearer tenant-2",
+        },
+        timeout=5.0,
+        encode_multipart=True,
+    )
+
+
+def test_post_file_with_fields(api_provider: SyncApiProvider):
+    api_provider.request(
+        "POST",
+        "bar",
+        fields={"a": "b"},
+        file=FileFormPost(file_name="test.zip", file=b"foo", field_name="x"),
+    )
+
+    assert api_provider._pool.request.call_count == 1
+
+    assert api_provider._pool.request.call_args[1] == dict(
+        method="POST",
+        url="http://testserver/foo/bar",
+        fields={"a": "b", "x": ("test.zip", b"foo", "application/octet-stream")},
+        headers={
+            "Authorization": "Bearer tenant-2",
+        },
+        timeout=5.0,
+        encode_multipart=True,
     )
