@@ -1,7 +1,7 @@
 # Changelog of clean-python
 
 
-0.6.9 (unreleased)
+0.6.9 (2023-10-11)
 ------------------
 
 - Disable the default multipart encoding in `SyncApiProvider`.
