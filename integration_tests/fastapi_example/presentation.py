@@ -77,8 +77,8 @@ class V1Books(Resource, version=v(1), name="books"):
         return {"name": name}
 
     @post("/file")
-    async def file(self, file: UploadFile):
-        return {file.filename: (await file.read()).decode()}
+    async def file(self, file: UploadFile, description: str = Form()):
+        return {file.filename: (await file.read()).decode(), "description": description}
 
     @put("/urlencode/{name}", response_model=Author)
     async def urlencode(self, name: str):

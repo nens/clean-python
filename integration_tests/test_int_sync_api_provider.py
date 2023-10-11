@@ -7,6 +7,7 @@ import pytest
 from clean_python import ctx
 from clean_python import Tenant
 from clean_python.api_client import ApiException
+from clean_python.api_client import FileFormPost
 from clean_python.api_client import SyncApiProvider
 
 
@@ -46,10 +47,15 @@ def test_request_form_body(provider: SyncApiProvider):
 
 
 def test_request_form_file(provider: SyncApiProvider):
-    response = provider.request("POST", "v1/file", fields={"file": ("x.txt", b"foo")})
+    response = provider.request(
+        "POST",
+        "v1/file",
+        fields={"description": "bla"},
+        file=FileFormPost(file_name="x.txt", file=b"foo"),
+    )
 
     assert isinstance(response, dict)
-    assert response["x.txt"] == "foo"
+    assert response == {"x.txt": "foo", "description": "bla"}
 
 
 @pytest.fixture
