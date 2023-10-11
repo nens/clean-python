@@ -113,8 +113,11 @@ class ApiProvider:
         params: Optional[Json],
         json: Optional[Json],
         fields: Optional[Json],
+        file: Optional[FileFormPost],
         timeout: float,
     ) -> ClientResponse:
+        if file is not None:
+            raise NotImplementedError("ApiProvider doesn't yet support file uploads")
         request_kwargs = {
             "method": method,
             "url": add_query_params(
@@ -149,10 +152,11 @@ class ApiProvider:
         params: Optional[Json] = None,
         json: Optional[Json] = None,
         fields: Optional[Json] = None,
+        file: Optional[FileFormPost] = None,
         timeout: float = 5.0,
     ) -> Optional[Json]:
         response = await self._request_with_retry(
-            method, path, params, json, fields, timeout
+            method, path, params, json, fields, file, timeout
         )
         status = HTTPStatus(response.status)
         content_type = response.headers.get("Content-Type")
@@ -175,10 +179,11 @@ class ApiProvider:
         params: Optional[Json] = None,
         json: Optional[Json] = None,
         fields: Optional[Json] = None,
+        file: Optional[FileFormPost] = None,
         timeout: float = 5.0,
     ) -> Response:
         response = await self._request_with_retry(
-            method, path, params, json, fields, timeout
+            method, path, params, json, fields, file, timeout
         )
         return Response(
             status=response.status,
