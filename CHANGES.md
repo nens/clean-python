@@ -4,7 +4,9 @@
 0.6.9 (unreleased)
 ------------------
 
-- Disable multpart encoding in `SyncApiProvider`.
+- Disable the default multipart encoding in `SyncApiProvider`.
+
+- Added `file` parameter to `ApiProvider` to upload files (async is a TODO).
 
 
 0.6.8 (2023-10-10)
