@@ -37,31 +37,34 @@ def message():
 
 @pytest.fixture
 def expected():
-    return [{
-        "id": 1,
-        "tag_suffix": "task_log",
-        "task_id": "abc123",
-        "name": "my_task",
-        "state": "STARTING",
-        "duration": 0,
-        "retries": 0,
-        "origin": f"host-{os.getpid()}",
-        "argsrepr": b"[1,2]",
-        "kwargsrepr": b'{"foo":"bar"}',
-        "result": None,
-    },{
-        "id": 1,
-        "tag_suffix": "task_log",
-        "task_id": "abc123",
-        "name": "my_task",
-        "state": "SUCCESS",
-        "duration": 0,
-        "retries": 0,
-        "origin": f"host-{os.getpid()}",
-        "argsrepr": b"[1,2]",
-        "kwargsrepr": b'{"foo":"bar"}',
-        "result": None,
-    }]
+    return [
+        {
+            "id": 1,
+            "tag_suffix": "task_log",
+            "task_id": "abc123",
+            "name": "my_task",
+            "state": "STARTING",
+            "duration": 0,
+            "retries": 0,
+            "origin": f"host-{os.getpid()}",
+            "argsrepr": b"[1,2]",
+            "kwargsrepr": b'{"foo":"bar"}',
+            "result": None,
+        },
+        {
+            "id": 2,
+            "tag_suffix": "task_log",
+            "task_id": "abc123",
+            "name": "my_task",
+            "state": "SUCCESS",
+            "duration": 0,
+            "retries": 0,
+            "origin": f"host-{os.getpid()}",
+            "argsrepr": b"[1,2]",
+            "kwargsrepr": b'{"foo":"bar"}',
+            "result": None,
+        },
+    ]
 
 
 @mock.patch("time.time", return_value=123)
