@@ -81,8 +81,8 @@ async def test_log_fail(task_logger, in_memory_gateway, message, expected):
     await task_logger.start(message)
     await task_logger.stop(message, exception=ValueError("test"))
 
-    assert in_memory_gateway.data[1] == {
-        **expected,
+    assert in_memory_gateway.data[2] == {
+        **expected[1],
         "state": "FAILURE",
         "result": None,
     }
@@ -93,7 +93,7 @@ async def test_log_retry(time, task_logger, in_memory_gateway, message, expected
     await task_logger.start(message)
     await task_logger.stop(message, exception=Retry("test"))
 
-    assert in_memory_gateway.data[1] == {
-        **expected,
+    assert in_memory_gateway.data[2] == {
+        **expected[1],
         "state": "RETRY",
     }
