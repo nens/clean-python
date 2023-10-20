@@ -24,7 +24,7 @@ class AsyncLoggingMiddleware(Middleware):
         self.logger = DramatiqTaskLogger(**kwargs)
 
     def before_process_message(self, broker, message):
-        broker.run_coroutine(self.logger.start())
+        broker.run_coroutine(self.logger.start(message))
 
     def after_skip_message(self, broker, message):
         broker.run_coroutine(self.logger.stop(message, None, SkipMessage()))
@@ -52,8 +52,22 @@ class DramatiqTaskLogger:
     def encoder(self):
         return get_encoder()
 
-    async def start(self):
+    async def start(self, message: Message):
         self.local.start_time = time.time()
+
+        log_dict = {
+            "tag_suffix": "task_log",
+            "task_id": message.message_id,
+            "name": message.actor_name,
+            "state": "STARTING",
+            "duration": 0,
+            "retries": message.options.get("retries", 0),
+            "origin": self.origin,
+            "argsrepr": self.encoder.encode(message.args),
+            "kwargsrepr": self.encoder.encode(message.kwargs),
+            "result": None,
+        }
+        return await self.gateway.add(log_dict)
 
     async def stop(self, message: Message, result=None, exception=None):
         if exception is None:
