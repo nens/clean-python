@@ -54,7 +54,7 @@ def expected():
 
 @mock.patch("time.time", return_value=123)
 async def test_log_success(time, task_logger, in_memory_gateway, message, expected):
-    await task_logger.start()
+    await task_logger.start(message)
     await task_logger.stop(message)
 
     assert in_memory_gateway.data[1] == expected
@@ -62,7 +62,7 @@ async def test_log_success(time, task_logger, in_memory_gateway, message, expect
 
 @mock.patch("time.time", new=mock.Mock(return_value=123))
 async def test_log_fail(task_logger, in_memory_gateway, message, expected):
-    await task_logger.start()
+    await task_logger.start(message)
     await task_logger.stop(message, exception=ValueError("test"))
 
     assert in_memory_gateway.data[1] == {
@@ -74,7 +74,7 @@ async def test_log_fail(task_logger, in_memory_gateway, message, expected):
 
 @mock.patch("time.time", return_value=123)
 async def test_log_retry(time, task_logger, in_memory_gateway, message, expected):
-    await task_logger.start()
+    await task_logger.start(message)
     await task_logger.stop(message, exception=Retry("test"))
 
     assert in_memory_gateway.data[1] == {
