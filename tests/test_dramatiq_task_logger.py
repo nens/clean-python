@@ -37,7 +37,19 @@ def message():
 
 @pytest.fixture
 def expected():
-    return {
+    return [{
+        "id": 1,
+        "tag_suffix": "task_log",
+        "task_id": "abc123",
+        "name": "my_task",
+        "state": "STARTING",
+        "duration": 0,
+        "retries": 0,
+        "origin": f"host-{os.getpid()}",
+        "argsrepr": b"[1,2]",
+        "kwargsrepr": b'{"foo":"bar"}',
+        "result": None,
+    },{
         "id": 1,
         "tag_suffix": "task_log",
         "task_id": "abc123",
@@ -49,7 +61,7 @@ def expected():
         "argsrepr": b"[1,2]",
         "kwargsrepr": b'{"foo":"bar"}',
         "result": None,
-    }
+    }]
 
 
 @mock.patch("time.time", return_value=123)
@@ -57,7 +69,8 @@ async def test_log_success(time, task_logger, in_memory_gateway, message, expect
     await task_logger.start(message)
     await task_logger.stop(message)
 
-    assert in_memory_gateway.data[1] == expected
+    assert in_memory_gateway.data[1] == expected[0]
+    assert in_memory_gateway.data[2] == expected[1]
 
 
 @mock.patch("time.time", new=mock.Mock(return_value=123))
