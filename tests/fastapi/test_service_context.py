@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from uuid import UUID
+from uuid import uuid4
 
 import pytest
 from fastapi.testclient import TestClient
@@ -19,7 +20,7 @@ class FooResource(Resource, version=v(1), name="testing"):
             "path": str(ctx.path),
             "user": ctx.user,
             "tenant": ctx.tenant,
-            "correlation_id": ctx.correlation_id,
+            "correlation_id": str(ctx.correlation_id),
         }
 
 
@@ -50,21 +51,20 @@ def test_default_context(app, client: TestClient):
     assert body["tenant"] is None
     UUID(body["correlation_id"])  # randomly generated uuid
 
-    assert ctx.correlation_id == ""
+    assert ctx.correlation_id is None
 
 
 def test_x_correlation_id_header(app, client: TestClient):
+    uid = str(uuid4())
     response = client.get(
         app.url_path_for("v1/context"),
-        headers={
-            "X-Correlation-Id": "abc",
-        },
+        headers={"X-Correlation-Id": uid},
     )
 
     assert response.status_code == HTTPStatus.OK
 
     body = response.json()
 
-    assert body["correlation_id"] == "abc"
+    assert body["correlation_id"] == uid
 
-    assert ctx.correlation_id == ""
+    assert ctx.correlation_id is None

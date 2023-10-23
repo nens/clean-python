@@ -95,6 +95,6 @@ class DramatiqTaskLogger:
             "kwargsrepr": self.encoder.encode(message.kwargs),
             "result": result,
             "time": time_,
-            "correlation_id": ctx.correlation_id,
+            "correlation_id": str(ctx.correlation_id) if ctx.correlation_id else None,
         }
         return await self.gateway.add(log_dict)

@@ -1,4 +1,5 @@
 from unittest import mock
+from uuid import uuid4
 
 import pytest
 from fastapi.routing import APIRoute
@@ -70,9 +71,10 @@ def call_next(response):
 
 @pytest.fixture
 def correlation_id():
-    ctx.correlation_id = "abc123"
-    yield "abc123"
-    ctx.correlation_id = ""
+    uid = uuid4()
+    ctx.correlation_id = uid
+    yield uid
+    ctx.correlation_id = None
 
 
 @mock.patch("time.time", return_value=0.0)
@@ -99,7 +101,7 @@ async def test_logging(
         "content_length": 13,
         "time": "1970-01-01T00:00:00Z",
         "request_time": 0.0,
-        "correlation_id": correlation_id,
+        "correlation_id": str(correlation_id),
     }
 
 
@@ -162,5 +164,5 @@ async def test_logging_minimal(
         "content_length": None,
         "time": "1970-01-01T00:00:00Z",
         "request_time": 0.0,
-        "correlation_id": "",
+        "correlation_id": None,
     }

@@ -1,5 +1,6 @@
 import os
 from unittest import mock
+from uuid import uuid4
 
 import pytest
 from dramatiq.errors import Retry
@@ -25,9 +26,10 @@ def task_logger(in_memory_gateway):
 
 @pytest.fixture
 def correlation_id():
-    ctx.correlation_id = "abc123"
-    yield "abc123"
-    ctx.correlation_id = ""
+    uid = uuid4()
+    ctx.correlation_id = uid
+    yield uid
+    ctx.correlation_id = None
 
 
 @pytest.fixture
@@ -64,7 +66,7 @@ def expected(correlation_id):
         "kwargsrepr": b'{"foo":"bar"}',
         "result": None,
         "time": "1970-01-01T00:00:00Z",
-        "correlation_id": correlation_id,
+        "correlation_id": str(correlation_id),
     }
 
 

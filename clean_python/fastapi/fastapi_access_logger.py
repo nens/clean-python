@@ -84,6 +84,6 @@ async def log_access(
         "content_length": content_length,
         "time": fmt_timestamp(time_received),
         "request_time": request_time,
-        "correlation_id": ctx.correlation_id,
+        "correlation_id": str(ctx.correlation_id) if ctx.correlation_id else None,
     }
     await gateway.add(item)
