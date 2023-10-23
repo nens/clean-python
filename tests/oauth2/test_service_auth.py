@@ -28,6 +28,7 @@ class FooResource(Resource, version=v(1), name="testing"):
             "path": str(ctx.path),
             "user": ctx.user,
             "tenant": ctx.tenant,
+            "correlation_id": ctx.correlation_id,
         }
 
 
@@ -98,15 +99,20 @@ def test_context(app, client: TestClient, token_generator):
     response = client.get(
         app.url_path_for("v1/context"),
         headers={
-            "Authorization": "Bearer " + token_generator(tenant=2, tenant_name="bar")
+            "Authorization": "Bearer " + token_generator(tenant=2, tenant_name="bar"),
+            "X-Correlation-Id": "abc",
         },
     )
 
     assert response.status_code == HTTPStatus.OK
-    assert response.json() == {
-        "path": "http://testserver/v1/context",
-        "user": {"id": "foo", "name": "piet"},
-        "tenant": {"id": 2, "name": "bar"},
-    }
+
+    body = response.json()
+
+    assert body["path"] == "http://testserver/v1/context"
+    assert body["user"] == {"id": "foo", "name": "piet"}
+    assert body["tenant"] == {"id": 2, "name": "bar"}
+    assert body["correlation_id"] == "abc"
+
     assert ctx.user.id != "foo"
     assert ctx.tenant is None
+    assert ctx.correlation_id == ""
