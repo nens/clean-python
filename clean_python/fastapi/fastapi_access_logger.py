@@ -12,6 +12,7 @@ from starlette.background import BackgroundTasks
 from starlette.requests import Request
 from starlette.responses import Response
 
+from clean_python import ctx
 from clean_python import Gateway
 from clean_python.fluentbit import FluentbitGateway
 
@@ -83,5 +84,6 @@ async def log_access(
         "content_length": content_length,
         "time": fmt_timestamp(time_received),
         "request_time": request_time,
+        "correlation_id": ctx.correlation_id,
     }
     await gateway.add(item)

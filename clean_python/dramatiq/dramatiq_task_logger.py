@@ -3,6 +3,7 @@
 import os
 import threading
 import time
+from datetime import datetime
 from typing import Optional
 
 import inject
@@ -13,6 +14,7 @@ from dramatiq.errors import Retry
 from dramatiq.message import Message
 from dramatiq.middleware import SkipMessage
 
+from clean_python import ctx
 from clean_python import Gateway
 from clean_python.fluentbit import FluentbitGateway
 
@@ -31,6 +33,10 @@ class AsyncLoggingMiddleware(Middleware):
 
     def after_process_message(self, broker, message, *, result=None, exception=None):
         broker.run_coroutine(self.logger.stop(message, result, exception))
+
+
+def fmt_timestamp(timestamp: float) -> str:
+    return datetime.utcfromtimestamp(timestamp).isoformat() + "Z"
 
 
 class DramatiqTaskLogger:
@@ -72,6 +78,11 @@ class DramatiqTaskLogger:
         except AttributeError:
             duration = 0
 
+        try:
+            time_ = fmt_timestamp(self.local.start_time)
+        except AttributeError:
+            time_ = None
+
         log_dict = {
             "tag_suffix": "task_log",
             "task_id": message.message_id,
@@ -83,5 +94,7 @@ class DramatiqTaskLogger:
             "argsrepr": self.encoder.encode(message.args),
             "kwargsrepr": self.encoder.encode(message.kwargs),
             "result": result,
+            "time": time_,
+            "correlation_id": ctx.correlation_id,
         }
         return await self.gateway.add(log_dict)

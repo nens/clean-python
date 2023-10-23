@@ -45,6 +45,9 @@ class Context:
         self._tenant_value: ContextVar[Optional[Tenant]] = ContextVar(
             "tenant_value", default=None
         )
+        self._correlation_id_value: ContextVar[str] = ContextVar(
+            "correlation_id", default=""
+        )
 
     @property
     def path(self) -> AnyUrl:
@@ -69,6 +72,14 @@ class Context:
     @tenant.setter
     def tenant(self, value: Optional[Tenant]) -> None:
         self._tenant_value.set(value)
+
+    @property
+    def correlation_id(self) -> str:
+        return self._correlation_id_value.get()
+
+    @correlation_id.setter
+    def correlation_id(self, value: str) -> None:
+        self._correlation_id_value.set(value)
 
 
 ctx = Context()
