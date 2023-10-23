@@ -6,6 +6,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.responses import StreamingResponse
 
+from clean_python import ctx
 from clean_python import InMemoryGateway
 from clean_python.fastapi import FastAPIAccessLogger
 
@@ -67,8 +68,17 @@ def call_next(response):
     return func
 
 
+@pytest.fixture
+def correlation_id():
+    ctx.correlation_id = "abc123"
+    yield "abc123"
+    ctx.correlation_id = ""
+
+
 @mock.patch("time.time", return_value=0.0)
-async def test_logging(time, fastapi_access_logger, req, response, call_next):
+async def test_logging(
+    time, fastapi_access_logger, req, response, call_next, correlation_id
+):
     await fastapi_access_logger(req, call_next)
     assert len(fastapi_access_logger.gateway.data) == 0
     await response.background()
@@ -89,6 +99,7 @@ async def test_logging(time, fastapi_access_logger, req, response, call_next):
         "content_length": 13,
         "time": "1970-01-01T00:00:00Z",
         "request_time": 0.0,
+        "correlation_id": correlation_id,
     }
 
 
@@ -151,4 +162,5 @@ async def test_logging_minimal(
         "content_length": None,
         "time": "1970-01-01T00:00:00Z",
         "request_time": 0.0,
+        "correlation_id": "",
     }
