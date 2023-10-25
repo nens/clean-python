@@ -8,5 +8,4 @@ from .pagination import *  # NOQA
 from .repository import *  # NOQA
 from .root_entity import *  # NOQA
 from .types import *  # NOQA
-from .value import *  # NOQA
 from .value_object import *  # NOQA

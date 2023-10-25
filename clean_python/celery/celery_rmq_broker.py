@@ -34,7 +34,7 @@ class CeleryRmqBroker(Gateway):
     def __init__(
         self, broker_url: AnyUrl, queue: str, origin: str, declare_queue: bool = False
     ):
-        self._parameters = pika.URLParameters(broker_url)
+        self._parameters = pika.URLParameters(str(broker_url))
         self._queue = queue
         self._origin = origin
         self._declare_queue = declare_queue
