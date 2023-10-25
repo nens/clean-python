@@ -99,7 +99,7 @@ async def test_logging(
         "status": 200,
         "content_type": "application/json",
         "content_length": 13,
-        "time": "1970-01-01T00:00:00Z",
+        "time": 0.0,
         "request_time": 0.0,
         "correlation_id": str(correlation_id),
     }
@@ -162,7 +162,7 @@ async def test_logging_minimal(
         "status": 200,
         "content_type": "text/html; charset=utf-8",
         "content_length": None,
-        "time": "1970-01-01T00:00:00Z",
+        "time": 0.0,
         "request_time": 0.0,
         "correlation_id": None,
     }

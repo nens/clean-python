@@ -65,7 +65,7 @@ def expected(correlation_id):
         "argsrepr": b"[1,2]",
         "kwargsrepr": b'{"foo":"bar"}',
         "result": None,
-        "time": "1970-01-01T00:00:00Z",
+        "time": 0.0,
         "correlation_id": str(correlation_id),
     }
 

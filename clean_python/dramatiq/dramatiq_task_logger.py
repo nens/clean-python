@@ -3,7 +3,6 @@
 import os
 import threading
 import time
-from datetime import datetime
 from typing import Optional
 
 import inject
@@ -33,10 +32,6 @@ class AsyncLoggingMiddleware(Middleware):
 
     def after_process_message(self, broker, message, *, result=None, exception=None):
         broker.run_coroutine(self.logger.stop(message, result, exception))
-
-
-def fmt_timestamp(timestamp: float) -> str:
-    return datetime.utcfromtimestamp(timestamp).isoformat() + "Z"
 
 
 class DramatiqTaskLogger:
@@ -79,9 +74,9 @@ class DramatiqTaskLogger:
             duration = 0
 
         try:
-            time_ = fmt_timestamp(self.local.start_time)
+            start_time = self.local.start_time
         except AttributeError:
-            time_ = None
+            start_time = None
 
         log_dict = {
             "tag_suffix": "task_log",
@@ -94,7 +89,7 @@ class DramatiqTaskLogger:
             "argsrepr": self.encoder.encode(message.args),
             "kwargsrepr": self.encoder.encode(message.kwargs),
             "result": result,
-            "time": time_,
+            "time": start_time,
             "correlation_id": str(ctx.correlation_id) if ctx.correlation_id else None,
         }
         return await self.gateway.add(log_dict)

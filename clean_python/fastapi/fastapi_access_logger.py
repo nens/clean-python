@@ -2,7 +2,6 @@
 
 import os
 import time
-from datetime import datetime
 from typing import Awaitable
 from typing import Callable
 from typing import Optional
@@ -45,10 +44,6 @@ class FastAPIAccessLogger:
         return response
 
 
-def fmt_timestamp(timestamp: float) -> str:
-    return datetime.utcfromtimestamp(timestamp).isoformat() + "Z"
-
-
 async def log_access(
     gateway: Gateway,
     request: Request,
@@ -82,7 +77,7 @@ async def log_access(
         "status": response.status_code,
         "content_type": response.headers.get("content-type"),
         "content_length": content_length,
-        "time": fmt_timestamp(time_received),
+        "time": time_received,
         "request_time": request_time,
         "correlation_id": str(ctx.correlation_id) if ctx.correlation_id else None,
     }
