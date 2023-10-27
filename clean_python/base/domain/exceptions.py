@@ -42,8 +42,8 @@ class Conflict(Exception):
 
 
 class AlreadyExists(Conflict):
-    def __init__(self, id: Optional[int] = None):
-        super().__init__(f"record with id={id} already exists")
+    def __init__(self, value: Any = None, key: str = "id"):
+        super().__init__(f"record with {key}={value} already exists")
 
 
 class PreconditionFailed(Exception):

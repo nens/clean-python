@@ -193,7 +193,7 @@ async def test_handle_integrity_error(
     )
 
     with pytest.raises(
-        ValueError, match="duplicate key value violates unique constraint"
+        AlreadyExists, match=f"record with id={record_id} already exists"
     ):
         await database_with_cleanup.execute(
             insert_query_with_id, bind_params={"id": record_id}
@@ -268,7 +268,9 @@ async def test_add(sql_gateway, test_transaction, obj):
 
 
 async def test_add_id_exists(sql_gateway, obj_in_db):
-    with pytest.raises(AlreadyExists):
+    with pytest.raises(
+        AlreadyExists, match=f"record with id={obj_in_db['id']} already exists"
+    ):
         await sql_gateway.add(obj_in_db)
 
 
