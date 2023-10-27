@@ -162,8 +162,9 @@ async def test_handle_serialization_error(
     1> BEGIN
     1> UPDATE ... WHERE id=1
     2> BEGIN
-    2> UPDATE ... WHERE id=1   # transaction 2 will wait until transaction 1 ends
-    1> COMMIT  # transaction 1 will raise SerializationError
+    2> UPDATE ... WHERE id=1   # transaction 2 will wait until transaction 1 finishes
+    1> COMMIT
+    2> will raise SerializationError
     """
 
     async def update(sleep_before=0.0, sleep_after=0.0):
