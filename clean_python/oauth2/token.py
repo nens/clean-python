@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic import validator
+from pydantic import field_validator
 
 from clean_python import Json
 from clean_python import Scope
@@ -14,7 +14,8 @@ __all__ = ["Token"]
 class Token(ValueObject):
     claims: Json
 
-    @validator("claims")
+    @field_validator("claims")
+    @classmethod
     def validate_claims(cls, v):
         if not isinstance(v, dict):
             return v

@@ -60,7 +60,7 @@ class OAuth2SPAClientSchema(OAuth2AuthorizationCodeBearer):
 
     def __init__(self, client: OAuth2SPAClientSettings):
         super().__init__(
-            scheme_name="OAuth2 Authorization Code Flow with PKCE",
+            scheme_name="OAuth2Bearer",
             authorizationUrl=str(client.authorization_url),
             tokenUrl=str(client.token_url),
         )
@@ -76,7 +76,7 @@ class JWTBearerTokenSchema(HTTPBearer):
     """
 
     def __init__(self):
-        super().__init__(scheme_name="JWT Bearer token", bearerFormat="JWT")
+        super().__init__(scheme_name="OAuth2Bearer", bearerFormat="JWT")
 
     async def __call__(self) -> None:
         pass
