@@ -15,7 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.sql import Executable
 
-from clean_python import Conflict, AlreadyExists
+from clean_python import Conflict
 from clean_python import Json
 
 __all__ = ["SQLProvider", "SQLDatabase"]
@@ -26,7 +26,9 @@ def is_serialization_error(e: DBAPIError) -> bool:
 
 
 def is_integrity_error(e: DBAPIError) -> bool:
-    return e.orig.args[0].startswith("<class 'asyncpg.exceptions.UniqueViolationError'>")
+    return e.orig.args[0].startswith(
+        "<class 'asyncpg.exceptions.UniqueViolationError'>"
+    )
 
 
 class SQLProvider(ABC):
@@ -46,7 +48,7 @@ class SQLDatabase(SQLProvider):
     engine: AsyncEngine
 
     def __init__(self, url: str, **kwargs):
-        kwargs.setdefault("isolation_level", "SERIALIZABLE")
+        kwargs.setdefault("isolation_level", "REPEATABLE READ")
         self.engine = create_async_engine(url, **kwargs)
 
     async def dispose(self) -> None:
@@ -106,7 +108,7 @@ class SQLTransaction(SQLProvider):
             if is_serialization_error(e):
                 raise Conflict("could not execute query due to concurrent update")
             elif is_integrity_error(e):
-                raise AlreadyExists("duplicate key value violates unique constraint")
+                raise ValueError("duplicate key value violates unique constraint")
             else:
                 raise e
         # _asdict() is a documented method of a NamedTuple
