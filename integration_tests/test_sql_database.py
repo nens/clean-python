@@ -3,6 +3,7 @@
 from datetime import datetime
 from datetime import timezone
 from unittest import mock
+import asyncio
 
 import pytest
 from sqlalchemy import Boolean
@@ -15,6 +16,7 @@ from sqlalchemy import Table
 from sqlalchemy import Text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import text
+from sqlalchemy.pool import NullPool
 
 from clean_python import AlreadyExists
 from clean_python import Conflict
@@ -42,20 +44,21 @@ insert_query = text(
     "VALUES ('foo', 1.23, TRUE, '2016-06-22 19:10:25-07') "
     "RETURNING id"
 )
+update_query = text(f"UPDATE test_model SET t='bar' WHERE id=:id RETURNING t")
 
 
 @pytest.fixture(scope="session")
 async def database(postgres_url):
     dburl = f"postgresql+asyncpg://{postgres_url}"
     dbname = "cleanpython_test"
-    root_provider = SQLDatabase(f"{dburl}/")
+    root_provider = SQLDatabase(f"{dburl}/", poolclass=NullPool)
     await root_provider.drop_database(dbname)
     await root_provider.create_database(dbname)
-    provider = SQLDatabase(f"{dburl}/{dbname}")
+    provider = SQLDatabase(f"{dburl}/{dbname}", poolclass=NullPool)
     async with provider.engine.begin() as conn:
         await conn.run_sync(test_model.metadata.drop_all)
         await conn.run_sync(test_model.metadata.create_all)
-    yield SQLDatabase(f"{dburl}/{dbname}")
+    yield SQLDatabase(f"{dburl}/{dbname}", poolclass=NullPool)
 
 
 @pytest.fixture
@@ -70,6 +73,11 @@ async def transaction_with_cleanup(database_with_cleanup):
     async with database_with_cleanup.transaction() as trans:
         yield trans
 
+
+@pytest.fixture
+async def record_id(database_with_cleanup: SQLDatabase) -> int:
+    record = await database_with_cleanup.execute(insert_query)
+    return record[0]["id"]
 
 async def test_execute(database_with_cleanup):
     db = database_with_cleanup
@@ -126,6 +134,51 @@ async def test_testing_transaction_rollback(database_with_cleanup):
         await trans.execute(insert_query)
 
     assert await database_with_cleanup.execute(count_query) == [{"count": 0}]
+
+
+async def test_handle_serialization_error(database_with_cleanup: SQLDatabase, record_id: int):
+    """Typical 'lost update' situation will result in a Conflict error
+    
+    1> BEGIN
+    1> UPDATE ... WHERE id=1
+    2> BEGIN
+    2> UPDATE ... WHERE id=1   # transaction 2 will wait until transaction 1 ends
+    1> COMMIT  # transaction 1 will raise SerializationError
+    """
+    async def update(sleep_before=0.0, sleep_after=0.0):
+        await asyncio.sleep(sleep_before)
+        async with database_with_cleanup.transaction() as trans:
+            res = await trans.execute(update_query, bind_params={"id": record_id})
+            await asyncio.sleep(sleep_after)
+        return res
+
+    res1, res2 = await asyncio.gather(
+        update(sleep_after=0.02), update(sleep_before=0.01),
+        return_exceptions=True
+    )
+    assert res1 == [{"t": "bar"}]
+    assert isinstance(res2, Conflict)
+    assert str(res2) == "could not execute query due to concurrent update"
+
+
+
+async def test_handle_integrity_error(database_with_cleanup: SQLDatabase, record_id: int):
+    """Typical 'lost update' situation will result in a Conflict error
+    
+    1> BEGIN
+    1> UPDATE ... WHERE id=1
+    2> BEGIN
+    2> UPDATE ... WHERE id=1   # transaction 2 will wait until transaction 1 ends
+    1> COMMIT  # transaction 1 will raise SerializationError
+    """
+    insert_query_with_id = text(
+        "INSERT INTO test_model (id, t, f, b, updated_at) "
+        "VALUES (:id, 'foo', 1.23, TRUE, '2016-06-22 19:10:25-07') "
+        "RETURNING id"
+    )
+
+    with pytest.raises(AlreadyExists, match="duplicate key value violates unique constraint"):
+        await database_with_cleanup.execute(insert_query_with_id, bind_params={"id": record_id})
 
 
 ### SQLGateway integration tests
