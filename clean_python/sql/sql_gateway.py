@@ -18,12 +18,10 @@ from sqlalchemy import Table
 from sqlalchemy import true
 from sqlalchemy import update
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import Executable
 from sqlalchemy.sql.expression import ColumnElement
 from sqlalchemy.sql.expression import false
 
-from clean_python import AlreadyExists
 from clean_python import Conflict
 from clean_python import ctx
 from clean_python import DoesNotExist
@@ -37,14 +35,6 @@ from .sql_provider import SQLDatabase
 from .sql_provider import SQLProvider
 
 __all__ = ["SQLGateway"]
-
-
-def _is_unique_violation_error_id(e: IntegrityError, id: int):
-    # sqlalchemy wraps the asyncpg error
-    msg = e.orig.args[0]
-    return ("duplicate key value violates unique constraint" in msg) and (
-        f"Key (id)=({id}) already exists." in msg
-    )
 
 
 T = TypeVar("T", bound="SQLGateway")
@@ -117,13 +107,7 @@ class SQLGateway(Gateway):
             insert(self.table).values(**self.dict_to_row(item)).returning(self.table)
         )
         async with self.transaction() as transaction:
-            try:
-                (result,) = await transaction.execute(query)
-            except IntegrityError as e:
-                id_ = item.get("id")
-                if id_ is not None and _is_unique_violation_error_id(e, id_):
-                    raise AlreadyExists(id_)
-                raise
+            (result,) = await transaction.execute(query)
             await transaction.set_related(item, result)
         return result
 

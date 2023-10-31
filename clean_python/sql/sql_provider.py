@@ -1,3 +1,4 @@
+import re
 from abc import ABC
 from abc import abstractmethod
 from contextlib import asynccontextmanager
@@ -15,14 +16,32 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.sql import Executable
 
+from clean_python import AlreadyExists
 from clean_python import Conflict
 from clean_python import Json
 
 __all__ = ["SQLProvider", "SQLDatabase"]
 
 
-def is_serialization_error(e: DBAPIError) -> bool:
-    return e.orig.args[0].startswith("<class 'asyncpg.exceptions.SerializationError'>")
+UNIQUE_VIOLATION_DETAIL_REGEX = re.compile(
+    r"DETAIL:\s*Key\s\((?P<key>.*)\)=\((?P<value>.*)\)\s+already exists"
+)
+
+
+def maybe_raise_conflict(e: DBAPIError) -> None:
+    # https://www.postgresql.org/docs/current/errcodes-appendix.html
+    if e.orig.pgcode == "40001":  # serialization_failure
+        raise Conflict("could not execute query due to concurrent update")
+
+
+def maybe_raise_already_exists(e: DBAPIError) -> None:
+    # https://www.postgresql.org/docs/current/errcodes-appendix.html
+    if e.orig.pgcode == "23505":  # unique_violation
+        match = UNIQUE_VIOLATION_DETAIL_REGEX.match(e.orig.args[0].split("\n")[-1])
+        if match:
+            raise AlreadyExists(key=match["key"], value=match["value"])
+        else:
+            raise AlreadyExists()
 
 
 class SQLProvider(ABC):
@@ -42,7 +61,7 @@ class SQLDatabase(SQLProvider):
     engine: AsyncEngine
 
     def __init__(self, url: str, **kwargs):
-        kwargs.setdefault("isolation_level", "READ COMMITTED")
+        kwargs.setdefault("isolation_level", "REPEATABLE READ")
         self.engine = create_async_engine(url, **kwargs)
 
     async def dispose(self) -> None:
@@ -99,10 +118,9 @@ class SQLTransaction(SQLProvider):
         try:
             result = await self.connection.execute(query, bind_params)
         except DBAPIError as e:
-            if is_serialization_error(e):
-                raise Conflict(str(e))
-            else:
-                raise e
+            maybe_raise_conflict(e)
+            maybe_raise_already_exists(e)
+            raise e
         # _asdict() is a documented method of a NamedTuple
         # https://docs.python.org/3/library/collections.html#collections.somenamedtuple._asdict
         return [x._asdict() for x in result.fetchall()]
