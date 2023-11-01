@@ -4,7 +4,7 @@
 ## 0.7.1 (unreleased)
 ---------------------
 
-- Propagate context in dramatiq async_actor.
+- Propagate context in dramatiq async_actor and fastapi access logger.
 
 
 ## 0.7.0 (2023-11-01)
