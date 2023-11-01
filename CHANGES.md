@@ -7,6 +7,11 @@
 - Add correlation_id to logging and accept X-Correlation-Id header in
   fastapi service.
 
+- Add `SyncFluentbitGateway`.
+
+- Log the nanosecond-precision "time" instead of the second-precision logtime
+  in `[Sync]FluentbitGateway`.
+
 
 0.6.9 (2023-10-11)
 ------------------
