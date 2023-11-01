@@ -1,10 +1,12 @@
 import os
 from unittest import mock
+from uuid import uuid4
 
 import pytest
 from dramatiq.errors import Retry
 from dramatiq.message import Message
 
+from clean_python import ctx
 from clean_python import InMemoryGateway
 from clean_python.dramatiq import DramatiqTaskLogger
 
@@ -23,6 +25,20 @@ def task_logger(in_memory_gateway):
 
 
 @pytest.fixture
+def correlation_id():
+    uid = uuid4()
+    ctx.correlation_id = uid
+    yield uid
+    ctx.correlation_id = None
+
+
+@pytest.fixture
+def patched_time():
+    with mock.patch("time.time", side_effect=(0, 123.456)):
+        yield
+
+
+@pytest.fixture
 def message():
     return Message(
         queue_name="default",
@@ -36,32 +52,36 @@ def message():
 
 
 @pytest.fixture
-def expected():
+def expected(correlation_id):
     return {
         "id": 1,
         "tag_suffix": "task_log",
         "task_id": "abc123",
         "name": "my_task",
         "state": "SUCCESS",
-        "duration": 0,
+        "duration": 123.456,
         "retries": 0,
         "origin": f"host-{os.getpid()}",
         "argsrepr": b"[1,2]",
         "kwargsrepr": b'{"foo":"bar"}',
         "result": None,
+        "time": 0.0,
+        "correlation_id": str(correlation_id),
     }
 
 
-@mock.patch("time.time", return_value=123)
-async def test_log_success(time, task_logger, in_memory_gateway, message, expected):
+async def test_log_success(
+    patched_time, task_logger, in_memory_gateway, message, expected
+):
     await task_logger.start()
     await task_logger.stop(message)
 
     assert in_memory_gateway.data[1] == expected
 
 
-@mock.patch("time.time", new=mock.Mock(return_value=123))
-async def test_log_fail(task_logger, in_memory_gateway, message, expected):
+async def test_log_fail(
+    patched_time, task_logger, in_memory_gateway, message, expected
+):
     await task_logger.start()
     await task_logger.stop(message, exception=ValueError("test"))
 
@@ -72,8 +92,9 @@ async def test_log_fail(task_logger, in_memory_gateway, message, expected):
     }
 
 
-@mock.patch("time.time", return_value=123)
-async def test_log_retry(time, task_logger, in_memory_gateway, message, expected):
+async def test_log_retry(
+    patched_time, task_logger, in_memory_gateway, message, expected
+):
     await task_logger.start()
     await task_logger.stop(message, exception=Retry("test"))
 

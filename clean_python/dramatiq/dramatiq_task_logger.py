@@ -13,6 +13,7 @@ from dramatiq.errors import Retry
 from dramatiq.message import Message
 from dramatiq.middleware import SkipMessage
 
+from clean_python import ctx
 from clean_python import Gateway
 from clean_python.fluentbit import FluentbitGateway
 
@@ -72,6 +73,11 @@ class DramatiqTaskLogger:
         except AttributeError:
             duration = 0
 
+        try:
+            start_time = self.local.start_time
+        except AttributeError:
+            start_time = None
+
         log_dict = {
             "tag_suffix": "task_log",
             "task_id": message.message_id,
@@ -83,5 +89,7 @@ class DramatiqTaskLogger:
             "argsrepr": self.encoder.encode(message.args),
             "kwargsrepr": self.encoder.encode(message.kwargs),
             "result": result,
+            "time": start_time,
+            "correlation_id": str(ctx.correlation_id) if ctx.correlation_id else None,
         }
         return await self.gateway.add(log_dict)

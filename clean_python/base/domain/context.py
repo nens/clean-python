@@ -4,6 +4,7 @@ import os
 from contextvars import ContextVar
 from typing import FrozenSet
 from typing import Optional
+from uuid import UUID
 
 from pydantic import AnyUrl
 from pydantic import FileUrl
@@ -45,6 +46,9 @@ class Context:
         self._tenant_value: ContextVar[Optional[Tenant]] = ContextVar(
             "tenant_value", default=None
         )
+        self._correlation_id_value: ContextVar[Optional[UUID]] = ContextVar(
+            "correlation_id", default=None
+        )
 
     @property
     def path(self) -> AnyUrl:
@@ -69,6 +73,14 @@ class Context:
     @tenant.setter
     def tenant(self, value: Optional[Tenant]) -> None:
         self._tenant_value.set(value)
+
+    @property
+    def correlation_id(self) -> Optional[UUID]:
+        return self._correlation_id_value.get()
+
+    @correlation_id.setter
+    def correlation_id(self, value: Optional[UUID]) -> None:
+        self._correlation_id_value.set(value)
 
 
 ctx = Context()

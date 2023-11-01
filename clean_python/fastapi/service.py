@@ -6,9 +6,12 @@ from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Set
+from uuid import UUID
+from uuid import uuid4
 
 from fastapi import Depends
 from fastapi import FastAPI
+from fastapi import Header
 from fastapi import Request
 from fastapi.exceptions import RequestValidationError
 from starlette.types import ASGIApp
@@ -62,10 +65,15 @@ def get_auth_kwargs(auth_client: Optional[OAuth2SPAClientSettings]) -> Dict[str,
         }
 
 
-async def set_context(request: Request, token: Token = Depends(get_token)) -> None:
+async def set_context(
+    request: Request,
+    token: Token = Depends(get_token),
+    x_correlation_id: UUID = Header(default_factory=uuid4),
+) -> None:
     ctx.path = request.url
     ctx.user = token.user
     ctx.tenant = token.tenant
+    ctx.correlation_id = x_correlation_id
 
 
 async def health_check():
