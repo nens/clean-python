@@ -1,7 +1,7 @@
 # Changelog of clean-python
 
 
-0.6.10 (unreleased)
+## 0.7.0 (2023-11-01)
 -------------------
 
 - Add correlation_id to logging and accept X-Correlation-Id header in
