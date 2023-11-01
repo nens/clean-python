@@ -5,6 +5,7 @@ import time
 from typing import Awaitable
 from typing import Callable
 from typing import Optional
+from uuid import UUID
 
 import inject
 from starlette.background import BackgroundTasks
@@ -39,7 +40,13 @@ class FastAPIAccessLogger:
         if response.background is None:
             response.background = BackgroundTasks()
         response.background.add_task(
-            log_access, self.gateway, request, response, time_received, request_time
+            log_access,
+            self.gateway,
+            request,
+            response,
+            time_received,
+            request_time,
+            ctx.correlation_id,
         )
         return response
 
@@ -50,6 +57,7 @@ async def log_access(
     response: Response,
     time_received: float,
     request_time: float,
+    correlation_id: Optional[UUID] = None,
 ) -> None:
     """
     Create a dictionary with logging data.
@@ -79,6 +87,6 @@ async def log_access(
         "content_length": content_length,
         "time": time_received,
         "request_time": request_time,
-        "correlation_id": str(ctx.correlation_id) if ctx.correlation_id else None,
+        "correlation_id": str(correlation_id) if correlation_id else None,
     }
     await gateway.add(item)

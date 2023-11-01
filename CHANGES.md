@@ -4,7 +4,9 @@
 ## 0.7.1 (unreleased)
 ---------------------
 
-- Nothing changed yet.
+- Automatically dump and restore correlation_id in dramatiq actors.
+
+- Fixed logging of correlation_id in fastapi access logger.
 
 
 ## 0.7.0 (2023-11-01)
