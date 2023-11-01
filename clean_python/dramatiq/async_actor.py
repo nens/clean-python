@@ -1,7 +1,6 @@
 # (c) Nelen & Schuurmans
 
 import asyncio
-import contextvars
 import logging
 import threading
 import time
@@ -71,11 +70,7 @@ class EventLoopThread(threading.Thread):
 
         done = threading.Event()
 
-        context_dump = list(contextvars.copy_context().items())
-
         async def wrapped_coro() -> R:
-            for ctx_var, value in context_dump:
-                ctx_var.set(value)
             try:
                 return await coro
             finally:
