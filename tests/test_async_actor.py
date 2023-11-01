@@ -1,5 +1,6 @@
 import threading
 from asyncio import BaseEventLoop
+from contextvars import ContextVar
 from unittest import mock
 
 import pytest
@@ -104,3 +105,15 @@ def test_async_actor():
 
     # no recursion errors here:
     repr(foo)
+
+
+foo_var: ContextVar[int] = ContextVar("foo", default=42)
+
+
+def test_run_coroutine_keeps_context(started_thread: EventLoopThread):
+    async def return_foo_var():
+        return foo_var.get()
+
+    foo_var.set(31)
+
+    assert started_thread.run_coroutine(return_foo_var()) == 31
