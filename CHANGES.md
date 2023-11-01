@@ -1,8 +1,8 @@
 # Changelog of clean-python
 
 
-## 0.7.1 (unreleased)
----------------------
+0.7.1 (2023-11-01)
+------------------
 
 - Automatically dump and restore correlation_id in dramatiq actors.
 
