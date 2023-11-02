@@ -1,7 +1,6 @@
 # (c) Nelen & Schuurmans
 
 import json
-import os
 import threading
 import time
 from typing import Any
@@ -26,18 +25,11 @@ from clean_python.fluentbit import SyncFluentbitGateway
 
 __all__ = ["CeleryTaskLogger", "set_task_logger"]
 
-celery_logger: "CeleryTaskLogger" | None = None
-
 
 class CeleryTaskLogger:
     local = threading.local()
 
-    def __init__(
-        self,
-        hostname: str,
-        gateway_override: Optional[SyncGateway] = None,
-    ):
-        self.origin = f"{hostname}-{os.getpid()}"
+    def __init__(self, gateway_override: Optional[SyncGateway] = None):
         self.gateway_override = gateway_override
 
     @property
@@ -61,27 +53,37 @@ class CeleryTaskLogger:
         except AttributeError:
             start_time = None
 
+        self.local.start_time = None
+
         if start_time is not None:
             duration = time.time() - start_time
         else:
             duration = None
 
+        try:
+            request = task.request
+        except AttributeError:
+            request = None
+
         log_dict = {
             "tag_suffix": "task_log",
             "time": start_time,
-            "task_id": getattr(task.request, "id", None),
+            "task_id": getattr(request, "id", None),
             "name": task.name,
             "state": state,
             "duration": duration,
-            "origin": getattr(task.request, "origin", None),
-            "retries": getattr(task.request, "retries", None),
-            "argsrepr": getattr(task.request, "argsrepr", None),
-            "kwargsrepr": getattr(task.request, "kwargsrepr", None),
+            "origin": getattr(request, "origin", None),
+            "retries": getattr(request, "retries", None),
+            "argsrepr": getattr(request, "argsrepr", None),
+            "kwargsrepr": getattr(request, "kwargsrepr", None),
             "result": result_json,
             "correlation_id": str(ctx.correlation_id) if ctx.correlation_id else None,
         }
 
         return self.gateway.add(log_dict)
+
+
+celery_logger: CeleryTaskLogger | None = None
 
 
 def set_task_logger(logger: CeleryTaskLogger | None):
