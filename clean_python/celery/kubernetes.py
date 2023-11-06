@@ -4,6 +4,9 @@ from celery import bootsteps
 from celery.signals import worker_ready
 from celery.signals import worker_shutdown
 
+__all__ = ["setup_kubernetes_probes"]
+
+
 HEARTBEAT_FILE = Path("/dev/shm/worker_heartbeat")
 READINESS_FILE = Path("/dev/shm/worker_ready")
 
