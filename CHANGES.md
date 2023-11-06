@@ -1,7 +1,13 @@
 # Changelog of clean-python
 
 
-0.7.2 (unreleased)
+0.8.1 (unreleased)
+------------------
+
+- Fixed celery BaseTask for retried tasks.
+
+
+0.8.0 (2023-11-06)
 ------------------
 
 - Renamed clean_python.celery to clean_python.amqp; clean_python.celery now contains
