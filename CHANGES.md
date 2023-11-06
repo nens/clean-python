@@ -1,6 +1,12 @@
 # Changelog of clean-python
 
 
+0.8.1 (unreleased)
+------------------
+
+- Nothing changed yet.
+
+
 0.8.0 (2023-11-06)
 ------------------
 
