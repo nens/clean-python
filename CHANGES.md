@@ -1,7 +1,7 @@
 # Changelog of clean-python
 
 
-0.8.1 (unreleased)
+0.8.1 (2023-11-06)
 ------------------
 
 - Fixed celery BaseTask for retried tasks.
