@@ -56,7 +56,7 @@ jobs:
       - name: Install python dependencies
         run: |
           pip install --disable-pip-version-check --upgrade pip setuptools
-          pip install -e .[dramatiq,fastapi,auth,celery,fluentbit,sql,s3,api_client,test] ${{ matrix.pins }}
+          pip install -e .[dramatiq,fastapi,auth,celery,fluentbit,sql,s3,api_client,amqp,test] ${{ matrix.pins }}
           pip list
 
       - name: Run tests
