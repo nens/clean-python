@@ -86,10 +86,10 @@ class CeleryTaskLogger:
         return self.gateway.add(log_dict)
 
 
-celery_logger: CeleryTaskLogger | None = None
+celery_logger: Optional[CeleryTaskLogger] = None
 
 
-def set_task_logger(logger: CeleryTaskLogger | None):
+def set_task_logger(logger: Optional[CeleryTaskLogger]):
     global celery_logger
     celery_logger = logger
 
