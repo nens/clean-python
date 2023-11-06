@@ -1,4 +1,5 @@
 from contextvars import copy_context
+from typing import Optional
 from uuid import UUID
 from uuid import uuid4
 
@@ -15,8 +16,8 @@ HEADER_FIELD = "clean_python_context"
 
 
 class TaskHeaders(ValueObject):
-    tenant: Tenant | None
-    correlation_id: UUID | None
+    tenant: Optional[Tenant]
+    correlation_id: Optional[UUID]
 
     @classmethod
     def from_celery_request(cls, request) -> "TaskHeaders":
