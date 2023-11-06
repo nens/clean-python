@@ -4,7 +4,6 @@ from uuid import uuid4
 import pytest
 from celery import Task
 
-from clean_python import ctx
 from clean_python import InMemorySyncGateway
 from clean_python.celery import CeleryTaskLogger
 
@@ -55,6 +54,12 @@ def celery_task():
     request.retries = 25
     request.argsrepr = "[1, 2]"
     request.kwargsrepr = "{}"
+    request.headers = {
+        "clean_python_context": {
+            "tenant": None,
+            "correlation_id": "b3089ea7-2585-43e5-a63c-ae30a6e9b5e4",
+        }
+    }
     task = mock.Mock()
     task.name = "task_name"
     task.request = request
@@ -71,6 +76,7 @@ def test_log_with_request(celery_task_logger: CeleryTaskLogger, celery_task):
     assert entry["argsrepr"] == "[1, 2]"
     assert entry["kwargsrepr"] == "{}"
     assert entry["origin"] == "hostname"
+    assert entry["correlation_id"] == "b3089ea7-2585-43e5-a63c-ae30a6e9b5e4"
 
 
 @pytest.mark.parametrize(
@@ -89,19 +95,3 @@ def test_log_with_result(
 
     (entry,) = celery_task_logger.gateway.filter([])
     assert entry["result"] == expected
-
-
-@pytest.fixture
-def correlation_id():
-    ctx.correlation_id = uuid4()
-    yield ctx.correlation_id
-    ctx.correlation_id = None
-
-
-def test_log_with_correlation_id(
-    celery_task_logger: CeleryTaskLogger, celery_task, correlation_id
-):
-    celery_task_logger.stop(celery_task, "STAAT")
-
-    (entry,) = celery_task_logger.gateway.filter([])
-    assert entry["correlation_id"] == str(correlation_id)
