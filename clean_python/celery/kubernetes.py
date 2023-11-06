@@ -8,12 +8,10 @@ HEARTBEAT_FILE = Path("/dev/shm/worker_heartbeat")
 READINESS_FILE = Path("/dev/shm/worker_ready")
 
 
-@worker_ready.connect
 def register_readiness(**_):
     READINESS_FILE.touch()
 
 
-@worker_shutdown.connect
 def unregister_readiness(**_):
     READINESS_FILE.unlink(missing_ok=True)
 
@@ -38,3 +36,10 @@ class LivenessProbe(bootsteps.StartStopStep):
 
     def update_heartbeat_file(self, worker):
         HEARTBEAT_FILE.touch()
+
+
+def setup_kubernetes_probes(app):
+    worker_ready.connect(register_readiness)
+    worker_shutdown.connect(unregister_readiness)
+
+    app.steps["worker"].add(LivenessProbe)
