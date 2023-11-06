@@ -30,13 +30,18 @@ class TaskHeaders(ValueObject):
 class BaseTask(Task):
     def apply_async(self, args=None, kwargs=None, **options):
         # include correlation_id and tenant in the headers
-        if options.get("headers") is not None:
-            headers = options["headers"].copy()
+        if "headers" in options:
+            headers = options.pop("headers")
+            if headers is None:
+                headers = {}
+            else:
+                headers = headers.copy()
         else:
             headers = {}
-        headers[HEADER_FIELD] = TaskHeaders(
-            tenant=ctx.tenant, correlation_id=ctx.correlation_id or uuid4()
-        ).model_dump(mode="json")
+        if HEADER_FIELD not in headers:
+            headers[HEADER_FIELD] = TaskHeaders(
+                tenant=ctx.tenant, correlation_id=ctx.correlation_id or uuid4()
+            ).model_dump(mode="json")
         return super().apply_async(args, kwargs, headers=headers, **options)
 
     def __call__(self, *args, **kwargs):
