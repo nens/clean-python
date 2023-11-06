@@ -21,7 +21,8 @@ test = [
     "debugpy",
     "httpx",
     "uvicorn",
-    "python-multipart"
+    "python-multipart",
+    "pytest-celery"
 ]
 dramatiq = ["dramatiq"]
 fastapi = ["fastapi"]
