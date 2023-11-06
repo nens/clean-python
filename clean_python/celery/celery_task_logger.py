@@ -19,9 +19,10 @@ from celery.states import RETRY
 from celery.states import REVOKED
 from celery.states import SUCCESS
 
-from clean_python import ctx
 from clean_python import SyncGateway
 from clean_python.fluentbit import SyncFluentbitGateway
+
+from .base_task import TaskHeaders
 
 __all__ = ["CeleryTaskLogger", "set_task_logger"]
 
@@ -62,8 +63,10 @@ class CeleryTaskLogger:
 
         try:
             request = task.request
+            correlation_id = TaskHeaders.from_celery_request(request).correlation_id
         except AttributeError:
             request = None
+            correlation_id = None
 
         log_dict = {
             "tag_suffix": "task_log",
@@ -77,7 +80,7 @@ class CeleryTaskLogger:
             "argsrepr": getattr(request, "argsrepr", None),
             "kwargsrepr": getattr(request, "kwargsrepr", None),
             "result": result_json,
-            "correlation_id": str(ctx.correlation_id) if ctx.correlation_id else None,
+            "correlation_id": str(correlation_id) if correlation_id else None,
         }
 
         return self.gateway.add(log_dict)

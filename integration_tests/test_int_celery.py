@@ -1,10 +1,13 @@
 import time
+from uuid import UUID
 
 import pytest
 from celery.exceptions import Ignore
 from celery.exceptions import Reject
 
+from clean_python import ctx
 from clean_python import InMemorySyncGateway
+from clean_python import Tenant
 from clean_python.celery import BaseTask
 from clean_python.celery import CeleryTaskLogger
 from clean_python.celery import set_task_logger
@@ -37,6 +40,8 @@ def celery_task(celery_app, celery_worker):
             raise Reject()
         elif event == "retry":
             raise self.retry(countdown=seconds, max_retries=1)
+        elif event == "context":
+            return {"tenant": ctx.tenant.id, "correlation_id": str(ctx.correlation_id)}
         else:
             raise ValueError(f"Unknown event '{event}'")
 
@@ -70,6 +75,7 @@ def test_log_success(celery_task: BaseTask, task_logger: CeleryTaskLogger):
     assert log["kwargsrepr"] == "{'return_value': 16}"
     assert log["retries"] == 0
     assert log["result"] == {"value": 16}
+    assert UUID(log["correlation_id"])  # generated
 
 
 def test_log_failure(celery_task: BaseTask, task_logger: CeleryTaskLogger):
@@ -81,3 +87,26 @@ def test_log_failure(celery_task: BaseTask, task_logger: CeleryTaskLogger):
     (log,) = task_logger.gateway.filter([])
     assert log["state"] == "FAILURE"
     assert log["result"]["traceback"].startswith("Traceback")
+
+
+@pytest.fixture
+def custom_context():
+    ctx.correlation_id = UUID("b3089ea7-2585-43e5-a63c-ae30a6e9b5e4")
+    ctx.tenant = Tenant(id=2, name="custom")
+    yield ctx
+    ctx.correlation_id = None
+    ctx.tenant = None
+
+
+def test_context(celery_task: BaseTask, task_logger: CeleryTaskLogger, custom_context):
+    result = celery_task.apply_async((0.0,), {"event": "context"}, countdown=1.0)
+    custom_context.correlation_id = None
+    custom_context.tenant = None
+
+    assert result.get(timeout=10) == {
+        "tenant": 2,
+        "correlation_id": "b3089ea7-2585-43e5-a63c-ae30a6e9b5e4",
+    }
+
+    (log,) = task_logger.gateway.filter([])
+    assert log["correlation_id"] == "b3089ea7-2585-43e5-a63c-ae30a6e9b5e4"
