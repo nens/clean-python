@@ -18,7 +18,7 @@ def test_default_context():
 async def test_task_isolation():
     async def get_set(user):
         ctx.user = user
-        asyncio.sleep(0.01)
+        await asyncio.sleep(0.01)
         assert ctx.user == user
 
     await asyncio.gather(*[get_set(User(id=str(i), name="piet")) for i in range(10)])

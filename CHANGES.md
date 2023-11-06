@@ -4,7 +4,8 @@
 0.7.2 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Renamed clean_python.celery to clean_python.amqp; clean_python.celery now contains
+  actual Celery abstractions.
 
 
 0.7.1 (2023-11-01)
