@@ -1,7 +1,7 @@
 # Changelog of clean-python
 
 
-0.8.2 (unreleased)
+0.8.2 (2023-11-07)
 ------------------
 
 - Skip health check access logs.
