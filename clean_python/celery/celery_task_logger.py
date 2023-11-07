@@ -83,7 +83,7 @@ class CeleryTaskLogger:
 
         try:
             args = json.loads(json.dumps(request.args))
-        except TypeError:
+        except (AttributeError, TypeError):
             args = None
 
         try:
@@ -104,7 +104,7 @@ class CeleryTaskLogger:
             "kwargs": kwargs,
             "result": result_json,
             "tenant_id": tenant_id,
-            "correlation_id": str(correlation_id),
+            "correlation_id": None if correlation_id is None else str(correlation_id),
         }
 
         return self.gateway.add(log_dict)

@@ -24,10 +24,11 @@ def test_log_minimal(celery_task_logger: CeleryTaskLogger):
         "state": "STAAT",
         "duration": None,
         "origin": None,
-        "argsrepr": None,
-        "kwargsrepr": None,
+        "args": None,
+        "kwargs": None,
         "result": None,
         "time": None,
+        "tenant_id": None,
         "correlation_id": None,
         "retries": None,
     }
@@ -52,9 +53,8 @@ def celery_task():
     request.id = "abc123"
     request.origin = "hostname"
     request.retries = 25
-    request.argsrepr = "[1, 2]"
-    request.kwargsrepr = "{}"
-    request.headers = {
+    request.args = [1, 2]
+    request.kwargs = {
         "clean_python_context": {
             "tenant": None,
             "correlation_id": "b3089ea7-2585-43e5-a63c-ae30a6e9b5e4",
@@ -73,8 +73,8 @@ def test_log_with_request(celery_task_logger: CeleryTaskLogger, celery_task):
     assert entry["name"] == "task_name"
     assert entry["task_id"] == "abc123"
     assert entry["retries"] == 25
-    assert entry["argsrepr"] == "[1, 2]"
-    assert entry["kwargsrepr"] == "{}"
+    assert entry["args"] == [1, 2]
+    assert entry["kwargs"] == {}
     assert entry["origin"] == "hostname"
     assert entry["correlation_id"] == "b3089ea7-2585-43e5-a63c-ae30a6e9b5e4"
 
