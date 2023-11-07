@@ -19,6 +19,19 @@ from clean_python.fluentbit import FluentbitGateway
 __all__ = ["FastAPIAccessLogger"]
 
 
+def get_view_name(request: Request) -> Optional[str]:
+    try:
+        view_name = request.scope["route"].name
+    except KeyError:
+        return None
+
+    return view_name
+
+
+def is_health_check(request: Request) -> bool:
+    return get_view_name(request) == "health_check"
+
+
 class FastAPIAccessLogger:
     def __init__(self, hostname: str, gateway_override: Optional[Gateway] = None):
         self.origin = f"{hostname}-{os.getpid()}"
@@ -35,19 +48,20 @@ class FastAPIAccessLogger:
         response = await call_next(request)
         request_time = time.time() - time_received
 
-        # Instead of logging directly, set it as background task so that it is
-        # executed after the response. See https://www.starlette.io/background/.
-        if response.background is None:
-            response.background = BackgroundTasks()
-        response.background.add_task(
-            log_access,
-            self.gateway,
-            request,
-            response,
-            time_received,
-            request_time,
-            ctx.correlation_id,
-        )
+        if not is_health_check(request):
+            # Instead of logging directly, set it as background task so that it is
+            # executed after the response. See https://www.starlette.io/background/.
+            if response.background is None:
+                response.background = BackgroundTasks()
+            response.background.add_task(
+                log_access,
+                self.gateway,
+                request,
+                response,
+                time_received,
+                request_time,
+                ctx.correlation_id,
+            )
         return response
 
 
@@ -67,11 +81,6 @@ async def log_access(
     except (TypeError, ValueError):
         content_length = None
 
-    try:
-        view_name = request.scope["route"].name
-    except KeyError:
-        view_name = None
-
     item = {
         "tag_suffix": "access_log",
         "remote_address": getattr(request.client, "host", None),
@@ -81,7 +90,7 @@ async def log_access(
         "referer": request.headers.get("referer"),
         "user_agent": request.headers.get("user-agent"),
         "query_params": request.url.query,
-        "view_name": view_name,
+        "view_name": get_view_name(request),
         "status": response.status_code,
         "content_type": response.headers.get("content-type"),
         "content_length": content_length,

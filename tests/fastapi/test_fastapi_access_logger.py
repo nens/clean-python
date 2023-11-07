@@ -166,3 +166,26 @@ async def test_logging_minimal(
         "request_time": 0.0,
         "correlation_id": None,
     }
+
+
+@pytest.fixture
+def req_health():
+    # a copy-paste from a local session, with some values removed / shortened
+    scope = {
+        "type": "http",
+        "route": APIRoute(
+            endpoint=lambda x: x,
+            path="/health",
+            name="health_check",
+            methods=["GET"],
+        ),
+    }
+    return Request(scope)
+
+
+@mock.patch("time.time", return_value=0.0)
+async def test_logging_health_check_skipped(
+    time, fastapi_access_logger, req_health, streaming_response, call_next_streaming
+):
+    await fastapi_access_logger(req_health, call_next_streaming)
+    assert streaming_response.background is None
