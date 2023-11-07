@@ -63,10 +63,33 @@ class CeleryTaskLogger:
 
         try:
             request = task.request
-            correlation_id = TaskHeaders.from_celery_request(request).correlation_id
         except AttributeError:
             request = None
+
+        try:
+            headers, kwargs = TaskHeaders.from_kwargs(request.kwargs)
+        except AttributeError:
+            headers = kwargs = None  # type: ignore
+
+        try:
+            tenant_id = headers.tenant.id  # type: ignore
+        except AttributeError:
+            tenant_id = None
+
+        try:
+            correlation_id = headers.correlation_id
+        except AttributeError:
             correlation_id = None
+
+        try:
+            args = json.loads(json.dumps(request.args))
+        except TypeError:
+            args = None
+
+        try:
+            kwargs = json.loads(json.dumps(kwargs))
+        except TypeError:
+            kwargs = None
 
         log_dict = {
             "tag_suffix": "task_log",
@@ -77,10 +100,11 @@ class CeleryTaskLogger:
             "duration": duration,
             "origin": getattr(request, "origin", None),
             "retries": getattr(request, "retries", None),
-            "argsrepr": getattr(request, "argsrepr", None),
-            "kwargsrepr": getattr(request, "kwargsrepr", None),
+            "args": args,
+            "kwargs": kwargs,
             "result": result_json,
-            "correlation_id": str(correlation_id) if correlation_id else None,
+            "tenant_id": tenant_id,
+            "correlation_id": str(correlation_id),
         }
 
         return self.gateway.add(log_dict)

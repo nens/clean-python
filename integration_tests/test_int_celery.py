@@ -15,7 +15,7 @@ from clean_python.celery import set_task_logger
 
 @pytest.fixture(scope="session")
 def celery_parameters():
-    return {"task_cls": BaseTask}
+    return {"task_cls": BaseTask, "strict_typing": False}
 
 
 @pytest.fixture(scope="session")
@@ -41,7 +41,10 @@ def celery_task(celery_app, celery_worker):
         elif event == "retry":
             raise self.retry(countdown=seconds, max_retries=1)
         elif event == "context":
-            return {"tenant": ctx.tenant.id, "correlation_id": str(ctx.correlation_id)}
+            return {
+                "tenant_id": ctx.tenant.id,
+                "correlation_id": str(ctx.correlation_id),
+            }
         else:
             raise ValueError(f"Unknown event '{event}'")
 
@@ -71,11 +74,12 @@ def test_log_success(celery_task: BaseTask, task_logger: CeleryTaskLogger):
     assert log["state"] == "SUCCESS"
     assert log["name"] == "testing"
     assert log["duration"] > 0.0
-    assert log["argsrepr"] == "(0.0,)"
-    assert log["kwargsrepr"] == "{'return_value': 16}"
+    assert log["args"] == [0.0]
+    assert log["kwargs"] == {"return_value": 16}
     assert log["retries"] == 0
     assert log["result"] == {"value": 16}
     assert UUID(log["correlation_id"])  # generated
+    assert log["tenant_id"] is None
 
 
 def test_log_failure(celery_task: BaseTask, task_logger: CeleryTaskLogger):
@@ -98,15 +102,14 @@ def custom_context():
     ctx.tenant = None
 
 
-def test_context(celery_task: BaseTask, task_logger: CeleryTaskLogger, custom_context):
+def test_context(celery_task: BaseTask, custom_context, task_logger):
     result = celery_task.apply_async((0.0,), {"event": "context"}, countdown=1.0)
-    custom_context.correlation_id = None
-    custom_context.tenant = None
 
     assert result.get(timeout=10) == {
-        "tenant": 2,
+        "tenant_id": 2,
         "correlation_id": "b3089ea7-2585-43e5-a63c-ae30a6e9b5e4",
     }
 
     (log,) = task_logger.gateway.filter([])
     assert log["correlation_id"] == "b3089ea7-2585-43e5-a63c-ae30a6e9b5e4"
+    assert log["tenant_id"] == 2
