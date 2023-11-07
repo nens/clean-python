@@ -18,3 +18,8 @@ services:
       MINIO_ROOT_PASSWORD: cleanpython
     ports:
       - "9000:9000"
+
+  fluentbit:
+    image: fluent/fluent-bit:1.9
+    ports:
+      - "24224:24224"

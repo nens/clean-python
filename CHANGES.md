@@ -4,7 +4,9 @@
 0.8.2 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Skip health check access logs.
+
+- Fix access logging of correlation id.
 
 
 0.8.1 (2023-11-06)
