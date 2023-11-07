@@ -7,9 +7,11 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.responses import StreamingResponse
 
-from clean_python import ctx
 from clean_python import InMemoryGateway
 from clean_python.fastapi import FastAPIAccessLogger
+from clean_python.fastapi import get_correlation_id
+
+SOME_UUID = uuid4()
 
 
 @pytest.fixture
@@ -38,6 +40,7 @@ def req():
             (b"accept-encoding", b"gzip, deflate, br"),
             (b"accept-language", b"en-US,en;q=0.9"),
             (b"cookie", b"..."),
+            (b"x-correlation-id", str(SOME_UUID).encode()),
         ],
         "state": {},
         "method": "GET",
@@ -64,23 +67,14 @@ def response():
 @pytest.fixture
 def call_next(response):
     async def func(request):
+        assert get_correlation_id(request) == SOME_UUID
         return response
 
     return func
 
 
-@pytest.fixture
-def correlation_id():
-    uid = uuid4()
-    ctx.correlation_id = uid
-    yield uid
-    ctx.correlation_id = None
-
-
 @mock.patch("time.time", return_value=0.0)
-async def test_logging(
-    time, fastapi_access_logger, req, response, call_next, correlation_id
-):
+async def test_logging(time, fastapi_access_logger, req, response, call_next):
     await fastapi_access_logger(req, call_next)
     assert len(fastapi_access_logger.gateway.data) == 0
     await response.background()
@@ -101,7 +95,7 @@ async def test_logging(
         "content_length": 13,
         "time": 0.0,
         "request_time": 0.0,
-        "correlation_id": str(correlation_id),
+        "correlation_id": str(SOME_UUID),
     }
 
 
@@ -116,7 +110,7 @@ def req_minimal():
         "scheme": "http",
         "path": "/",
         "query_string": "",
-        "headers": [],
+        "headers": [(b"abc", b"def")],
     }
     return Request(scope)
 
@@ -135,16 +129,27 @@ def streaming_response():
 @pytest.fixture
 def call_next_streaming(streaming_response):
     async def func(request):
+        assert get_correlation_id(request) == SOME_UUID
         return streaming_response
 
     return func
 
 
 @mock.patch("time.time", return_value=0.0)
+@mock.patch("clean_python.fastapi.fastapi_access_logger.uuid4", return_value=SOME_UUID)
 async def test_logging_minimal(
-    time, fastapi_access_logger, req_minimal, streaming_response, call_next_streaming
+    time,
+    uuid4,
+    fastapi_access_logger,
+    req_minimal,
+    streaming_response,
+    call_next_streaming,
 ):
     await fastapi_access_logger(req_minimal, call_next_streaming)
+    assert req_minimal["headers"] == [
+        (b"abc", b"def"),
+        (b"x-correlation-id", str(SOME_UUID).encode()),
+    ]
     assert len(fastapi_access_logger.gateway.data) == 0
     await streaming_response.background()
     (actual,) = fastapi_access_logger.gateway.data.values()
@@ -164,15 +169,21 @@ async def test_logging_minimal(
         "content_length": None,
         "time": 0.0,
         "request_time": 0.0,
-        "correlation_id": None,
+        "correlation_id": str(SOME_UUID),
     }
 
 
 @pytest.fixture
 def req_health():
-    # a copy-paste from a local session, with some values removed / shortened
     scope = {
         "type": "http",
+        "asgi": {"version": "3.0"},
+        "http_version": "1.1",
+        "method": "GET",
+        "scheme": "http",
+        "path": "/",
+        "query_string": "",
+        "headers": [],
         "route": APIRoute(
             endpoint=lambda x: x,
             path="/health",
@@ -183,9 +194,22 @@ def req_health():
     return Request(scope)
 
 
+@pytest.fixture
+def call_next_no_correlation_id(response):
+    async def func(request):
+        assert get_correlation_id(request) is None
+        return response
+
+    return func
+
+
 @mock.patch("time.time", return_value=0.0)
 async def test_logging_health_check_skipped(
-    time, fastapi_access_logger, req_health, streaming_response, call_next_streaming
+    time,
+    fastapi_access_logger,
+    req_health,
+    streaming_response,
+    call_next_no_correlation_id,
 ):
-    await fastapi_access_logger(req_health, call_next_streaming)
+    await fastapi_access_logger(req_health, call_next_no_correlation_id)
     assert streaming_response.background is None
