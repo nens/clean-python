@@ -8,6 +8,8 @@
 
 - Fix access logging of correlation id.
 
+- Workaround celery issues with message headers: use the body (kwargs) instead.
+
 
 0.8.1 (2023-11-06)
 ------------------
