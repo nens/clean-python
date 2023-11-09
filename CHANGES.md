@@ -1,7 +1,7 @@
 # Changelog of clean-python
 
 
-0.8.3 (unreleased)
+## 0.8.3 (2023-11-09)
 ------------------
 
 - Adapted RequestQuery.filters() to deal with list query parameters.
