@@ -1,3 +1,4 @@
+from typing import List
 from typing import Optional
 
 import pytest
@@ -10,6 +11,10 @@ from clean_python.fastapi import RequestQuery
 
 class SomeQuery(RequestQuery):
     foo: Optional[int] = None
+
+
+class SomeListQuery(RequestQuery):
+    foo: Optional[List[int]]
 
 
 @pytest.mark.parametrize(
@@ -35,6 +40,7 @@ def test_as_page_options(query, expected):
         (SomeQuery(), []),
         (SomeQuery(foo=None), []),
         (SomeQuery(foo=3), [Filter(field="foo", values=[3])]),
+        (SomeListQuery(foo=[3, 4]), [Filter(field="foo", values=[3, 4])]),
     ],
 )
 def test_filters(query, expected):

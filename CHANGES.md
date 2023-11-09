@@ -4,7 +4,7 @@
 0.8.3 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Adapted RequestQuery.filters() to deal with list query parameters.
 
 
 0.8.2 (2023-11-07)
