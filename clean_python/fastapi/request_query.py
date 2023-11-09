@@ -44,7 +44,10 @@ class RequestQuery(ValueObject):
         for name in self.model_fields:
             if name in {"limit", "offset", "order_by"}:
                 continue
+            # deal with list query paramerers
             value = getattr(self, name)
             if value is not None:
-                result.append(Filter(field=name, values=[value]))
+                if not isinstance(value, List):
+                    value = [value]
+                result.append(Filter(field=name, values=value))
         return result
