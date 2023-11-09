@@ -47,7 +47,7 @@ class RequestQuery(ValueObject):
             # deal with list query paramerers
             value = getattr(self, name)
             if value is not None:
-                if not isinstance(value, List):
+                if not isinstance(value, list):
                     value = [value]
                 result.append(Filter(field=name, values=value))
         return result

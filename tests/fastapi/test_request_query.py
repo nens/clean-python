@@ -12,6 +12,10 @@ class SomeQuery(RequestQuery):
     foo: Optional[int] = None
 
 
+class SomeListQuery(RequestQuery):
+    foo: list[int] | None = None
+
+
 @pytest.mark.parametrize(
     "query,expected",
     [
@@ -35,6 +39,7 @@ def test_as_page_options(query, expected):
         (SomeQuery(), []),
         (SomeQuery(foo=None), []),
         (SomeQuery(foo=3), [Filter(field="foo", values=[3])]),
+        (SomeListQuery(foo=[3, 4]), [Filter(field="foo", values=[3, 4])]),
     ],
 )
 def test_filters(query, expected):
