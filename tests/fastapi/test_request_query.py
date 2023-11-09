@@ -14,7 +14,7 @@ class SomeQuery(RequestQuery):
 
 
 class SomeListQuery(RequestQuery):
-    foo: List[int] | None = None
+    foo: Optional[List[int]]
 
 
 @pytest.mark.parametrize(
