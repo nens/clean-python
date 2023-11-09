@@ -1,3 +1,4 @@
+from typing import List
 from typing import Optional
 
 import pytest
@@ -13,7 +14,7 @@ class SomeQuery(RequestQuery):
 
 
 class SomeListQuery(RequestQuery):
-    foo: list[int] | None = None
+    foo: List[int] | None = None
 
 
 @pytest.mark.parametrize(
