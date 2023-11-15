@@ -4,7 +4,7 @@
 ## 0.8.4 (unreleased)
 ---------------------
 
-- Nothing changed yet.
+- Fixed verification of client credentials tokens.
 
 
 ## 0.8.3 (2023-11-09)

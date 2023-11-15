@@ -62,3 +62,17 @@ def test_tenant(claims_multitenant):
 def test_no_tenant(claims):
     actual = Token(claims=claims).tenant
     assert actual is None
+
+
+@pytest.fixture
+def claims_client_credentials():
+    return {
+        "sub": "abc123",
+        "scope": "a b",
+        "client_id": "foo",
+    }
+
+
+def test_user_client_credentials(claims_client_credentials):
+    actual = Token(claims=claims_client_credentials).user
+    assert actual == User(id="abc123", name="foo")
