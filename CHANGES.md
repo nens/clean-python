@@ -1,8 +1,8 @@
 # Changelog of clean-python
 
 
-## 0.8.4 (unreleased)
----------------------
+0.8.4 (2023-11-15)
+------------------
 
 - Fixed verification of client credentials tokens.
 
