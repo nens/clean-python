@@ -50,7 +50,6 @@ def token_generator(private_key):
         "token_use": "access",
         "exp": int(time.time()) + 3600,
         "iat": int(time.time()) - 3600,
-        "nbf": int(time.time()) - 3600,
     }
 
     def generate_token(**claim_overrides):

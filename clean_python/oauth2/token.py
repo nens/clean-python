@@ -21,14 +21,19 @@ class Token(ValueObject):
             return v
         assert v.get("sub"), "missing 'sub' claim"
         assert v.get("scope"), "missing 'scope' claim"
-        assert v.get("username"), "missing 'username' claim"
+        assert v.get("username") or v.get(
+            "client_id"
+        ), "missing 'username' / 'client_id' claim"
         if v.get("tenant"):
             assert v.get("tenant_name"), "missing 'tenant_name' claim"
         return v
 
     @property
     def user(self) -> User:
-        return User(id=self.claims["sub"], name=self.claims["username"])
+        return User(
+            id=self.claims["sub"],
+            name=self.claims.get("username") or self.claims["client_id"],
+        )
 
     @property
     def scope(self) -> Scope:

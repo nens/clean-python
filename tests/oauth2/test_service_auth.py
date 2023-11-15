@@ -110,3 +110,15 @@ def test_context(app, client: TestClient, token_generator):
     }
     assert ctx.user.id != "foo"
     assert ctx.tenant is None
+
+
+@pytest.mark.usefixtures("jwk_patched")
+def test_client_credentials_ok(app, client: TestClient, token_generator):
+    response = client.get(
+        app.url_path_for("v1/testing"),
+        headers={
+            "Authorization": "Bearer " + token_generator(username=None, client_id="foo")
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK
