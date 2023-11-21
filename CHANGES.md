@@ -1,10 +1,12 @@
 # Changelog of clean-python
 
 
-0.8.5 (unreleased)
+0.9.0 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Manage.update now automatically retries if a Conflict is raised.
+
+- AlreadyExists is not a subclass of Conflict anymore.
 
 
 0.8.4 (2023-11-15)
