@@ -17,6 +17,7 @@ from aiohttp import ClientSession
 from pydantic import AnyHttpUrl
 from pydantic import field_validator
 
+from clean_python import Conflict
 from clean_python import Json
 from clean_python import ValueObject
 
@@ -32,6 +33,13 @@ RETRY_STATUSES = frozenset({413, 429, 503})  # like in urllib3
 def is_success(status: HTTPStatus) -> bool:
     """Returns True on 2xx status"""
     return (int(status) // 100) == 2
+
+
+def check_exception(status: HTTPStatus, body: Json) -> None:
+    if status == HTTPStatus.CONFLICT:
+        raise Conflict(body.get("message", str(body)))
+    elif not is_success(status):
+        raise ApiException(body, status=status)
 
 
 JSON_CONTENT_TYPE_REGEX = re.compile(r"^application\/[^+]*[+]?(json);?.*$")
@@ -167,10 +175,8 @@ class ApiProvider:
                 f"Unexpected content type '{content_type}'", status=status
             )
         body = await response.json()
-        if is_success(status):
-            return body
-        else:
-            raise ApiException(body, status=status)
+        check_exception(status, body)
+        return body
 
     async def request_raw(
         self,

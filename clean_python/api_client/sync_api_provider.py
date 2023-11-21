@@ -12,9 +12,9 @@ from urllib3 import Retry
 from clean_python import Json
 
 from .api_provider import add_query_params
+from .api_provider import check_exception
 from .api_provider import FileFormPost
 from .api_provider import is_json_content_type
-from .api_provider import is_success
 from .api_provider import join
 from .exceptions import ApiException
 from .response import Response
@@ -112,10 +112,8 @@ class SyncApiProvider:
                 f"Unexpected content type '{content_type}'", status=status
             )
         body = json_lib.loads(response.data.decode())
-        if is_success(status):
-            return body
-        else:
-            raise ApiException(body, status=status)
+        check_exception(status, body)
+        return body
 
     def request_raw(
         self,

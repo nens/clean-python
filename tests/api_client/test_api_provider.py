@@ -4,6 +4,7 @@ from unittest import mock
 import pytest
 from aiohttp import ClientSession
 
+from clean_python import Conflict
 from clean_python import ctx
 from clean_python import Tenant
 from clean_python.api_client import ApiException
@@ -171,3 +172,18 @@ async def test_trailing_slash(
         api_provider._session.request.call_args[1]["url"]
         == "http://testserver/foo/" + expected
     )
+
+
+async def test_conflict(api_provider: ApiProvider, response):
+    response.status = HTTPStatus.CONFLICT
+
+    with pytest.raises(Conflict):
+        await api_provider.request("GET", "bar")
+
+
+async def test_conflict_with_message(api_provider: ApiProvider, response):
+    response.status = HTTPStatus.CONFLICT
+    response.json.return_value = {"message": "foo"}
+
+    with pytest.raises(Conflict, match="foo"):
+        await api_provider.request("GET", "bar")
