@@ -48,7 +48,9 @@ class Manage(Generic[T]):
         """This update has a built-in retry function that can be switched off.
 
         This because some gateways (SQLGateway, ApiGateway) may raise Conflict
-        errors in case there are concurrency issues.
+        errors in case there are concurrency issues. The backoff strategy assumes that
+        we can retry immediately (because the conflict is gone immediately), but it
+        does add some jitter between 0 and 200 ms to avoid many competing processes.
 
         If the repo.update is not idempotent (which is atypical), retries should be
         switched off.
@@ -58,7 +60,7 @@ class Manage(Generic[T]):
         else:
             return await self.repo.update(id, values)
 
-    @backoff.on_exception(backoff.constant, Conflict, max_time=1.0, interval=0.05)
+    @backoff.on_exception(backoff.constant, Conflict, max_tries=10, interval=0.2)
     async def _update_with_retries(self, id: Id, values: Json) -> T:
         return await self.repo.update(id, values)
 
