@@ -5,6 +5,7 @@ from unittest import mock
 
 import pytest
 
+from clean_python import Conflict
 from clean_python import ctx
 from clean_python import Tenant
 from clean_python.api_client import ApiException
@@ -203,3 +204,18 @@ def test_post_file_with_fields(api_provider: SyncApiProvider):
         timeout=5.0,
         encode_multipart=True,
     )
+
+
+def test_conflict(api_provider: SyncApiProvider, response):
+    response.status = HTTPStatus.CONFLICT
+
+    with pytest.raises(Conflict):
+        api_provider.request("GET", "bar")
+
+
+def test_conflict_with_message(api_provider: SyncApiProvider, response):
+    response.status = HTTPStatus.CONFLICT
+    response.json.return_value = {"message": "foo"}
+
+    with pytest.raises(Conflict, match="foo"):
+        api_provider.request("GET", "bar")
