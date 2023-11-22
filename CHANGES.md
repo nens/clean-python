@@ -1,7 +1,7 @@
 # Changelog of clean-python
 
 
-0.9.0 (unreleased)
+0.9.0 (2023-11-22)
 ------------------
 
 - Manage.update now automatically retries if a Conflict is raised.

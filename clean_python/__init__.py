@@ -3,5 +3,5 @@
 from .base import *  # NOQA
 
 # fmt: off
-__version__ = '0.8.5.dev0'
+__version__ = '0.9.0'
 # fmt: on
