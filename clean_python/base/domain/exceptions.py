@@ -41,7 +41,7 @@ class Conflict(Exception):
         super().__init__(msg)
 
 
-class AlreadyExists(Conflict):
+class AlreadyExists(Exception):
     def __init__(self, value: Any = None, key: str = "id"):
         super().__init__(f"record with {key}={value} already exists")
 

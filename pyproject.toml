@@ -10,7 +10,7 @@ license = {text = "MIT"}
 classifiers = ["Programming Language :: Python"]
 keywords = []
 requires-python = ">=3.7"
-dependencies = ["pydantic==2.*", "inject==4.*", "asgiref", "blinker", "async-lru"]
+dependencies = ["pydantic==2.*", "inject==4.*", "asgiref", "blinker", "async-lru", "backoff"]
 dynamic = ["version"]
 
 [project.optional-dependencies]

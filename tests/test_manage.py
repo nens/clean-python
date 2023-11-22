@@ -4,6 +4,7 @@ from unittest import mock
 
 import pytest
 
+from clean_python import Conflict
 from clean_python import Filter
 from clean_python import Manage
 from clean_python import RootEntity
@@ -39,8 +40,6 @@ async def test_create(manage_user):
 
 
 async def test_update(manage_user):
-    manage_user.repo.get.return_value = User.create(id=2, name="piet")
-
     result = await manage_user.update(2, {"name": "jan"})
 
     manage_user.repo.update.assert_awaited_once_with(2, {"name": "jan"})
@@ -94,3 +93,22 @@ async def test_exists(manage_user):
     manage_user.repo.exists.assert_awaited_once_with(filters)
 
     assert result is manage_user.repo.exists.return_value
+
+
+@pytest.mark.parametrize("failure_count", [1, 2])
+async def test_update_retry_on_conflict(manage_user, failure_count: int):
+    manage_user.repo.update.side_effect = (Conflict,) * failure_count + (
+        {"name": "foo"},
+    )
+
+    result = await manage_user.update(2, {"name": "jan"})
+
+    assert manage_user.repo.update.call_count == failure_count + 1
+    assert result == {"name": "foo"}
+
+
+async def test_update_retry_on_conflict_opt_out(manage_user):
+    manage_user.repo.update.side_effect = (Conflict, {"name": "foo"})
+
+    with pytest.raises(Conflict):
+        await manage_user.update(2, {"name": "jan"}, retry_on_conflict=False)
