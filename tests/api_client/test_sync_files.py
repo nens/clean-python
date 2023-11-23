@@ -296,3 +296,13 @@ def test_upload_fileobj_with_headers(pool, fileobj, upload_response):
 
     _, kwargs = pool.request.call_args
     assert kwargs["headers"] == {"Content-Length": "39", "foo": "bar"}
+
+
+def test_upload_fileobj_201_response(pool, fileobj):
+    pool.request.return_value = HTTPResponse(status=201)
+    # no error is raised
+    upload_fileobj(
+        "some-url", fileobj, pool=pool, headers_factory=lambda: {"foo": "bar"}
+    )
+
+    pool.request.assert_called_once()

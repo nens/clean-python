@@ -9,6 +9,8 @@
 
 - Added 'headers_factory' to upload/download functions.
 
+- Allow 201 "CREATED" status code in upload_file.
+
 
 0.9.0 (2023-11-22)
 ------------------

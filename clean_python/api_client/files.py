@@ -3,6 +3,7 @@ import hashlib
 import logging
 import os
 import re
+from http import HTTPStatus
 from pathlib import Path
 from typing import BinaryIO
 from typing import Callable
@@ -185,12 +186,12 @@ def download_fileobj(
             headers=headers,
             timeout=timeout,
         )
-        if response.status == 200:
+        if response.status == HTTPStatus.OK:
             raise ApiException(
                 "The file server does not support multipart downloads.",
                 status=response.status,
             )
-        elif response.status != 206:
+        elif response.status != HTTPStatus.PARTIAL_CONTENT:
             raise ApiException("Unexpected status", status=response.status)
 
         # write to file
@@ -410,7 +411,7 @@ def upload_fileobj(
         headers=headers,
         timeout=DEFAULT_UPLOAD_TIMEOUT if timeout is None else timeout,
     )
-    if response.status != 200:
+    if response.status not in {HTTPStatus.OK, HTTPStatus.CREATED}:
         raise ApiException("Unexpected status", status=response.status)
 
     return file_size
