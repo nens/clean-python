@@ -85,6 +85,9 @@ class CCTokenGateway:
             token_str = await self.cached_fetch_token()
         return token_str
 
+    async def fetch_headers(self) -> dict[str, str]:
+        return {"Authorization": f"Bearer {await self.fetch_token()}"}
+
 
 # Copy-paste of async version:
 
@@ -119,3 +122,6 @@ class SyncCCTokenGateway:
             self.cached_fetch_token.cache_clear()
             token_str = self.cached_fetch_token()
         return token_str
+
+    def fetch_headers(self) -> dict[str, str]:
+        return {"Authorization": f"Bearer {self.fetch_token()}"}

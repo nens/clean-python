@@ -131,3 +131,15 @@ def test_fetch_token_sync_cache(sync_gateway: SyncCCTokenGateway):
         actual = sync_gateway.fetch_token()
         assert actual == token
         assert sync_gateway.provider.request.called
+
+
+async def test_fetch_headers(gateway: CCTokenGateway):
+    gateway.provider.request.return_value = {"access_token": "foo"}
+
+    await gateway.fetch_headers() == {"Authorization": "Bearer foo"}
+
+
+def test_fetch_headers_sync(sync_gateway: SyncCCTokenGateway):
+    sync_gateway.provider.request.return_value = {"access_token": "foo"}
+
+    assert sync_gateway.fetch_headers() == {"Authorization": "Bearer foo"}
