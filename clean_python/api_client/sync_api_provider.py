@@ -38,7 +38,7 @@ class SyncApiProvider:
     def __init__(
         self,
         url: AnyHttpUrl,
-        headers_factory: Callable[[], Dict[str, str]] | None = None,
+        headers_factory: Optional[Callable[[], Dict[str, str]]] = None,
         retries: int = 3,
         backoff_factor: float = 1.0,
         trailing_slash: bool = False,
