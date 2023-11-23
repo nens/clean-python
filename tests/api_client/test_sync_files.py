@@ -111,7 +111,12 @@ def test_download_fileobj_forbidden(pool, responses_single):
 @mock.patch(MODULE + ".download_fileobj")
 def test_download_file(download_fileobj, tmp_path):
     download_file(
-        "http://domain/a.b", tmp_path / "c.d", chunk_size=64, timeout=3.0, pool="foo"
+        "http://domain/a.b",
+        tmp_path / "c.d",
+        chunk_size=64,
+        timeout=3.0,
+        pool="foo",
+        headers_factory="bar",
     )
 
     args, kwargs = download_fileobj.call_args
@@ -122,6 +127,7 @@ def test_download_file(download_fileobj, tmp_path):
     assert kwargs["chunk_size"] == 64
     assert kwargs["timeout"] == 3.0
     assert kwargs["pool"] == "foo"
+    assert kwargs["headers_factory"] == "bar"
 
 
 @mock.patch(MODULE + ".download_fileobj")
@@ -231,7 +237,13 @@ def test_upload_file(upload_fileobj, tmp_path):
         f.write(b"X")
 
     upload_file(
-        "http://domain/a.b", path, chunk_size=1234, timeout=3.0, pool="foo", md5=b"abcd"
+        "http://domain/a.b",
+        path,
+        chunk_size=1234,
+        timeout=3.0,
+        pool="foo",
+        md5=b"abcd",
+        headers_factory="bar",
     )
 
     args, kwargs = upload_fileobj.call_args
@@ -243,6 +255,7 @@ def test_upload_file(upload_fileobj, tmp_path):
     assert kwargs["chunk_size"] == 1234
     assert kwargs["pool"] == "foo"
     assert kwargs["md5"] == b"abcd"
+    assert kwargs["headers_factory"] == "bar"
 
 
 def test_seekable_chunk_iterator():
@@ -255,3 +268,31 @@ def test_seekable_chunk_iterator():
     assert list(body) == []
     set_file_position(body, pos)
     assert list(body) == [data]
+
+
+def test_download_fileobj_with_headers(pool, responses_single):
+    pool.request.side_effect = responses_single
+    download_fileobj(
+        "some-url",
+        io.BytesIO(),
+        chunk_size=64,
+        pool=pool,
+        headers_factory=lambda: {"foo": "bar"},
+    )
+
+    pool.request.assert_called_with(
+        "GET",
+        "some-url",
+        headers={"Range": "bytes=0-63", "foo": "bar"},
+        timeout=5.0,
+    )
+
+
+def test_upload_fileobj_with_headers(pool, fileobj, upload_response):
+    pool.request.return_value = upload_response
+    upload_fileobj(
+        "some-url", fileobj, pool=pool, headers_factory=lambda: {"foo": "bar"}
+    )
+
+    _, kwargs = pool.request.call_args
+    assert kwargs["headers"] == {"Content-Length": "39", "foo": "bar"}

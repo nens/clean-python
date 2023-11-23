@@ -45,7 +45,7 @@ def api_provider(tenant, response) -> ApiProvider:
     with mock.patch.object(ClientSession, "request", new=request):
         api_provider = ApiProvider(
             url="http://testserver/foo/",
-            fetch_token=fake_token,
+            headers_factory=fake_token,
         )
         api_provider._session.request.return_value = response
         yield api_provider
@@ -148,7 +148,7 @@ async def test_error_response(api_provider: ApiProvider, response, status):
 
 
 async def test_no_token(api_provider: ApiProvider):
-    api_provider._fetch_token = no_token
+    api_provider._headers_factory = no_token
     await api_provider.request("GET", "")
     assert api_provider._session.request.call_args[1]["headers"] == {}
 

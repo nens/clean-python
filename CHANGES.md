@@ -7,6 +7,8 @@
 - Renamed 'fetch_token' parameter in api client to 'headers_factory' and
   made it optional.
 
+- Added 'headers_factory' to upload/download functions.
+
 
 0.9.0 (2023-11-22)
 ------------------
