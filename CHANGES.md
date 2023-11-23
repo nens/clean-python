@@ -4,7 +4,9 @@
 0.9.2 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Revert changes done in 0.9.1 in CCTokenGateway.
+
+- Added CCTokenGateway.fetch_headers()
 
 
 0.9.1 (2023-11-23)
