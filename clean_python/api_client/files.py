@@ -164,6 +164,8 @@ def download_fileobj(
         pool = get_pool()
     if headers_factory is not None:
         base_headers = headers_factory()
+        if any(x.lower() == "range" for x in base_headers):
+            raise ValueError("Cannot set the Range header through header_factory")
     else:
         base_headers = {}
 
