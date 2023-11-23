@@ -91,15 +91,16 @@ class ApiProvider:
 
     Args:
         url: The url of the API (with trailing slash)
-        fetch_token: Coroutine that returns headers for authorization
+        headers_factory: Coroutine that returns headers (for e.g. authorization)
         retries: Total number of retries per request
         backoff_factor: Multiplier for retry delay times (1, 2, 4, ...)
+        trailing_slash: Wether to automatically add or remove trailing slashes.
     """
 
     def __init__(
         self,
         url: AnyHttpUrl,
-        fetch_token: Callable[[], Awaitable[Dict[str, str]]],
+        headers_factory: Callable[[], Awaitable[Dict[str, str]]] | None = None,
         retries: int = 3,
         backoff_factor: float = 1.0,
         trailing_slash: bool = False,
@@ -107,7 +108,7 @@ class ApiProvider:
         self._url = str(url)
         if not self._url.endswith("/"):
             self._url += "/"
-        self._fetch_token = fetch_token
+        self._headers_factory = headers_factory
         assert retries > 0
         self._retries = retries
         self._backoff_factor = backoff_factor
@@ -134,8 +135,9 @@ class ApiProvider:
             "timeout": timeout,
             "json": json,
             "data": fields,
-            "headers": await self._fetch_token(),
         }
+        if self._headers_factory is not None:
+            request_kwargs["headers"] = await self._headers_factory()
         for attempt in range(self._retries):
             if attempt > 0:
                 backoff = self._backoff_factor * 2 ** (attempt - 1)

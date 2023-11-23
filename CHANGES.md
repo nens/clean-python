@@ -4,7 +4,8 @@
 0.9.1 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Renamed 'fetch_token' parameter in api client to 'headers_factory' and
+  made it optional.
 
 
 0.9.0 (2023-11-22)
