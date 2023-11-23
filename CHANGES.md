@@ -1,7 +1,7 @@
 # Changelog of clean-python
 
 
-0.9.1 (unreleased)
+0.9.1 (2023-11-23)
 ------------------
 
 - Renamed 'fetch_token' parameter in api client to 'headers_factory' and
