@@ -221,3 +221,16 @@ def test_conflict_with_message(api_provider: SyncApiProvider, response):
 
     with pytest.raises(Conflict, match="foo"):
         api_provider.request("GET", "bar")
+
+
+def test_custom_header(api_provider: SyncApiProvider):
+    api_provider.request("POST", "bar", headers={"foo": "bar"})
+    assert api_provider._pool.request.call_args[1]["headers"] == {
+        "foo": "bar",
+        **api_provider._headers_factory(),
+    }
+
+
+def test_custom_header_precedes(api_provider: SyncApiProvider):
+    api_provider.request("POST", "bar", headers={"Authorization": "bar"})
+    assert api_provider._pool.request.call_args[1]["headers"]["Authorization"] == "bar"

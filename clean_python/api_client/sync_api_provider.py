@@ -58,9 +58,14 @@ class SyncApiProvider:
         json: Optional[Json],
         fields: Optional[Json],
         file: Optional[FileFormPost],
+        headers: Optional[Dict[str, str]],
         timeout: float,
     ):
-        headers = {}
+        actual_headers = {}
+        if self._headers_factory is not None:
+            actual_headers.update(self._headers_factory())
+        if headers:
+            actual_headers.update(headers)
         request_kwargs = {
             "method": method,
             "url": add_query_params(
@@ -75,7 +80,7 @@ class SyncApiProvider:
             raise ValueError("Cannot both specify 'json' and 'file'")
         elif json is not None:
             request_kwargs["body"] = json_lib.dumps(json).encode()
-            headers["Content-Type"] = "application/json"
+            actual_headers["Content-Type"] = "application/json"
         elif fields is not None and file is None:
             request_kwargs["fields"] = fields
             request_kwargs["encode_multipart"] = False
@@ -90,9 +95,7 @@ class SyncApiProvider:
             }
             request_kwargs["encode_multipart"] = True
 
-        if self._headers_factory is not None:
-            headers.update(self._headers_factory())
-        return self._pool.request(headers=headers, **request_kwargs)
+        return self._pool.request(headers=actual_headers, **request_kwargs)
 
     def request(
         self,
@@ -102,9 +105,12 @@ class SyncApiProvider:
         json: Optional[Json] = None,
         fields: Optional[Json] = None,
         file: Optional[FileFormPost] = None,
+        headers: Optional[Dict[str, str]] = None,
         timeout: float = 5.0,
     ) -> Optional[Json]:
-        response = self._request(method, path, params, json, fields, file, timeout)
+        response = self._request(
+            method, path, params, json, fields, file, headers, timeout
+        )
         status = HTTPStatus(response.status)
         content_type = response.headers.get("Content-Type")
         if status is HTTPStatus.NO_CONTENT:
@@ -125,9 +131,12 @@ class SyncApiProvider:
         json: Optional[Json] = None,
         fields: Optional[Json] = None,
         file: Optional[FileFormPost] = None,
+        headers: Optional[Dict[str, str]] = None,
         timeout: float = 5.0,
     ) -> Response:
-        response = self._request(method, path, params, json, fields, file, timeout)
+        response = self._request(
+            method, path, params, json, fields, file, headers, timeout
+        )
         return Response(
             status=response.status,
             data=response.data,

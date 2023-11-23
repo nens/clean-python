@@ -8,6 +8,8 @@
 
 - Added CCTokenGateway.fetch_headers()
 
+- Added optional 'headers' parameter to ApiProvider.
+
 
 0.9.1 (2023-11-23)
 ------------------

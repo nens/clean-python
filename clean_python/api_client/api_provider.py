@@ -123,6 +123,7 @@ class ApiProvider:
         json: Optional[Json],
         fields: Optional[Json],
         file: Optional[FileFormPost],
+        headers: Optional[Dict[str, str]],
         timeout: float,
     ) -> ClientResponse:
         if file is not None:
@@ -136,15 +137,20 @@ class ApiProvider:
             "json": json,
             "data": fields,
         }
+        actual_headers = {}
         if self._headers_factory is not None:
-            request_kwargs["headers"] = await self._headers_factory()
+            actual_headers.update(await self._headers_factory())
+        if headers:
+            actual_headers.update(headers)
         for attempt in range(self._retries):
             if attempt > 0:
                 backoff = self._backoff_factor * 2 ** (attempt - 1)
                 await asyncio.sleep(backoff)
 
             try:
-                response = await self._session.request(**request_kwargs)
+                response = await self._session.request(
+                    headers=actual_headers, **request_kwargs
+                )
                 await response.read()
             except (aiohttp.ClientError, asyncio.exceptions.TimeoutError):
                 if attempt == self._retries - 1:
@@ -163,10 +169,11 @@ class ApiProvider:
         json: Optional[Json] = None,
         fields: Optional[Json] = None,
         file: Optional[FileFormPost] = None,
+        headers: Optional[Dict[str, str]] = None,
         timeout: float = 5.0,
     ) -> Optional[Json]:
         response = await self._request_with_retry(
-            method, path, params, json, fields, file, timeout
+            method, path, params, json, fields, file, headers, timeout
         )
         status = HTTPStatus(response.status)
         content_type = response.headers.get("Content-Type")
@@ -188,10 +195,11 @@ class ApiProvider:
         json: Optional[Json] = None,
         fields: Optional[Json] = None,
         file: Optional[FileFormPost] = None,
+        headers: Optional[Dict[str, str]] = None,
         timeout: float = 5.0,
     ) -> Response:
         response = await self._request_with_retry(
-            method, path, params, json, fields, file, timeout
+            method, path, params, json, fields, file, headers, timeout
         )
         return Response(
             status=response.status,

@@ -187,3 +187,18 @@ async def test_conflict_with_message(api_provider: ApiProvider, response):
 
     with pytest.raises(Conflict, match="foo"):
         await api_provider.request("GET", "bar")
+
+
+async def test_custom_header(api_provider: ApiProvider):
+    await api_provider.request("POST", "bar", headers={"foo": "bar"})
+    assert api_provider._session.request.call_args[1]["headers"] == {
+        "foo": "bar",
+        **(await api_provider._headers_factory()),
+    }
+
+
+async def test_custom_header_precedes(api_provider: ApiProvider):
+    await api_provider.request("POST", "bar", headers={"Authorization": "bar"})
+    assert (
+        api_provider._session.request.call_args[1]["headers"]["Authorization"] == "bar"
+    )
