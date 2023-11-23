@@ -137,11 +137,11 @@ class ApiProvider:
             "json": json,
             "data": fields,
         }
-        headers = {}
+        actual_headers = {}
         if self._headers_factory is not None:
-            headers.update(await self._headers_factory())
+            actual_headers.update(await self._headers_factory())
         if headers:
-            headers.update(headers)
+            actual_headers.update(headers)
         for attempt in range(self._retries):
             if attempt > 0:
                 backoff = self._backoff_factor * 2 ** (attempt - 1)
@@ -149,7 +149,7 @@ class ApiProvider:
 
             try:
                 response = await self._session.request(
-                    headers=headers, **request_kwargs
+                    headers=actual_headers, **request_kwargs
                 )
                 await response.read()
             except (aiohttp.ClientError, asyncio.exceptions.TimeoutError):
