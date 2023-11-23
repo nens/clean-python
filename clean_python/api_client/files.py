@@ -3,9 +3,11 @@ import hashlib
 import logging
 import os
 import re
+from http import HTTPStatus
 from pathlib import Path
 from typing import BinaryIO
 from typing import Callable
+from typing import Dict
 from typing import Optional
 from typing import Tuple
 from typing import Union
@@ -58,6 +60,7 @@ def download_file(
     timeout: Optional[Union[float, urllib3.Timeout]] = 5.0,
     pool: Optional[urllib3.PoolManager] = None,
     callback_func: Optional[Callable[[int, int], None]] = None,
+    headers_factory: Optional[Callable[[], Dict[str, str]]] = None,
 ) -> Tuple[Path, int]:
     """Download a file to a specified path on disk.
 
@@ -75,6 +78,7 @@ def download_file(
             created with a retry policy of 3 retries after 1, 2, 4 seconds.
         callback_func: optional function used to receive: bytes_downloaded, total_bytes
             for example: def callback(bytes_downloaded: int, total_bytes: int) -> None
+        headers_factory: optional function to inject headers
 
     Returns:
         Tuple of file path, total number of downloaded bytes.
@@ -105,6 +109,7 @@ def download_file(
                 timeout=timeout,
                 pool=pool,
                 callback_func=callback_func,
+                headers_factory=headers_factory,
             )
     except Exception:
         # Clean up a partially downloaded file
@@ -124,6 +129,7 @@ def download_fileobj(
     timeout: Optional[Union[float, urllib3.Timeout]] = 5.0,
     pool: Optional[urllib3.PoolManager] = None,
     callback_func: Optional[Callable[[int, int], None]] = None,
+    headers_factory: Optional[Callable[[], Dict[str, str]]] = None,
 ) -> int:
     """Download a url to a file object using multiple requests.
 
@@ -139,6 +145,7 @@ def download_fileobj(
             created with a retry policy of 3 retries after 1, 2, 4 seconds.
         callback_func: optional function used to receive: bytes_downloaded, total_bytes
             for example: def callback(bytes_downloaded: int, total_bytes: int) -> None
+        headers_factory: optional function to inject headers
 
     Returns:
         The total number of downloaded bytes.
@@ -156,6 +163,12 @@ def download_fileobj(
     """
     if pool is None:
         pool = get_pool()
+    if headers_factory is not None:
+        base_headers = headers_factory()
+        if any(x.lower() == "range" for x in base_headers):
+            raise ValueError("Cannot set the Range header through header_factory")
+    else:
+        base_headers = {}
 
     # Our strategy here is to just start downloading chunks while monitoring
     # the Content-Range header to check if we're done. Although we could get
@@ -165,7 +178,7 @@ def download_fileobj(
     while True:
         # download a chunk
         stop = start + chunk_size - 1
-        headers = {"Range": "bytes={}-{}".format(start, stop)}
+        headers = {"Range": "bytes={}-{}".format(start, stop), **base_headers}
 
         response = pool.request(
             "GET",
@@ -173,12 +186,12 @@ def download_fileobj(
             headers=headers,
             timeout=timeout,
         )
-        if response.status == 200:
+        if response.status == HTTPStatus.OK:
             raise ApiException(
                 "The file server does not support multipart downloads.",
                 status=response.status,
             )
-        elif response.status != 206:
+        elif response.status != HTTPStatus.PARTIAL_CONTENT:
             raise ApiException("Unexpected status", status=response.status)
 
         # write to file
@@ -210,6 +223,7 @@ def upload_file(
     pool: Optional[urllib3.PoolManager] = None,
     md5: Optional[bytes] = None,
     callback_func: Optional[Callable[[int, int], None]] = None,
+    headers_factory: Optional[Callable[[], Dict[str, str]]] = None,
 ) -> int:
     """Upload a file at specified file path to a url.
 
@@ -230,6 +244,7 @@ def upload_file(
             should be included in the signing procedure.
         callback_func: optional function used to receive: bytes_uploaded, total_bytes
             for example: def callback(bytes_uploaded: int, total_bytes: int) -> None
+        headers_factory: optional function to inject headers
 
     Returns:
         The total number of uploaded bytes.
@@ -257,6 +272,7 @@ def upload_file(
             pool=pool,
             md5=md5,
             callback_func=callback_func,
+            headers_factory=headers_factory,
         )
 
     return size
@@ -311,6 +327,7 @@ def upload_fileobj(
     pool: Optional[urllib3.PoolManager] = None,
     md5: Optional[bytes] = None,
     callback_func: Optional[Callable[[int, int], None]] = None,
+    headers_factory: Optional[Callable[[], Dict[str, str]]] = None,
 ) -> int:
     """Upload a file object to a url.
 
@@ -331,6 +348,7 @@ def upload_fileobj(
             should be included in the signing procedure.
         callback_func: optional function used to receive: bytes_uploaded, total_bytes
             for example: def callback(bytes_uploaded: int, total_bytes: int) -> None
+        headers_factory: optional function to inject headers
 
     Returns:
         The total number of uploaded bytes.
@@ -384,6 +402,8 @@ def upload_fileobj(
     }
     if md5 is not None:
         headers["Content-MD5"] = base64.b64encode(md5).decode()
+    if headers_factory is not None:
+        headers.update(headers_factory())
     response = pool.request(
         "PUT",
         url,
@@ -391,7 +411,7 @@ def upload_fileobj(
         headers=headers,
         timeout=DEFAULT_UPLOAD_TIMEOUT if timeout is None else timeout,
     )
-    if response.status != 200:
+    if response.status not in {HTTPStatus.OK, HTTPStatus.CREATED}:
         raise ApiException("Unexpected status", status=response.status)
 
     return file_size

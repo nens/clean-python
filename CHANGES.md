@@ -4,7 +4,12 @@
 0.9.1 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Renamed 'fetch_token' parameter in api client to 'headers_factory' and
+  made it optional.
+
+- Added 'headers_factory' to upload/download functions.
+
+- Allow 201 "CREATED" status code in upload_file.
 
 
 0.9.0 (2023-11-22)

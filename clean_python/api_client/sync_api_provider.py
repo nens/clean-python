@@ -29,15 +29,16 @@ class SyncApiProvider:
 
     Args:
         url: The url of the API (with trailing slash)
-        fetch_token: Callable that returns a token for a tenant id
+        headers_factory: Callable that returns headers (for e.g. authorization)
         retries: Total number of retries per request
         backoff_factor: Multiplier for retry delay times (1, 2, 4, ...)
+        trailing_slash: Wether to automatically add or remove trailing slashes.
     """
 
     def __init__(
         self,
         url: AnyHttpUrl,
-        fetch_token: Callable[[], Dict[str, str]],
+        headers_factory: Optional[Callable[[], Dict[str, str]]] = None,
         retries: int = 3,
         backoff_factor: float = 1.0,
         trailing_slash: bool = False,
@@ -45,7 +46,7 @@ class SyncApiProvider:
         self._url = str(url)
         if not self._url.endswith("/"):
             self._url += "/"
-        self._fetch_token = fetch_token
+        self._headers_factory = headers_factory
         self._pool = PoolManager(retries=Retry(retries, backoff_factor=backoff_factor))
         self._trailing_slash = trailing_slash
 
@@ -89,7 +90,8 @@ class SyncApiProvider:
             }
             request_kwargs["encode_multipart"] = True
 
-        headers.update(self._fetch_token())
+        if self._headers_factory is not None:
+            headers.update(self._headers_factory())
         return self._pool.request(headers=headers, **request_kwargs)
 
     def request(
