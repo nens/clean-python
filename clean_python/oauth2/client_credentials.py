@@ -53,15 +53,17 @@ class CCTokenGateway:
         self.timeout = settings.timeout
         self.leeway = settings.leeway
 
-        async def fetch_token():
+        async def headers_factory():
             auth = BasicAuth(settings.client_id, settings.client_secret)
             return {"Authorization": auth.encode()}
 
-        self.provider = ApiProvider(url=settings.token_url, fetch_token=fetch_token)
+        self.provider = ApiProvider(
+            url=settings.token_url, headers_factory=headers_factory
+        )
         # This binds the cache to the CCTokenGateway instance (and not the class)
-        self.cached_fetch_token = alru_cache(self._fetch_token)
+        self.cached_headers_factory = alru_cache(self._headers_factory)
 
-    async def _fetch_token(self) -> str:
+    async def _headers_factory(self) -> str:
         response = await self.provider.request(
             method="POST",
             path="",
@@ -71,11 +73,11 @@ class CCTokenGateway:
         assert response is not None
         return response["access_token"]
 
-    async def fetch_token(self) -> str:
-        token_str = await self.cached_fetch_token()
+    async def headers_factory(self) -> str:
+        token_str = await self.cached_headers_factory()
         if not is_token_usable(token_str, self.leeway):
-            self.cached_fetch_token.cache_clear()
-            token_str = await self.cached_fetch_token()
+            self.cached_headers_factory.cache_clear()
+            token_str = await self.cached_headers_factory()
         return token_str
 
 
@@ -88,15 +90,17 @@ class SyncCCTokenGateway:
         self.timeout = settings.timeout
         self.leeway = settings.leeway
 
-        def fetch_token():
+        def headers_factory():
             auth = BasicAuth(settings.client_id, settings.client_secret)
             return {"Authorization": auth.encode()}
 
-        self.provider = SyncApiProvider(url=settings.token_url, fetch_token=fetch_token)
+        self.provider = SyncApiProvider(
+            url=settings.token_url, headers_factory=headers_factory
+        )
         # This binds the cache to the SyncCCTokenGateway instance (and not the class)
-        self.cached_fetch_token = lru_cache(self._fetch_token)
+        self.cached_headers_factory = lru_cache(self._headers_factory)
 
-    def _fetch_token(self) -> str:
+    def _headers_factory(self) -> str:
         response = self.provider.request(
             method="POST",
             path="",
@@ -106,9 +110,9 @@ class SyncCCTokenGateway:
         assert response is not None
         return response["access_token"]
 
-    def fetch_token(self) -> str:
-        token_str = self.cached_fetch_token()
+    def headers_factory(self) -> str:
+        token_str = self.cached_headers_factory()
         if not is_token_usable(token_str, self.leeway):
-            self.cached_fetch_token.cache_clear()
-            token_str = self.cached_fetch_token()
+            self.cached_headers_factory.cache_clear()
+            token_str = self.cached_headers_factory()
         return token_str

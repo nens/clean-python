@@ -55,10 +55,10 @@ def test_is_token_usable(expires_in, leeway, expected):
     assert is_token_usable(token, leeway) is expected
 
 
-async def test_fetch_token(gateway: CCTokenGateway):
+async def test_headers_factory(gateway: CCTokenGateway):
     gateway.provider.request.return_value = {"access_token": "foo"}
 
-    token = await gateway._fetch_token()
+    token = await gateway._headers_factory()
 
     assert token == "foo"
 
@@ -70,18 +70,18 @@ async def test_fetch_token(gateway: CCTokenGateway):
     )
 
 
-async def test_fetch_token_cache(gateway: CCTokenGateway):
+async def test_headers_factory_cache(gateway: CCTokenGateway):
     # empty cache: provider gets called
     token = get_token({})
     gateway.provider.request.return_value = {"access_token": token}
-    actual = await gateway.fetch_token()
+    actual = await gateway.headers_factory()
     assert actual == token
     assert gateway.provider.request.called
 
     gateway.provider.request.reset_mock()
 
     # cache is filled: provider is not called
-    actual = await gateway.fetch_token()
+    actual = await gateway.headers_factory()
     assert actual == token
     assert not gateway.provider.request.called
 
@@ -89,15 +89,15 @@ async def test_fetch_token_cache(gateway: CCTokenGateway):
 
     # token is not usable so it is refreshed:
     with mock.patch(MODULE + ".is_token_usable", side_effect=(False, True)):
-        actual = await gateway.fetch_token()
+        actual = await gateway.headers_factory()
         assert actual == token
         assert gateway.provider.request.called
 
 
-def test_fetch_token_sync(sync_gateway: SyncCCTokenGateway):
+def test_headers_factory_sync(sync_gateway: SyncCCTokenGateway):
     sync_gateway.provider.request.return_value = {"access_token": "foo"}
 
-    token = sync_gateway._fetch_token()
+    token = sync_gateway._headers_factory()
 
     assert token == "foo"
 
@@ -109,18 +109,18 @@ def test_fetch_token_sync(sync_gateway: SyncCCTokenGateway):
     )
 
 
-def test_fetch_token_sync_cache(sync_gateway: SyncCCTokenGateway):
+def test_headers_factory_sync_cache(sync_gateway: SyncCCTokenGateway):
     # empty cache: provider gets called
     token = get_token({})
     sync_gateway.provider.request.return_value = {"access_token": token}
-    actual = sync_gateway.fetch_token()
+    actual = sync_gateway.headers_factory()
     assert actual == token
     assert sync_gateway.provider.request.called
 
     sync_gateway.provider.request.reset_mock()
 
     # cache is filled: provider is not called
-    actual = sync_gateway.fetch_token()
+    actual = sync_gateway.headers_factory()
     assert actual == token
     assert not sync_gateway.provider.request.called
 
@@ -128,6 +128,6 @@ def test_fetch_token_sync_cache(sync_gateway: SyncCCTokenGateway):
 
     # token is not usable so it is refreshed:
     with mock.patch(MODULE + ".is_token_usable", side_effect=(False, True)):
-        actual = sync_gateway.fetch_token()
+        actual = sync_gateway.headers_factory()
         assert actual == token
         assert sync_gateway.provider.request.called

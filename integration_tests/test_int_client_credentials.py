@@ -22,8 +22,8 @@ def gateway(settings) -> CCTokenGateway:
     return CCTokenGateway(settings)
 
 
-async def test_fetch_token(gateway: CCTokenGateway):
-    response = await gateway._fetch_token()
+async def test_headers_factory(gateway: CCTokenGateway):
+    response = await gateway._headers_factory()
     assert is_token_usable(response, 0)
 
 
@@ -32,6 +32,6 @@ def sync_gateway(settings) -> SyncCCTokenGateway:
     return SyncCCTokenGateway(settings)
 
 
-def test_fetch_token_sync(sync_gateway: SyncCCTokenGateway):
-    response = sync_gateway._fetch_token()
+def test_headers_factory_sync(sync_gateway: SyncCCTokenGateway):
+    response = sync_gateway._headers_factory()
     assert is_token_usable(response, 0)
