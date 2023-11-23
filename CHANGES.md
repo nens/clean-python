@@ -1,7 +1,7 @@
 # Changelog of clean-python
 
 
-0.9.2 (unreleased)
+0.9.2 (2023-11-23)
 ------------------
 
 - Revert changes done in 0.9.1 in CCTokenGateway.
