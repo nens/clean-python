@@ -27,7 +27,6 @@ from clean_python.oauth2 import TokenVerifierSettings
 from .error_responses import conflict_handler
 from .error_responses import DefaultErrorResponse
 from .error_responses import not_found_handler
-from .error_responses import not_implemented_handler
 from .error_responses import permission_denied_handler
 from .error_responses import unauthorized_handler
 from .error_responses import validation_error_handler
@@ -138,7 +137,6 @@ class Service:
         app.add_exception_handler(Conflict, conflict_handler)
         app.add_exception_handler(RequestValidationError, validation_error_handler)
         app.add_exception_handler(BadRequest, validation_error_handler)
-        app.add_exception_handler(NotImplementedError, not_implemented_handler)
         app.add_exception_handler(PermissionDenied, permission_denied_handler)
         app.add_exception_handler(Unauthorized, unauthorized_handler)
         return app

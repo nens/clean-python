@@ -4,6 +4,10 @@
 0.9.3 (unreleased)
 ------------------
 
+- Sanitize error responses.
+
+- Remove 501 error response on NotImplementedError.
+
 - Solved aiohttp 'Unclosed client session' warning.
 
 

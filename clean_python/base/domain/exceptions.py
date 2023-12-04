@@ -1,13 +1,13 @@
 # (c) Nelen & Schuurmans
 
 from typing import Any
-from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Union
 
 from pydantic import create_model
 from pydantic import ValidationError
+from pydantic_core import ErrorDetails
 
 from .types import Id
 
@@ -62,10 +62,17 @@ class BadRequest(Exception):
         self._internal_error = err_or_msg
         super().__init__(err_or_msg)
 
-    def errors(self) -> List[Dict[str, Any]]:
+    def errors(self) -> List[ErrorDetails]:
         if isinstance(self._internal_error, ValidationError):
-            return [dict() for x in self._internal_error.errors()]
-        return [{"error": self}]
+            return self._internal_error.errors()
+        return [
+            ErrorDetails(
+                type="value_error",
+                msg=self._internal_error,
+                loc=[],  # type: ignore
+                input=None,
+            )
+        ]
 
     def __str__(self) -> str:
         error = self._internal_error
