@@ -8,6 +8,8 @@
 
 - Remove 501 error response on NotImplementedError.
 
+- Solved aiohttp 'Unclosed client session' warning.
+
 
 0.9.2 (2023-11-23)
 ------------------
