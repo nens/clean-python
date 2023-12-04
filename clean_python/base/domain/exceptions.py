@@ -1,6 +1,7 @@
 # (c) Nelen & Schuurmans
 
 from typing import Any
+from typing import List
 from typing import Optional
 from typing import Union
 
@@ -61,7 +62,7 @@ class BadRequest(Exception):
         self._internal_error = err_or_msg
         super().__init__(err_or_msg)
 
-    def errors(self) -> list[ErrorDetails]:
+    def errors(self) -> List[ErrorDetails]:
         if isinstance(self._internal_error, ValidationError):
             return self._internal_error.errors()
         return [
