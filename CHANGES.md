@@ -4,7 +4,9 @@
 0.9.3 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Sanitize error responses.
+
+- Remove 501 error response on NotImplementedError.
 
 
 0.9.2 (2023-11-23)

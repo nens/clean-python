@@ -1,6 +1,7 @@
 # (c) Nelen & Schuurmans
 
 from typing import List
+from typing import Optional
 from typing import Union
 
 from fastapi.encoders import jsonable_encoder
@@ -21,7 +22,6 @@ __all__ = [
     "not_found_handler",
     "conflict_handler",
     "validation_error_handler",
-    "not_implemented_handler",
     "permission_denied_handler",
     "unauthorized_handler",
 ]
@@ -34,51 +34,58 @@ class ValidationErrorEntry(ValueObject):
 
 
 class ValidationErrorResponse(ValueObject):
+    message: str
     detail: List[ValidationErrorEntry]
 
 
 class DefaultErrorResponse(ValueObject):
     message: str
+    detail: Optional[str]
 
 
-async def not_found_handler(request: Request, exc: DoesNotExist):
+async def not_found_handler(request: Request, exc: DoesNotExist) -> JSONResponse:
     return JSONResponse(
         status_code=status.HTTP_404_NOT_FOUND,
-        content={"message": f"Could not find {exc.name} with id={exc.id}"},
+        content={
+            "message": f"Could not find {exc.name}{' with id=' + str(exc.id) if exc.id else ''}"
+        },
     )
 
 
-async def conflict_handler(request: Request, exc: Conflict):
+async def conflict_handler(request: Request, exc: Conflict) -> JSONResponse:
     return JSONResponse(
         status_code=status.HTTP_409_CONFLICT,
-        content={"message": str(exc)},
+        content={
+            "message": "Conflict",
+            "detail": jsonable_encoder(exc.args[0] if exc.args else None),
+        },
     )
 
 
-async def validation_error_handler(request: Request, exc: BadRequest):
+async def validation_error_handler(request: Request, exc: BadRequest) -> JSONResponse:
     return JSONResponse(
         status_code=status.HTTP_400_BAD_REQUEST,
-        content=jsonable_encoder({"detail": exc.errors()}),
+        content=ValidationErrorResponse(
+            message="Validation error", detail=exc.errors()  # type: ignore
+        ).model_dump(mode="json"),
     )
 
 
-async def not_implemented_handler(request: Request, exc: NotImplementedError):
-    return JSONResponse(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        content={"message": str(exc)},
-    )
-
-
-async def unauthorized_handler(request: Request, exc: Unauthorized):
+async def unauthorized_handler(request: Request, exc: Unauthorized) -> JSONResponse:
     return JSONResponse(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        content={"message": "Unauthorized"},
+        content={"message": "Unauthorized", "detail": None},
         headers={"WWW-Authenticate": "Bearer"},
     )
 
 
-async def permission_denied_handler(request: Request, exc: PermissionDenied):
+async def permission_denied_handler(
+    request: Request, exc: PermissionDenied
+) -> JSONResponse:
     return JSONResponse(
         status_code=status.HTTP_403_FORBIDDEN,
-        content={"message": "Permission denied", "detail": str(exc)},
+        content={
+            "message": "Permission denied",
+            "detail": jsonable_encoder(exc.args[0] if exc.args else None),
+        },
     )
