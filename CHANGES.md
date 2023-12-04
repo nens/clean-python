@@ -4,7 +4,7 @@
 0.9.3 (unreleased)
 ------------------
 
-- Solved aiohttp 'Unclosed client session' warning.
+- Nothing changed yet.
 
 
 0.9.2 (2023-11-23)

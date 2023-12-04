@@ -113,15 +113,7 @@ class ApiProvider:
         self._retries = retries
         self._backoff_factor = backoff_factor
         self._trailing_slash = trailing_slash
-
-    @property
-    def _session(self) -> ClientSession:
-        # There seems to be an issue if the ClientSession is instantiated before
-        # the event loop runs. So we do that delayed in a property. Use this property
-        # in a context manager.
-        # TODO It is more efficient to reuse the connection / connection pools. One idea
-        # is to expose .session as a context manager (like with the SQLProvider.transaction)
-        return ClientSession()
+        self._session = ClientSession()
 
     async def _request_with_retry(
         self,
@@ -156,11 +148,10 @@ class ApiProvider:
                 await asyncio.sleep(backoff)
 
             try:
-                async with self._session as session:
-                    response = await session.request(
-                        headers=actual_headers, **request_kwargs
-                    )
-                    await response.read()
+                response = await self._session.request(
+                    headers=actual_headers, **request_kwargs
+                )
+                await response.read()
             except (aiohttp.ClientError, asyncio.exceptions.TimeoutError):
                 if attempt == self._retries - 1:
                     raise  # propagate ClientError in case no retries left
