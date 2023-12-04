@@ -1,7 +1,7 @@
 # Changelog of clean-python
 
 
-0.9.3 (unreleased)
+0.9.3 (2023-12-04)
 ------------------
 
 - Sanitize error responses.
