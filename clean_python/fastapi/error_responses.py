@@ -1,5 +1,6 @@
 # (c) Nelen & Schuurmans
 
+import logging
 from typing import List
 from typing import Optional
 from typing import Union
@@ -15,6 +16,8 @@ from clean_python import DoesNotExist
 from clean_python import PermissionDenied
 from clean_python import Unauthorized
 from clean_python import ValueObject
+
+logger = logging.getLogger(__name__)
 
 __all__ = [
     "ValidationErrorResponse",
@@ -72,6 +75,8 @@ async def validation_error_handler(request: Request, exc: BadRequest) -> JSONRes
 
 
 async def unauthorized_handler(request: Request, exc: Unauthorized) -> JSONResponse:
+    if exc.args:
+        logger.info(f"unauthorized: {exc}")
     return JSONResponse(
         status_code=status.HTTP_401_UNAUTHORIZED,
         content={"message": "Unauthorized", "detail": None},

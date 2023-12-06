@@ -4,7 +4,7 @@
 0.9.4 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Use a timeout for fetching jwks in TokenVerifier.
 
 
 0.9.3 (2023-12-04)

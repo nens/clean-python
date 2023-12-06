@@ -1,4 +1,5 @@
 import json
+import logging
 from http import HTTPStatus
 
 from pydantic import BaseModel
@@ -44,21 +45,29 @@ async def test_conflict_no_msg():
     assert json.loads(actual.body) == {"message": "Conflict", "detail": None}
 
 
-async def test_unauthorized():
+async def test_unauthorized(caplog):
     actual = await unauthorized_handler(None, Unauthorized())
 
     assert actual.status_code == HTTPStatus.UNAUTHORIZED
     assert json.loads(actual.body) == {"message": "Unauthorized", "detail": None}
     assert actual.headers["WWW-Authenticate"] == "Bearer"
 
+    assert caplog.record_tuples == []
 
-async def test_unauthorized_with_msg():
+
+async def test_unauthorized_wit_msg(caplog):
+    caplog.set_level(logging.INFO)
+
     # message should be ignored
     actual = await unauthorized_handler(None, Unauthorized("foo"))
 
     assert actual.status_code == HTTPStatus.UNAUTHORIZED
     assert json.loads(actual.body) == {"message": "Unauthorized", "detail": None}
     assert actual.headers["WWW-Authenticate"] == "Bearer"
+
+    assert caplog.record_tuples == [
+        ("clean_python.fastapi.error_responses", logging.INFO, "unauthorized: foo")
+    ]
 
 
 async def test_permission_denied():
