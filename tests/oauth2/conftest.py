@@ -1,10 +1,12 @@
+import json
 import time
+import urllib.request
+from io import BytesIO
 from unittest import mock
 
 import jwt
 import pytest
 
-from clean_python.oauth2 import TokenVerifier
 from clean_python.oauth2 import TokenVerifierSettings
 
 
@@ -35,9 +37,11 @@ def public_key(private_key):
 
 @pytest.fixture
 def jwk_patched(public_key):
-    with mock.patch.object(TokenVerifier, "get_key") as f:
-        f.return_value = jwt.PyJWK.from_dict(public_key)
-        yield
+    with mock.patch.object(urllib.request, "urlopen") as urlopen:
+        urlopen.return_value.__enter__.return_value = BytesIO(
+            json.dumps({"keys": [public_key]}).encode()
+        )
+        yield urlopen
 
 
 @pytest.fixture
