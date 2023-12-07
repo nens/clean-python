@@ -6,6 +6,8 @@
 
 - Use a timeout for fetching jwks in TokenVerifier.
 
+- Changed celery task logger args/kwargs back to argsrepr/kwargsrepr.
+
 
 0.9.3 (2023-12-04)
 ------------------
