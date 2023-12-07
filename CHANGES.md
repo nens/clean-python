@@ -1,7 +1,7 @@
 # Changelog of clean-python
 
 
-0.9.4 (unreleased)
+0.9.4 (2023-12-07)
 ------------------
 
 - Use a timeout for fetching jwks in TokenVerifier.
