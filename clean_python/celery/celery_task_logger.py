@@ -82,14 +82,14 @@ class CeleryTaskLogger:
             correlation_id = None
 
         try:
-            args = json.loads(json.dumps(request.args))
+            argsrepr = json.dumps(request.args)
         except (AttributeError, TypeError):
-            args = None
+            argsrepr = None
 
         try:
-            kwargs = json.loads(json.dumps(kwargs))
+            kwargsrepr = json.dumps(kwargs)
         except TypeError:
-            kwargs = None
+            kwargsrepr = None
 
         log_dict = {
             "tag_suffix": "task_log",
@@ -100,8 +100,8 @@ class CeleryTaskLogger:
             "duration": duration,
             "origin": getattr(request, "origin", None),
             "retries": getattr(request, "retries", None),
-            "args": args,
-            "kwargs": kwargs,
+            "argsrepr": argsrepr if argsrepr != "null" else None,
+            "kwargsrepr": kwargsrepr if kwargsrepr != "null" else None,
             "result": result_json,
             "tenant_id": tenant_id,
             "correlation_id": None if correlation_id is None else str(correlation_id),

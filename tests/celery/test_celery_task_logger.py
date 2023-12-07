@@ -24,8 +24,8 @@ def test_log_minimal(celery_task_logger: CeleryTaskLogger):
         "state": "STAAT",
         "duration": None,
         "origin": None,
-        "args": None,
-        "kwargs": None,
+        "argsrepr": None,
+        "kwargsrepr": None,
         "result": None,
         "time": None,
         "tenant_id": None,
@@ -73,8 +73,8 @@ def test_log_with_request(celery_task_logger: CeleryTaskLogger, celery_task):
     assert entry["name"] == "task_name"
     assert entry["task_id"] == "abc123"
     assert entry["retries"] == 25
-    assert entry["args"] == [1, 2]
-    assert entry["kwargs"] == {}
+    assert entry["argsrepr"] == "[1, 2]"
+    assert entry["kwargsrepr"] == "{}"
     assert entry["origin"] == "hostname"
     assert entry["correlation_id"] == "b3089ea7-2585-43e5-a63c-ae30a6e9b5e4"
 

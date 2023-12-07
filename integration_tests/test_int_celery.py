@@ -1,3 +1,4 @@
+import json
 import time
 from uuid import UUID
 
@@ -74,8 +75,8 @@ def test_log_success(celery_task: BaseTask, task_logger: CeleryTaskLogger):
     assert log["state"] == "SUCCESS"
     assert log["name"] == "testing"
     assert log["duration"] > 0.0
-    assert log["args"] == [0.0]
-    assert log["kwargs"] == {"return_value": 16}
+    assert json.loads(log["argsrepr"]) == [0.0]
+    assert json.loads(log["kwargsrepr"]) == {"return_value": 16}
     assert log["retries"] == 0
     assert log["result"] == {"value": 16}
     assert UUID(log["correlation_id"])  # generated
