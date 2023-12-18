@@ -1,7 +1,7 @@
 # Changelog of clean-python
 
 
-0.9.5 (unreleased)
+0.9.5 (2023-12-18)
 ------------------
 
 - SyncApiProvider: also retry when the Retry-After response header is missing.
