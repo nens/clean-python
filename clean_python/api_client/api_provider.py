@@ -27,7 +27,20 @@ from .response import Response
 __all__ = ["ApiProvider", "FileFormPost"]
 
 
-RETRY_STATUSES = frozenset({413, 429, 503})  # like in urllib3
+# Retry on 429 and all 5xx errors (because they are mostly temporary)
+RETRY_STATUSES = frozenset(
+    {
+        HTTPStatus.TOO_MANY_REQUESTS,
+        HTTPStatus.INTERNAL_SERVER_ERROR,
+        HTTPStatus.BAD_GATEWAY,
+        HTTPStatus.SERVICE_UNAVAILABLE,
+        HTTPStatus.GATEWAY_TIMEOUT,
+    }
+)
+# PATCH is strictly not idempotent, because you could do advanced
+# JSON operations like 'add an array element'. mostly idempotent.
+# However we never do that and we always make PATCH idempotent.
+RETRY_METHODS = frozenset(["HEAD", "GET", "PATCH", "PUT", "DELETE", "OPTIONS", "TRACE"])
 
 
 def is_success(status: HTTPStatus) -> bool:
@@ -109,7 +122,7 @@ class ApiProvider:
         if not self._url.endswith("/"):
             self._url += "/"
         self._headers_factory = headers_factory
-        assert retries > 0
+        assert retries >= 0
         self._retries = retries
         self._backoff_factor = backoff_factor
         self._trailing_slash = trailing_slash
@@ -150,7 +163,8 @@ class ApiProvider:
             actual_headers.update(await self._headers_factory())
         if headers:
             actual_headers.update(headers)
-        for attempt in range(self._retries):
+        retries = self._retries if method.upper() in RETRY_METHODS else 0
+        for attempt in range(retries + 1):
             if attempt > 0:
                 backoff = self._backoff_factor * 2 ** (attempt - 1)
                 await asyncio.sleep(backoff)
@@ -160,13 +174,13 @@ class ApiProvider:
                     response = await session.request(
                         headers=actual_headers, **request_kwargs
                     )
+                    if response.status in RETRY_STATUSES:
+                        continue
                     await response.read()
+                    return response
             except (aiohttp.ClientError, asyncio.exceptions.TimeoutError):
-                if attempt == self._retries - 1:
+                if attempt == retries:
                     raise  # propagate ClientError in case no retries left
-            else:
-                if response.status not in RETRY_STATUSES:
-                    return response  # on all non-retry statuses: return response
 
         return response  # retries exceeded; return the (possibly error) response
 

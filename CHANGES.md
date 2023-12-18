@@ -4,7 +4,11 @@
 0.9.5 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- SyncApiProvider: also retry when the Retry-After response header is missing.
+
+- ApiProvider: (sync and async) retry on all methods except POST.
+
+- ApiProvider: (sync and async) retry on 429, 500, 502, 503, 504.
 
 
 0.9.4 (2023-12-07)

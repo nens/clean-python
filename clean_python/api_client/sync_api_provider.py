@@ -16,6 +16,8 @@ from .api_provider import check_exception
 from .api_provider import FileFormPost
 from .api_provider import is_json_content_type
 from .api_provider import join
+from .api_provider import RETRY_METHODS
+from .api_provider import RETRY_STATUSES
 from .exceptions import ApiException
 from .response import Response
 
@@ -47,7 +49,14 @@ class SyncApiProvider:
         if not self._url.endswith("/"):
             self._url += "/"
         self._headers_factory = headers_factory
-        self._pool = PoolManager(retries=Retry(retries, backoff_factor=backoff_factor))
+        self._pool = PoolManager(
+            retries=Retry(
+                retries,
+                backoff_factor=backoff_factor,
+                status_forcelist=RETRY_STATUSES,
+                allowed_methods=RETRY_METHODS,
+            )
+        )
         self._trailing_slash = trailing_slash
 
     def _request(

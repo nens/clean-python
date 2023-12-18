@@ -3,6 +3,9 @@
 import asyncio
 import multiprocessing
 import os
+import time
+from urllib.error import URLError
+from urllib.request import urlopen
 
 import pytest
 import uvicorn
@@ -43,11 +46,26 @@ async def s3_url():
     return os.environ.get("S3_URL", "http://localhost:9000")
 
 
+def wait_until_url_available(url: str, max_tries=10, interval=0.1):
+    # wait for the server to be ready
+    for _ in range(max_tries):
+        try:
+            urlopen(url)
+        except URLError:
+            time.sleep(interval)
+            continue
+        else:
+            break
+
+
 @pytest.fixture(scope="session")
 async def fastapi_example_app():
     port = int(os.environ.get("API_PORT", "8005"))
     config = uvicorn.Config("fastapi_example:app", host="0.0.0.0", port=port)
     p = multiprocessing.Process(target=uvicorn.Server(config).run)
     p.start()
-    yield f"http://localhost:{port}"
-    p.terminate()
+    try:
+        wait_until_url_available(f"http://localhost:{port}/docs")
+        yield f"http://localhost:{port}"
+    finally:
+        p.terminate()
