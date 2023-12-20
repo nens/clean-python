@@ -4,7 +4,7 @@
 0.9.6 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Fixed celery task_failure_log in case of a crashed worker.
 
 
 0.9.5 (2023-12-18)

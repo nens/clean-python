@@ -68,7 +68,7 @@ class CeleryTaskLogger:
 
         try:
             headers, kwargs = TaskHeaders.from_kwargs(request.kwargs)
-        except AttributeError:
+        except (AttributeError, TypeError):
             headers = kwargs = None  # type: ignore
 
         try:

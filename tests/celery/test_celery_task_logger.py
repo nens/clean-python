@@ -56,7 +56,7 @@ def celery_task():
     request.args = [1, 2]
     request.kwargs = {
         "clean_python_context": {
-            "tenant": None,
+            "tenant": {"id": 15, "name": "foo"},
             "correlation_id": "b3089ea7-2585-43e5-a63c-ae30a6e9b5e4",
         }
     }
@@ -76,6 +76,7 @@ def test_log_with_request(celery_task_logger: CeleryTaskLogger, celery_task):
     assert entry["argsrepr"] == "[1, 2]"
     assert entry["kwargsrepr"] == "{}"
     assert entry["origin"] == "hostname"
+    assert entry["tenant_id"] == 15
     assert entry["correlation_id"] == "b3089ea7-2585-43e5-a63c-ae30a6e9b5e4"
 
 
@@ -95,3 +96,17 @@ def test_log_with_result(
 
     (entry,) = celery_task_logger.gateway.filter([])
     assert entry["result"] == expected
+
+
+def test_log_with_request_no_args_kwargs(
+    celery_task_logger: CeleryTaskLogger, celery_task
+):
+    celery_task.request.args = None
+    celery_task.request.kwargs = None
+    celery_task_logger.stop(celery_task, "STAAT")
+
+    (entry,) = celery_task_logger.gateway.filter([])
+    assert entry["argsrepr"] is None
+    assert entry["kwargsrepr"] is None
+    assert entry["tenant_id"] is None
+    assert entry["correlation_id"] is None
