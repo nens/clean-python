@@ -1,7 +1,7 @@
 # Changelog of clean-python
 
 
-0.9.6 (unreleased)
+0.9.6 (2023-12-20)
 ------------------
 
 - Fixed celery task_failure_log in case of a crashed worker.
