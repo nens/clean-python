@@ -1,6 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.pool import NullPool
 
 from clean_python import Json
 
@@ -9,7 +10,21 @@ from .base_provider import SQLProvider
 
 class AsyncSQLAlchemyProvider(SQLProvider):
     async def init(self) -> None:
-        self.engine = create_async_engine(f"postgresql+asyncpg://{self.url}")
+        self.engine = create_async_engine(
+            f"postgresql+asyncpg://{self.url}", pool_size=5
+        )
+
+    async def execute(self, query: str) -> list[Json]:
+        async with self.engine.begin() as conn:
+            result = await conn.execute(text(query))
+            return [{"result": list(x)} for x in result.fetchall()]
+
+
+class NullPoolSQLAlchemyProvider(SQLProvider):
+    async def init(self) -> None:
+        self.engine = create_async_engine(
+            f"postgresql+asyncpg://{self.url}", poolclass=NullPool
+        )
 
     async def execute(self, query: str) -> list[Json]:
         async with self.engine.begin() as conn:
@@ -19,7 +34,7 @@ class AsyncSQLAlchemyProvider(SQLProvider):
 
 class SyncSQLAlchemyProvider(SQLProvider):
     async def init(self) -> None:
-        self.engine = create_engine(f"postgresql+psycopg2://{self.url}")
+        self.engine = create_engine(f"postgresql+psycopg2://{self.url}", pool_size=5)
 
     async def execute(self, query: str) -> list[Json]:
         # we happily block the event loop here
