@@ -1,10 +1,13 @@
 # Changelog of clean-python
 
 
-0.9.7 (unreleased)
+0.10.0 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Changed the internals of SQLProvider: asyncpg is now used directly for
+  connection pooling, transaction management, query execution and parameter
+  binding. This removes overhead from SQL query execution and prevents the
+  use of greenlets.
 
 
 0.9.6 (2023-12-20)
