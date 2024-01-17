@@ -152,9 +152,7 @@ class SQLTransaction(SQLProvider):
             raise convert_unique_violation_error(e)
         except asyncpg.exceptions.SerializationError:
             raise Conflict("could not execute query due to concurrent update")
-        # _asdict() is a documented method of a NamedTuple
-        # https://docs.python.org/3/library/collections.html#collections.somenamedtuple._asdict
-        return [{k: v for (k, v) in x.items()} for x in result]
+        return list(map(dict, result))
 
     @asynccontextmanager
     async def transaction(self) -> AsyncIterator[SQLProvider]:
