@@ -8,6 +8,7 @@ from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Sequence
+from typing import Tuple
 
 import asyncpg
 from async_lru import alru_cache
@@ -41,7 +42,7 @@ def convert_unique_violation_error(
 class SQLProvider(ABC):
     def compile(
         self, query: Executable, bind_params: Optional[Dict[str, Any]] = None
-    ) -> tuple[Any, ...]:
+    ) -> Tuple[Any, ...]:
         # Rendering SQLAlchemy expressions to SQL, see:
         # - https://docs.sqlalchemy.org/en/20/faq/sqlexpressions.html
         compiled = query.compile(
