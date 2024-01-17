@@ -42,6 +42,8 @@ class SQLProvider(ABC):
     def compile(
         self, query: Executable, bind_params: Optional[Dict[str, Any]] = None
     ) -> tuple[Any, ...]:
+        # Rendering SQLAlchemy expressions to SQL, see:
+        # - https://docs.sqlalchemy.org/en/20/faq/sqlexpressions.html
         compiled = query.compile(
             dialect=DIALECT, compile_kwargs={"render_postcompile": True}
         )
@@ -50,6 +52,7 @@ class SQLProvider(ABC):
             if bind_params is None
             else {**compiled.params, **bind_params}
         )
+        # add params in positional order
         return (str(compiled),) + tuple(params[k] for k in compiled.positiontup)
 
     @abstractmethod
