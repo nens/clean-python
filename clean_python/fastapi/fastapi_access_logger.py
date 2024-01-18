@@ -8,13 +8,11 @@ from typing import Optional
 from uuid import UUID
 from uuid import uuid4
 
-import inject
 from starlette.background import BackgroundTasks
 from starlette.requests import Request
 from starlette.responses import Response
 
 from clean_python import Gateway
-from clean_python.fluentbit import FluentbitGateway
 
 __all__ = ["FastAPIAccessLogger", "get_correlation_id"]
 
@@ -54,13 +52,9 @@ def ensure_correlation_id(request: Request) -> None:
 
 
 class FastAPIAccessLogger:
-    def __init__(self, hostname: str, gateway_override: Optional[Gateway] = None):
+    def __init__(self, hostname: str, gateway: Gateway):
         self.origin = f"{hostname}-{os.getpid()}"
-        self.gateway_override = gateway_override
-
-    @property
-    def gateway(self) -> Gateway:
-        return self.gateway_override or inject.instance(FluentbitGateway)
+        self.gateway = gateway
 
     async def __call__(
         self, request: Request, call_next: Callable[[Request], Awaitable[Response]]

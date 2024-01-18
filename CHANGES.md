@@ -9,6 +9,9 @@
   binding. This removes overhead from SQL query execution and prevents the
   use of greenlets.
 
+- Don't do any access logging if the access_logger_gateway is not provided
+  to clean_python.fastapi.Service.
+
 
 0.9.6 (2023-12-20)
 ------------------

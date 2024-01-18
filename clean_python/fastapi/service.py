@@ -105,11 +105,10 @@ class Service:
             ],
             root_path_in_servers=False,
         )
-        app.middleware("http")(
-            FastAPIAccessLogger(
-                hostname=hostname, gateway_override=access_logger_gateway
+        if access_logger_gateway is not None:
+            app.middleware("http")(
+                FastAPIAccessLogger(hostname=hostname, gateway=access_logger_gateway)
             )
-        )
         app.get("/health", include_in_schema=False)(health_check)
         return app
 
