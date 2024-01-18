@@ -44,7 +44,7 @@ def req():
         ],
         "state": {},
         "method": "GET",
-        "path": "/rasters",
+        "path": "/v1-beta/rasters",
         "raw_path": b"/v1-beta/rasters",
         "query_string": b"limit=50&offset=0&order_by=id",
         "path_params": {},

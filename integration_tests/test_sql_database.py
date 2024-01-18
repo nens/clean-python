@@ -6,6 +6,7 @@ from datetime import timezone
 from unittest import mock
 
 import pytest
+from asyncpg.exceptions import NotNullViolationError
 from sqlalchemy import Boolean
 from sqlalchemy import Column
 from sqlalchemy import DateTime
@@ -14,8 +15,7 @@ from sqlalchemy import Integer
 from sqlalchemy import MetaData
 from sqlalchemy import Table
 from sqlalchemy import Text
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.pool import NullPool
+from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.sql import text
 
 from clean_python import AlreadyExists
@@ -48,25 +48,24 @@ update_query = text("UPDATE test_model SET t='bar' WHERE id=:id RETURNING t")
 
 
 @pytest.fixture(scope="session")
-def dburl(postgres_url):
-    return f"postgresql+asyncpg://{postgres_url}"
-
-
-@pytest.fixture(scope="session")
 def dbname():
     return "cleanpython_test"
 
 
 @pytest.fixture(scope="session")
-async def database(dburl, dbname):
-    root_provider = SQLDatabase(f"{dburl}/")
+async def database(postgres_url, dbname):
+    root_provider = SQLDatabase(f"{postgres_url}/")
     await root_provider.drop_database(dbname)
     await root_provider.create_database(dbname)
-    provider = SQLDatabase(f"{dburl}/{dbname}")
-    async with provider.engine.begin() as conn:
+    await root_provider.dispose()
+    engine = create_async_engine(f"postgresql+asyncpg://{postgres_url}/{dbname}")
+    async with engine.begin() as conn:
         await conn.run_sync(test_model.metadata.drop_all)
         await conn.run_sync(test_model.metadata.create_all)
-    yield SQLDatabase(f"{dburl}/{dbname}")
+    await engine.dispose()
+    yield SQLDatabase(
+        f"{postgres_url}/{dbname}", pool_size=2
+    )  # pool_size=2 for Conflict test
 
 
 @pytest.fixture
@@ -145,17 +144,8 @@ async def test_testing_transaction_rollback(database_with_cleanup):
     assert await database_with_cleanup.execute(count_query) == [{"count": 0}]
 
 
-@pytest.fixture
-async def database_no_pool_no_cache(dburl, dbname):
-    db = SQLDatabase(
-        f"{dburl}/{dbname}?prepared_statement_cache_size=0", poolclass=NullPool
-    )
-    yield db
-    await db.truncate_tables(["test_model"])
-
-
 async def test_handle_serialization_error(
-    database_no_pool_no_cache: SQLDatabase, record_id: int
+    database_with_cleanup: SQLDatabase, record_id: int
 ):
     """Typical 'lost update' situation will result in a Conflict error
 
@@ -169,13 +159,13 @@ async def test_handle_serialization_error(
 
     async def update(sleep_before=0.0, sleep_after=0.0):
         await asyncio.sleep(sleep_before)
-        async with database_no_pool_no_cache.transaction() as trans:
+        async with database_with_cleanup.transaction() as trans:
             res = await trans.execute(update_query, bind_params={"id": record_id})
             await asyncio.sleep(sleep_after)
         return res
 
     res1, res2 = await asyncio.gather(
-        update(sleep_after=0.02), update(sleep_before=0.01), return_exceptions=True
+        update(sleep_after=0.1), update(sleep_before=0.05), return_exceptions=True
     )
     assert res1 == [{"t": "bar"}]
     assert isinstance(res2, Conflict)
@@ -279,7 +269,7 @@ async def test_add_integrity_error(sql_gateway, obj, id):
     obj.pop("t")  # will cause the IntegrityError
     if id != "delete":
         obj["id"] = id
-    with pytest.raises(IntegrityError):
+    with pytest.raises(NotNullViolationError):
         await sql_gateway.add(obj)
 
 
