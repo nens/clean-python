@@ -23,7 +23,7 @@ from clean_python import DoesNotExist
 from clean_python import Filter
 
 # from clean_python.sql.asyncpg_sql_database import AsyncpgSQLDatabase as SQLDatabase
-from clean_python.sql import SQLGateway
+from clean_python.sql import SyncSQLGateway
 from clean_python.sql.sqlalchemy_sync_sql_database import (
     SQLAlchemySyncSQLDatabase as SQLDatabase,
 )
@@ -189,7 +189,7 @@ def test_handle_integrity_error(database_with_cleanup: SQLDatabase, record_id: i
 ### SQLGateway integration tests
 
 
-class TstSQLGateway(SQLGateway, table=test_model):
+class TstSQLGateway(SyncSQLGateway, table=test_model):
     pass
 
 

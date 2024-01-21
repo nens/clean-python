@@ -49,7 +49,7 @@ class SyncSQLProvider:
     ) -> List[Json]:
         raise NotImplementedError()
 
-    def transaction(self) -> Iterator["SQLProvider"]:
+    def transaction(self) -> Iterator["SyncSQLProvider"]:
         raise NotImplementedError()
         yield
 

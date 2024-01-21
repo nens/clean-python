@@ -66,6 +66,13 @@ class SQLAlchemySyncSQLDatabase(SyncSQLDatabase):
             with connection.begin():
                 yield SQLAlchemySyncSQLTransaction(connection)
 
+    @contextmanager
+    def testing_transaction(self) -> Iterator[SyncSQLProvider]:
+        with self.engine.connect() as connection:
+            with connection.begin() as transaction:
+                yield SQLAlchemySyncSQLTransaction(connection)
+                transaction.rollback()
+
     def execute_autocommit(self, query: Executable) -> None:
         engine = create_engine(f"postgresql://{self.url}", isolation_level="AUTOCOMMIT")
         with engine.connect() as connection:
