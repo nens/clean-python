@@ -1,6 +1,7 @@
 from typing import Any
 from typing import AsyncIterator
 from typing import Dict
+from typing import Iterator
 from typing import List
 from typing import Optional
 from typing import Sequence
@@ -10,7 +11,7 @@ from sqlalchemy.sql import Executable
 
 from clean_python import Json
 
-__all__ = ["SQLProvider", "SQLDatabase"]
+__all__ = ["SQLProvider", "SQLDatabase", "SyncSQLProvider", "SyncSQLDatabase"]
 
 
 class SQLProvider:
@@ -40,3 +41,32 @@ class SQLDatabase(SQLProvider):
     async def truncate_tables(self, names: Sequence[str]) -> None:
         quoted = [f'"{x}"' for x in names]
         await self.execute_autocommit(text(f"TRUNCATE TABLE {', '.join(quoted)}"))
+
+
+class SyncSQLProvider:
+    def execute(
+        self, query: Executable, bind_params: Optional[Dict[str, Any]] = None
+    ) -> List[Json]:
+        raise NotImplementedError()
+
+    def transaction(self) -> Iterator["SQLProvider"]:
+        raise NotImplementedError()
+        yield
+
+
+class SyncSQLDatabase(SyncSQLProvider):
+    def execute_autocommit(self, query: Executable) -> None:
+        pass
+
+    def create_database(self, name: str) -> None:
+        self.execute_autocommit(text(f"CREATE DATABASE {name}"))
+
+    def create_extension(self, name: str) -> None:
+        self.execute_autocommit(text(f"CREATE EXTENSION IF NOT EXISTS {name}"))
+
+    def drop_database(self, name: str) -> None:
+        self.execute_autocommit(text(f"DROP DATABASE IF EXISTS {name}"))
+
+    def truncate_tables(self, names: Sequence[str]) -> None:
+        quoted = [f'"{x}"' for x in names]
+        self.execute_autocommit(text(f"TRUNCATE TABLE {', '.join(quoted)}"))
