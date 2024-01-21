@@ -22,8 +22,12 @@ from clean_python import AlreadyExists
 from clean_python import Conflict
 from clean_python import DoesNotExist
 from clean_python import Filter
-from clean_python.sql import SQLDatabase
+
+# from clean_python.sql.asyncpg_sql_database import AsyncpgSQLDatabase as SQLDatabase
 from clean_python.sql import SQLGateway
+from clean_python.sql.sqlalchemy_async_sql_database import (
+    SQLAlchemyAsyncSQLDatabase as SQLDatabase,
+)
 
 test_model = Table(
     "test_model",
