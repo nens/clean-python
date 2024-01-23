@@ -43,6 +43,9 @@ def compile(
 ) -> Tuple[Any, ...]:
     # Rendering SQLAlchemy expressions to SQL, see:
     # - https://docs.sqlalchemy.org/en/20/faq/sqlexpressions.html
+    # Note that this circumvents the SQLAlchemy caching system and almost certainly
+    # will deteriorate performance when using complex query (compared to the
+    # standard sqlalchemy .execute)
     compiled = query.compile(
         dialect=DIALECT, compile_kwargs={"render_postcompile": True}
     )
@@ -83,7 +86,7 @@ class AsyncpgSQLDatabase(SQLDatabase):
             return await transaction.execute(query, bind_params)
 
     @asynccontextmanager
-    async def transaction(self) -> AsyncIterator[SQLProvider]:
+    async def transaction(self) -> AsyncIterator[SQLProvider]:  # type: ignore
         pool = await self.get_pool()
         connection: asyncpg.Connection
         async with pool.acquire() as connection:
@@ -91,7 +94,7 @@ class AsyncpgSQLDatabase(SQLDatabase):
                 yield AsyncpgSQLTransaction(connection)
 
     @asynccontextmanager
-    async def testing_transaction(self) -> AsyncIterator[SQLProvider]:
+    async def testing_transaction(self) -> AsyncIterator[SQLProvider]:  # type: ignore
         pool = await self.get_pool()
         connection: asyncpg.Connection
         async with pool.acquire() as connection:
@@ -125,6 +128,6 @@ class AsyncpgSQLTransaction(SQLProvider):
         return list(map(dict, result))
 
     @asynccontextmanager
-    async def transaction(self) -> AsyncIterator[SQLProvider]:
+    async def transaction(self) -> AsyncIterator[SQLProvider]:  # type: ignore
         async with self.connection.transaction():
             yield self

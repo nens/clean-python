@@ -36,7 +36,10 @@ def maybe_raise_conflict(e: DBAPIError) -> None:
 def maybe_raise_already_exists(e: DBAPIError) -> None:
     # https://www.postgresql.org/docs/current/errcodes-appendix.html
     if e.orig.pgcode == "23505":  # unique_violation
-        match = UNIQUE_VIOLATION_DETAIL_REGEX.match(e.orig.args[0].split("\n")[-1])
+        lines = e.orig.args[0].split("\n")
+        if len(lines) <= 1:
+            raise AlreadyExists()
+        match = UNIQUE_VIOLATION_DETAIL_REGEX.match(lines[1])
         if match:
             raise AlreadyExists(key=match["key"], value=match["value"])
         else:
@@ -63,13 +66,13 @@ class SQLAlchemyAsyncSQLDatabase(SQLDatabase):
             return await transaction.execute(query, bind_params)
 
     @asynccontextmanager
-    async def transaction(self) -> AsyncIterator[SQLProvider]:
+    async def transaction(self) -> AsyncIterator[SQLProvider]:  # type: ignore
         async with self.engine.connect() as connection:
             async with connection.begin():
                 yield SQLAlchemyAsyncSQLTransaction(connection)
 
     @asynccontextmanager
-    async def testing_transaction(self) -> AsyncIterator[SQLProvider]:
+    async def testing_transaction(self) -> AsyncIterator[SQLProvider]:  # type: ignore
         async with self.engine.connect() as connection:
             async with connection.begin() as transaction:
                 yield SQLAlchemyAsyncSQLTransaction(connection)
@@ -99,6 +102,6 @@ class SQLAlchemyAsyncSQLTransaction(SQLProvider):
         return [x._asdict() for x in result.fetchall()]
 
     @asynccontextmanager
-    async def transaction(self) -> AsyncIterator[SQLProvider]:
+    async def transaction(self) -> AsyncIterator[SQLProvider]:  # type: ignore
         async with self.connection.begin_nested():
             yield self

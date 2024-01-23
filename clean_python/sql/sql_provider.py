@@ -24,6 +24,10 @@ class SQLProvider:
         raise NotImplementedError()
         yield
 
+    async def testing_transaction(self) -> AsyncIterator["SQLProvider"]:
+        raise NotImplementedError()
+        yield
+
 
 class SQLDatabase(SQLProvider):
     async def execute_autocommit(self, query: Executable) -> None:
@@ -50,6 +54,10 @@ class SyncSQLProvider:
         raise NotImplementedError()
 
     def transaction(self) -> Iterator["SyncSQLProvider"]:
+        raise NotImplementedError()
+        yield
+
+    def testing_transaction(self) -> Iterator["SyncSQLProvider"]:
         raise NotImplementedError()
         yield
 

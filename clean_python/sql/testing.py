@@ -15,6 +15,9 @@ from clean_python.sql import SQLProvider
 __all__ = ["FakeSQLDatabase", "assert_query_equal"]
 
 
+DIALECT = postgresql.dialect()
+
+
 class FakeSQLDatabase(SQLProvider):
     def __init__(self):
         self.queries: List[List[Executable]] = []
@@ -27,7 +30,7 @@ class FakeSQLDatabase(SQLProvider):
         return self.result()
 
     @asynccontextmanager
-    async def transaction(self) -> AsyncIterator["SQLProvider"]:
+    async def transaction(self) -> AsyncIterator["SQLProvider"]:  # type: ignore
         x = FakeSQLTransaction(result=self.result)
         self.queries.append(x.queries)
         yield x

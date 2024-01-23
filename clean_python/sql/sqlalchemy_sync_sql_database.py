@@ -12,12 +12,12 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.sql import Executable
 
-from clean_python import AlreadyExists
-from clean_python import Conflict
 from clean_python import Json
 
 from .sql_provider import SyncSQLDatabase
 from .sql_provider import SyncSQLProvider
+from .sqlalchemy_async_sql_database import maybe_raise_already_exists
+from .sqlalchemy_async_sql_database import maybe_raise_conflict
 
 __all__ = ["SQLAlchemySyncSQLDatabase"]
 
@@ -25,22 +25,6 @@ __all__ = ["SQLAlchemySyncSQLDatabase"]
 UNIQUE_VIOLATION_DETAIL_REGEX = re.compile(
     r"DETAIL:\s*Key\s\((?P<key>.*)\)=\((?P<value>.*)\)\s+already exists"
 )
-
-
-def maybe_raise_conflict(e: DBAPIError) -> None:
-    # https://www.postgresql.org/docs/current/errcodes-appendix.html
-    if e.orig.pgcode == "40001":  # serialization_failure
-        raise Conflict("could not execute query due to concurrent update")
-
-
-def maybe_raise_already_exists(e: DBAPIError) -> None:
-    # https://www.postgresql.org/docs/current/errcodes-appendix.html
-    if e.orig.pgcode == "23505":  # unique_violation
-        match = UNIQUE_VIOLATION_DETAIL_REGEX.match(e.orig.args[0].split("\n")[-1])
-        if match:
-            raise AlreadyExists(key=match["key"], value=match["value"])
-        else:
-            raise AlreadyExists()
 
 
 class SQLAlchemySyncSQLDatabase(SyncSQLDatabase):
@@ -61,13 +45,13 @@ class SQLAlchemySyncSQLDatabase(SyncSQLDatabase):
             return transaction.execute(query, bind_params)
 
     @contextmanager
-    def transaction(self) -> Iterator[SyncSQLProvider]:
+    def transaction(self) -> Iterator[SyncSQLProvider]:  # type: ignore
         with self.engine.connect() as connection:
             with connection.begin():
                 yield SQLAlchemySyncSQLTransaction(connection)
 
     @contextmanager
-    def testing_transaction(self) -> Iterator[SyncSQLProvider]:
+    def testing_transaction(self) -> Iterator[SyncSQLProvider]:  # type: ignore
         with self.engine.connect() as connection:
             with connection.begin() as transaction:
                 yield SQLAlchemySyncSQLTransaction(connection)
@@ -98,6 +82,6 @@ class SQLAlchemySyncSQLTransaction(SyncSQLProvider):
         return [x._asdict() for x in result.fetchall()]
 
     @contextmanager
-    def transaction(self) -> Iterator[SyncSQLProvider]:
+    def transaction(self) -> Iterator[SyncSQLProvider]:  # type: ignore
         with self.connection.begin_nested():
             yield self
