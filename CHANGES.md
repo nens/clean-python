@@ -19,6 +19,8 @@
 
 - Removed Python 3.8 and 3.9 tests, added Python 3.12 tests.
 
+- Added ProfyleMiddleware.
+
 
 0.10.0 (2024-01-18)
 -------------------
