@@ -6,7 +6,12 @@ from locust import task
 class LoadUser(HttpUser):
     host = "http://localhost:8000/v1"
 
-    @tag("gateway")
+    @tag("sleep")
     @task
-    def gateway(self):
-        self.client.get("/gateway/1")
+    def sleep(self):
+        self.client.get("/sleep/20")
+
+    @tag("get")
+    @task
+    def get(self):
+        self.client.get("/get/1")

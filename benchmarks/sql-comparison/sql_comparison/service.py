@@ -1,6 +1,7 @@
 import os
 
 import inject
+from sqlalchemy import text
 
 from clean_python.fastapi import get
 from clean_python.fastapi import Resource
@@ -18,7 +19,7 @@ from .sql_model import create_and_fill_db
 
 URL = "postgres:postgres@localhost:5432"
 DB = "sqlcomparison"
-POOL_SIZE = 5
+POOL_SIZE = 50
 
 SQLDatabaseImpl = {
     "sqlalchemy_sync": SQLAlchemySyncSQLDatabase,
@@ -39,7 +40,13 @@ if USE_SYNC:
         def __init__(self):
             self.gateway = TestModelSyncGateway()
 
-        @get("/gateway/{id}")
+        @get("/sleep/{ms}")
+        def sleep(self, ms: int):
+            return self.gateway.provider.execute(
+                text("SELECT pg_sleep(:sec)").bindparams(sec=ms / 1000)
+            )
+
+        @get("/get/{id}")
         def get(self, id: int):
             return self.gateway.get(id)
 
@@ -52,7 +59,13 @@ else:
         def __init__(self):
             self.gateway = TestModelGateway()
 
-        @get("/gateway/{id}")
+        @get("/sleep/{ms}")
+        async def sleep(self, ms: int):
+            return await self.gateway.provider.execute(
+                text("SELECT pg_sleep(:sec)").bindparams(sec=ms / 1000)
+            )
+
+        @get("/get/{id}")
         async def get(self, id: int):
             return await self.gateway.get(id)
 
