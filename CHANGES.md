@@ -1,8 +1,8 @@
 # Changelog of clean-python
 
 
-0.10.0 (unreleased)
-------------------
+0.10.1 (unreleased)
+-------------------
 
 - Replaced SQLProvider with SQLAlchemyAsyncSQLDatabase. SQLProvider still exists,
   but is the baseclass of several implemenations. Another implementation is
@@ -19,6 +19,14 @@
 
 - Removed Python 3.8 and 3.9 tests, added Python 3.12 tests.
 
+
+0.10.0 (2024-01-18)
+-------------------
+
+- Changed the internals of SQLProvider: asyncpg is now used directly for
+  connection pooling, transaction management, query execution and parameter
+  binding. This removes overhead from SQL query execution and prevents the
+  use of greenlets.
 
 0.9.6 (2023-12-20)
 ------------------
