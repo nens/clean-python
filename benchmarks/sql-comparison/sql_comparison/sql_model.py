@@ -21,7 +21,8 @@ test_model = Table(
     Column("t", Text, nullable=False),
     Column("f", Float, nullable=False),
     Column("b", Boolean, nullable=False),
-    Column("dt", DateTime(timezone=True), nullable=False),
+    Column("created_at", DateTime(timezone=True), nullable=False),
+    Column("updated_at", DateTime(timezone=True), nullable=False),
 )
 
 
@@ -64,7 +65,8 @@ def create_and_fill_db(postgres_url, dbname, n=100):
                     "t": rand_str(16),
                     "f": rand_float(0, 1000),
                     "b": rand_bool(),
-                    "dt": rand_datetime(),
+                    "created_at": rand_datetime(),
+                    "updated_at": rand_datetime(),
                 }
                 for _ in range(n)
             ],

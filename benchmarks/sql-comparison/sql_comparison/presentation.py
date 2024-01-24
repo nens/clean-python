@@ -13,8 +13,13 @@ from clean_python.sql import SQLAlchemySyncSQLDatabase
 from clean_python.sql import SQLDatabase
 from clean_python.sql import SyncSQLDatabase
 
-from .sql_gateway import TestModelGateway
-from .sql_gateway import TestModelSyncGateway
+from .application import ManageTestModel
+from .application import SyncManageTestModel
+from .domain import TestModel
+from .domain import TestModelRepository
+from .domain import TestModelSyncRepository
+from .infrastructure import TestModelGateway
+from .infrastructure import TestModelSyncGateway
 from .sql_model import create_and_fill_db
 
 URL = "postgres:postgres@localhost:5432"
@@ -39,6 +44,7 @@ if USE_SYNC:
     class SQLComparisonResource(Resource, version=v(1), name="sql-comparison"):
         def __init__(self):
             self.gateway = TestModelSyncGateway()
+            self.manage = SyncManageTestModel(TestModelSyncRepository(self.gateway))
 
         @get("/sleep/{ms}")
         def sleep(self, ms: int):
@@ -46,9 +52,13 @@ if USE_SYNC:
                 text("SELECT pg_sleep(:sec)").bindparams(sec=ms / 1000)
             )
 
-        @get("/get/{id}")
-        def get(self, id: int):
+        @get("/raw/{id}")
+        def raw(self, id: int):
             return self.gateway.get(id)
+
+        @get("/get/{id}")
+        def get(self, id: int) -> TestModel:
+            return self.manage.retrieve(id)
 
 else:
 
@@ -58,6 +68,7 @@ else:
     class SQLComparisonResource(Resource, version=v(1), name="sql-comparison"):
         def __init__(self):
             self.gateway = TestModelGateway()
+            self.manage = ManageTestModel(TestModelRepository(self.gateway))
 
         @get("/sleep/{ms}")
         async def sleep(self, ms: int):
@@ -65,9 +76,13 @@ else:
                 text("SELECT pg_sleep(:sec)").bindparams(sec=ms / 1000)
             )
 
-        @get("/get/{id}")
-        async def get(self, id: int):
+        @get("/raw/{id}")
+        async def raw(self, id: int):
             return await self.gateway.get(id)
+
+        @get("/get/{id}")
+        async def get(self, id: int) -> TestModel:
+            return await self.manage.retrieve(id)
 
 
 app = Service(SQLComparisonResource()).create_app(
