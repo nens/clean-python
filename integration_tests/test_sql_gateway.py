@@ -6,7 +6,6 @@ from unittest import mock
 
 import pytest
 from asyncpg.exceptions import NotNullViolationError
-from sql_model import test_model
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.sql import text
 
@@ -18,6 +17,8 @@ from clean_python.sql import AsyncpgSQLDatabase
 from clean_python.sql import SQLAlchemyAsyncSQLDatabase
 from clean_python.sql import SQLDatabase
 from clean_python.sql import SQLGateway
+
+from .sql_model import test_model
 
 
 @pytest.fixture(

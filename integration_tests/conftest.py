@@ -48,9 +48,10 @@ async def s3_url():
 
 @pytest.fixture(scope="session")
 async def postgres_db_url(postgres_url) -> str:
-    from sql_model import test_model
     from sqlalchemy import create_engine
     from sqlalchemy import text
+
+    from .sql_model import test_model
 
     dbname = "cleanpython_test"
     root_engine = create_engine(
@@ -86,7 +87,9 @@ def wait_until_url_available(url: str, max_tries=10, interval=0.1):
 @pytest.fixture(scope="session")
 async def fastapi_example_app():
     port = int(os.environ.get("API_PORT", "8005"))
-    config = uvicorn.Config("fastapi_example:app", host="0.0.0.0", port=port)
+    config = uvicorn.Config(
+        "integration_tests.fastapi_example:app", host="0.0.0.0", port=port
+    )
     p = multiprocessing.Process(target=uvicorn.Server(config).run)
     p.start()
     try:

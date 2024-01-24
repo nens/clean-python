@@ -4,15 +4,16 @@ import time
 from concurrent.futures.thread import ThreadPoolExecutor
 
 import pytest
-from sql_model import count_query
-from sql_model import insert_query
-from sql_model import update_query
 from sqlalchemy.sql import text
 
 from clean_python import AlreadyExists
 from clean_python import Conflict
 from clean_python.sql import SQLAlchemySyncSQLDatabase
 from clean_python.sql import SQLDatabase
+
+from .sql_model import count_query
+from .sql_model import insert_query
+from .sql_model import update_query
 
 
 @pytest.fixture(scope="session")
