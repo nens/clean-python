@@ -85,7 +85,13 @@ class AsyncpgSQLDatabase(SQLDatabase):
         # compile before acquiring the connection
         args = compile(query, bind_params)
         pool = await self.get_pool()
-        return list(map(dict, await pool.fetch(*args)))
+        try:
+            result = await pool.fetch(*args)
+        except asyncpg.exceptions.UniqueViolationError as e:
+            raise convert_unique_violation_error(e)
+        except asyncpg.exceptions.SerializationError:
+            raise Conflict("could not execute query due to concurrent update")
+        return list(map(dict, result))
 
     @asynccontextmanager
     async def transaction(self) -> AsyncIterator[SQLProvider]:  # type: ignore
