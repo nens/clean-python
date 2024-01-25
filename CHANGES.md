@@ -21,6 +21,9 @@
 
 - Added ProfyleMiddleware.
 
+- Reverted to the old 'optimistic' concurrency control in Repository.update. This
+  can be switched to 'pessimistic' by using a keyword argument.
+
 
 0.10.0 (2024-01-18)
 -------------------
