@@ -4,7 +4,22 @@
 0.10.1 (unreleased)
 -------------------
 
-- Nothing changed yet.
+- Replaced SQLProvider with SQLAlchemyAsyncSQLDatabase. SQLProvider still exists,
+  but is the baseclass of several implemenations. Another implementation is
+  AsyncpgSQLDatase; this imlementation removes overhead from SQL query execution
+  and prevents the use of greenlets, but it also adds overhead because query
+  compilation isn't cached.
+
+- Added SyncSQLProvider and a (partial) implementation SQLAlchemySyncSQLDatabase.
+
+- Don't do any access logging if the access_logger_gateway is not provided
+  to clean_python.fastapi.Service.
+
+- Pinned dependencies for better guarantees of clean-python tests.
+
+- Removed Python 3.8 and 3.9 tests, added Python 3.12 tests.
+
+- Added ProfyleMiddleware.
 
 
 0.10.0 (2024-01-18)
@@ -14,7 +29,6 @@
   connection pooling, transaction management, query execution and parameter
   binding. This removes overhead from SQL query execution and prevents the
   use of greenlets.
-
 
 0.9.6 (2023-12-20)
 ------------------

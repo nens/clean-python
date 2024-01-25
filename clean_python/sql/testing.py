@@ -1,7 +1,9 @@
 from contextlib import asynccontextmanager
+from contextlib import contextmanager
 from typing import Any
 from typing import AsyncIterator
 from typing import Dict
+from typing import Iterator
 from typing import List
 from typing import Optional
 from unittest import mock
@@ -11,8 +13,12 @@ from sqlalchemy.sql import Executable
 
 from clean_python import Json
 from clean_python.sql import SQLProvider
+from clean_python.sql import SyncSQLProvider
 
-__all__ = ["FakeSQLDatabase", "assert_query_equal"]
+__all__ = ["FakeSQLDatabase", "FakeSyncSQLDatabase", "assert_query_equal"]
+
+
+DIALECT = postgresql.dialect()
 
 
 class FakeSQLDatabase(SQLProvider):
@@ -27,7 +33,7 @@ class FakeSQLDatabase(SQLProvider):
         return self.result()
 
     @asynccontextmanager
-    async def transaction(self) -> AsyncIterator["SQLProvider"]:
+    async def transaction(self) -> AsyncIterator["SQLProvider"]:  # type: ignore
         x = FakeSQLTransaction(result=self.result)
         self.queries.append(x.queries)
         yield x
@@ -39,6 +45,36 @@ class FakeSQLTransaction(SQLProvider):
         self.result = result
 
     async def execute(
+        self, query: Executable, _: Optional[Dict[str, Any]] = None
+    ) -> List[Json]:
+        self.queries.append(query)
+        return self.result()
+
+
+class FakeSyncSQLDatabase(SyncSQLProvider):
+    def __init__(self):
+        self.queries: List[List[Executable]] = []
+        self.result = mock.Mock(return_value=[])
+
+    def execute(
+        self, query: Executable, _: Optional[Dict[str, Any]] = None
+    ) -> List[Json]:
+        self.queries.append([query])
+        return self.result()
+
+    @contextmanager
+    def transaction(self) -> Iterator["SyncSQLProvider"]:  # type: ignore
+        x = FakeSyncSQLTransaction(result=self.result)
+        self.queries.append(x.queries)
+        yield x
+
+
+class FakeSyncSQLTransaction(SyncSQLProvider):
+    def __init__(self, result: mock.Mock):
+        self.queries: List[Executable] = []
+        self.result = result
+
+    def execute(
         self, query: Executable, _: Optional[Dict[str, Any]] = None
     ) -> List[Json]:
         self.queries.append(query)

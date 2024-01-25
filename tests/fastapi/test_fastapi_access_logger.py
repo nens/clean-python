@@ -16,7 +16,7 @@ SOME_UUID = uuid4()
 
 @pytest.fixture
 def fastapi_access_logger():
-    return FastAPIAccessLogger(hostname="myhost", gateway_override=InMemoryGateway([]))
+    return FastAPIAccessLogger(hostname="myhost", gateway=InMemoryGateway([]))
 
 
 @pytest.fixture
