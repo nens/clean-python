@@ -44,6 +44,7 @@ class SQLGateway(Gateway):
     table: Table
     nested: bool
     multitenant: bool
+    has_related: bool
 
     def __init__(
         self,
@@ -57,11 +58,14 @@ class SQLGateway(Gateway):
     def provider(self):
         return self.provider_override or inject.instance(SQLDatabase)
 
-    def __init_subclass__(cls, table: Table, multitenant: bool = False) -> None:
+    def __init_subclass__(
+        cls, table: Table, multitenant: bool = False, has_related: bool = False
+    ) -> None:
         cls.table = table
         if multitenant and not hasattr(table.c, "tenant"):
             raise ValueError("Can't use a multitenant SQLGateway without tenant column")
         cls.multitenant = multitenant
+        cls.has_related = has_related
         super().__init_subclass__()
 
     def rows_to_dict(self, rows: List[Json]) -> List[Json]:
@@ -93,22 +97,24 @@ class SQLGateway(Gateway):
         return ctx.tenant.id
 
     async def get_related(self, items: List[Json]) -> None:
-        pass
+        """Implement this to use transactions for consistently getting nested records"""
 
     async def set_related(self, item: Json, result: Json) -> None:
-        pass
+        """Implement this to use transactions for consistently setting nested records"""
 
     async def execute(self, query: Executable) -> List[Json]:
-        assert self.nested
         return self.rows_to_dict(await self.provider.execute(query))
 
     async def add(self, item: Json) -> Json:
         query = (
             insert(self.table).values(**self.dict_to_row(item)).returning(self.table)
         )
-        async with self.transaction() as transaction:
-            (result,) = await transaction.execute(query)
-            await transaction.set_related(item, result)
+        if self.has_related:
+            async with self.transaction() as transaction:
+                (result,) = await transaction.execute(query)
+                await transaction.set_related(item, result)
+        else:
+            (result,) = await self.execute(query)
         return result
 
     async def update(
@@ -126,15 +132,18 @@ class SQLGateway(Gateway):
             .values(**self.dict_to_row(item))
             .returning(self.table)
         )
-        async with self.transaction() as transaction:
-            result = await transaction.execute(query)
-            if not result:
-                if if_unmodified_since is not None:
-                    # note: the get() is to maybe raise DoesNotExist
-                    if await self.get(id_):
-                        raise Conflict()
-                raise DoesNotExist("record", id_)
-            await transaction.set_related(item, result[0])
+        if self.has_related:
+            async with self.transaction() as transaction:
+                result = await transaction.execute(query)
+                if result:
+                    await transaction.set_related(item, result[0])
+        else:
+            result = await self.execute(query)
+        if not result:
+            if if_unmodified_since is not None:
+                if await self.exists([Filter(field="id", values=[id_])]):
+                    raise Conflict()
+            raise DoesNotExist("record", id_)
         return result[0]
 
     async def _select_for_update(self, id: Id) -> Json:
@@ -166,9 +175,12 @@ class SQLGateway(Gateway):
             )
             .returning(self.table)
         )
-        async with self.transaction() as transaction:
-            result = await transaction.execute(query)
-            await transaction.set_related(item, result[0])
+        if self.has_related:
+            async with self.transaction() as transaction:
+                result = await transaction.execute(query)
+                await transaction.set_related(item, result[0])
+        else:
+            result = await self.execute(query)
         return result[0]
 
     async def remove(self, id: Id) -> bool:
@@ -177,9 +189,7 @@ class SQLGateway(Gateway):
             .where(self._id_filter_to_sql(id))
             .returning(self.table.c.id)
         )
-        async with self.transaction() as transaction:
-            result = await transaction.execute(query)
-        return bool(result)
+        return bool(await self.execute(query))
 
     def _filter_to_sql(self, filter: Filter) -> ColumnElement:
         try:
@@ -209,9 +219,12 @@ class SQLGateway(Gateway):
         if params is not None:
             sort = asc(params.order_by) if params.ascending else desc(params.order_by)
             query = query.order_by(sort).limit(params.limit).offset(params.offset)
-        async with self.transaction() as transaction:
-            result = await transaction.execute(query)
-            await transaction.get_related(result)
+        if self.has_related:
+            async with self.transaction() as transaction:
+                result = await transaction.execute(query)
+                await transaction.get_related(result)
+        else:
+            result = await self.execute(query)
         return result
 
     async def count(self, filters: List[Filter]) -> int:
@@ -220,8 +233,7 @@ class SQLGateway(Gateway):
             .select_from(self.table)
             .where(self._filters_to_sql(filters))
         )
-        async with self.transaction() as transaction:
-            return (await transaction.execute(query))[0]["count"]
+        return (await self.execute(query))[0]["count"]
 
     async def exists(self, filters: List[Filter]) -> bool:
         query = (
@@ -230,8 +242,7 @@ class SQLGateway(Gateway):
             .where(self._filters_to_sql(filters))
             .limit(1)
         )
-        async with self.transaction() as transaction:
-            return len(await transaction.execute(query)) > 0
+        return len(await self.execute(query)) > 0
 
     async def _get_related_one_to_many(
         self,

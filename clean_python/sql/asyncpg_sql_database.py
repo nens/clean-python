@@ -82,8 +82,10 @@ class AsyncpgSQLDatabase(SQLDatabase):
     async def execute(
         self, query: Executable, bind_params: Optional[Dict[str, Any]] = None
     ) -> List[Json]:
-        async with self.transaction() as transaction:
-            return await transaction.execute(query, bind_params)
+        # compile before acquiring the connection
+        args = compile(query, bind_params)
+        pool = await self.get_pool()
+        return list(map(dict, await pool.fetch(*args)))
 
     @asynccontextmanager
     async def transaction(self) -> AsyncIterator[SQLProvider]:  # type: ignore
