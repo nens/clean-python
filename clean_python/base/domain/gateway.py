@@ -40,11 +40,8 @@ class Gateway(ABC):
         raise NotImplementedError()
 
     async def update_transactional(self, id: Id, func: Callable[[Json], Json]) -> Json:
-        existing = await self.get(id)
-        if existing is None:
-            raise DoesNotExist("record", id)
-        return await self.update(
-            func(existing), if_unmodified_since=existing["updated_at"]
+        raise NotImplementedError(
+            f"{self.__class__} does not implement pessimistic concurrency control"
         )
 
     async def upsert(self, item: Json) -> Json:

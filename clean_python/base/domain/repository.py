@@ -1,5 +1,6 @@
 # (c) Nelen & Schuurmans
 
+from datetime import datetime
 from typing import Any
 from typing import Generic
 from typing import List
@@ -72,12 +73,23 @@ class Repository(Generic[T]):
         created = await self.gateway.add(item.model_dump())
         return self.entity(**created)
 
-    async def update(self, id: Id, values: Json) -> T:
+    async def update(self, id: Id, values: Json, optimistic: bool = True) -> T:
         if not values:
             return await self.get(id)
-        updated = await self.gateway.update_transactional(
-            id, lambda x: self.entity(**x).update(**values).model_dump()
-        )
+        if optimistic:
+            existing = await self.get(id)
+            updated_at = getattr(existing, "updated_at", None)
+            if not isinstance(updated_at, datetime):
+                raise ValueError(
+                    "Can't use optimistic locking on object without updated_at datetime"
+                )
+            updated = await self.gateway.update(
+                existing.update(**values).model_dump(), if_unmodified_since=updated_at
+            )
+        else:
+            updated = await self.gateway.update_transactional(
+                id, lambda x: self.entity(**x).update(**values).model_dump()
+            )
         return self.entity(**updated)
 
     async def upsert(self, item: T) -> T:

@@ -1,12 +1,17 @@
+from datetime import timedelta
+from typing import Callable
 from typing import List
 from unittest import mock
 
 import pytest
 
 from clean_python import BadRequest
+from clean_python import Conflict
 from clean_python import DoesNotExist
 from clean_python import Filter
+from clean_python import Id
 from clean_python import InMemoryGateway
+from clean_python import Json
 from clean_python import Page
 from clean_python import PageOptions
 from clean_python import Repository
@@ -79,20 +84,25 @@ async def test_add_json_validates(user_repository: UserRepository):
         await user_repository.add({"id": "d"})
 
 
-async def test_update(user_repository: UserRepository):
-    actual = await user_repository.update(id=2, values={"name": "d"})
+@pytest.mark.parametrize("optimistic", [False, True])
+async def test_update(user_repository: UserRepository, optimistic: bool):
+    actual = await user_repository.update(
+        id=2, values={"name": "d"}, optimistic=optimistic
+    )
     assert actual.name == "d"
     assert user_repository.gateway.data[2] == actual.model_dump()
 
 
-async def test_update_does_not_exist(user_repository: UserRepository):
+@pytest.mark.parametrize("optimistic", [False, True])
+async def test_update_does_not_exist(user_repository: UserRepository, optimistic: bool):
     with pytest.raises(DoesNotExist):
-        await user_repository.update(id=4, values={"name": "d"})
+        await user_repository.update(id=4, values={"name": "d"}, optimistic=optimistic)
 
 
-async def test_update_validates(user_repository: UserRepository):
+@pytest.mark.parametrize("optimistic", [False, True])
+async def test_update_validates(user_repository: UserRepository, optimistic: bool):
     with pytest.raises(BadRequest):
-        await user_repository.update(id=2, values={"id": 6})
+        await user_repository.update(id=2, values={"id": 6}, optimistic=optimistic)
 
 
 async def test_remove(user_repository: UserRepository):
@@ -178,3 +188,26 @@ async def test_count(gateway_count, user_repository):
 async def test_exists(gateway_exists, user_repository):
     assert await user_repository.exists("foo") is gateway_exists.return_value
     gateway_exists.assert_awaited_once_with("foo")
+
+
+class ConflictInMemoryGateway(InMemoryGateway):
+    async def get(self, id: Id) -> Json | None:
+        """Change 'updated_at' to something older so that we get a Conflict when
+        using optimistic locking.
+        """
+        result = await super().get(id)
+        if result is not None:
+            result["updated_at"] -= timedelta(seconds=1)
+        return result
+
+    async def update_transactional(self, id: Id, func: Callable[[Json], Json]) -> Json:
+        # call func although we raise always, just because it should happen
+        func(await self.get(id))
+        raise Conflict("foo")
+
+
+@pytest.mark.parametrize("optimistic", [False, True])
+async def test_update_conflict(user_repository: UserRepository, optimistic: bool):
+    user_repository.gateway.__class__ = ConflictInMemoryGateway
+    with pytest.raises(Conflict):
+        await user_repository.update(id=2, values={"name": "d"}, optimistic=optimistic)
