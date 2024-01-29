@@ -1,7 +1,7 @@
 # Changelog of clean-python
 
 
-0.10.1 (unreleased)
+0.11.0 (2024-01-29)
 -------------------
 
 - Replaced SQLProvider with SQLAlchemyAsyncSQLDatabase. SQLProvider still exists,
