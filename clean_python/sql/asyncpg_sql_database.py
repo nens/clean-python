@@ -1,3 +1,4 @@
+import json
 import re
 from contextlib import asynccontextmanager
 from typing import Any
@@ -56,6 +57,15 @@ def compile(
     return (str(compiled),) + tuple(params[k] for k in compiled.positiontup)
 
 
+async def init_db_types(conn: asyncpg.Connection):
+    await conn.set_type_codec(
+        "json", encoder=json.dumps, decoder=json.loads, schema="pg_catalog"
+    )
+    await conn.set_type_codec(
+        "jsonb", encoder=json.dumps, decoder=json.loads, schema="pg_catalog"
+    )
+
+
 class AsyncpgSQLDatabase(SQLDatabase):
     def __init__(
         self, url: str, *, isolation_level: str = "repeatable_read", pool_size: int = 1
@@ -73,6 +83,7 @@ class AsyncpgSQLDatabase(SQLDatabase):
             server_settings={"jit": "off"},
             min_size=1,
             max_size=self.pool_size,
+            init=init_db_types,
         )
 
     async def dispose(self) -> None:

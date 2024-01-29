@@ -7,6 +7,7 @@ from sqlalchemy import MetaData
 from sqlalchemy import Table
 from sqlalchemy import Text
 from sqlalchemy import text
+from sqlalchemy.dialects import postgresql
 
 test_model = Table(
     "test_model",
@@ -17,6 +18,7 @@ test_model = Table(
     Column("b", Boolean, nullable=False),
     Column("updated_at", DateTime(timezone=True), nullable=False),
     Column("n", Float, nullable=True),
+    Column("json", postgresql.JSONB(astext_type=Text()), nullable=True),
 )
 
 

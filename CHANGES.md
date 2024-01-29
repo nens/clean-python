@@ -4,7 +4,7 @@
 0.11.1 (unreleased)
 -------------------
 
-- Nothing changed yet.
+- Added default type casting to string for json fields in AsyncpgSQLDatabase.
 
 
 0.11.0 (2024-01-29)

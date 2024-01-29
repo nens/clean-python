@@ -54,6 +54,7 @@ def obj():
         "b": True,
         "updated_at": datetime(2016, 6, 23, 2, 10, 25, tzinfo=timezone.utc),
         "n": None,
+        "json": {"foo": 2},
     }
 
 
@@ -61,8 +62,8 @@ def obj():
 async def obj_in_db(test_transaction, obj):
     res = await test_transaction.execute(
         text(
-            "INSERT INTO test_model (t, f, b, updated_at) "
-            "VALUES ('foo', 1.23, TRUE, '2016-06-22 19:10:25-07') "
+            "INSERT INTO test_model (t, f, b, updated_at, json) "
+            "VALUES ('foo', 1.23, TRUE, '2016-06-22 19:10:25-07', '{\"foo\"\\:2}') "
             "RETURNING id"
         )
     )
