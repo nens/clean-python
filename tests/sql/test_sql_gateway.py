@@ -235,28 +235,28 @@ async def test_update_does_not_exist(sql_gateway):
     assert len(sql_gateway.provider.queries) == 1
 
 
-@mock.patch.object(SQLGateway, "get")
-async def test_update_if_unmodified_since_does_not_exist(get_m, sql_gateway):
-    get_m.return_value = None
+@mock.patch.object(SQLGateway, "exists")
+async def test_update_if_unmodified_since_does_not_exist(exists_m, sql_gateway):
+    exists_m.return_value = False
     sql_gateway.provider.result.return_value = []
     with pytest.raises(DoesNotExist):
         await sql_gateway.update(
             {"id": 2}, if_unmodified_since=datetime(2010, 1, 1, tzinfo=timezone.utc)
         )
     assert len(sql_gateway.provider.queries) == 1
-    get_m.assert_awaited_once_with(2)
+    exists_m.assert_awaited_once_with([Filter(field="id", values=[2])])
 
 
-@mock.patch.object(SQLGateway, "get")
-async def test_update_if_unmodified_since_conflict(get_m, sql_gateway):
-    get_m.return_value = {"id": 2, "value": "foo"}
+@mock.patch.object(SQLGateway, "exists")
+async def test_update_if_unmodified_since_conflict(exists_m, sql_gateway):
+    exists_m.return_value = True
     sql_gateway.provider.result.return_value = []
     with pytest.raises(Conflict):
         await sql_gateway.update(
             {"id": 2}, if_unmodified_since=datetime(2010, 1, 1, tzinfo=timezone.utc)
         )
     assert len(sql_gateway.provider.queries) == 1
-    get_m.assert_awaited_once_with(2)
+    exists_m.assert_awaited_once_with([Filter(field="id", values=[2])])
 
 
 async def test_remove(sql_gateway):

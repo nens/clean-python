@@ -82,8 +82,16 @@ class AsyncpgSQLDatabase(SQLDatabase):
     async def execute(
         self, query: Executable, bind_params: Optional[Dict[str, Any]] = None
     ) -> List[Json]:
-        async with self.transaction() as transaction:
-            return await transaction.execute(query, bind_params)
+        # compile before acquiring the connection
+        args = compile(query, bind_params)
+        pool = await self.get_pool()
+        try:
+            result = await pool.fetch(*args)
+        except asyncpg.exceptions.UniqueViolationError as e:
+            raise convert_unique_violation_error(e)
+        except asyncpg.exceptions.SerializationError:
+            raise Conflict("could not execute query due to concurrent update")
+        return list(map(dict, result))
 
     @asynccontextmanager
     async def transaction(self) -> AsyncIterator[SQLProvider]:  # type: ignore

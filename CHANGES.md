@@ -10,6 +10,9 @@
   and prevents the use of greenlets, but it also adds overhead because query
   compilation isn't cached.
 
+- Added a 'has_related' subclass argument to SQLGateway, which should be used whenever
+  a gateway contains nested (related) gateways.
+
 - Added SyncSQLProvider and a (partial) implementation SQLAlchemySyncSQLDatabase.
 
 - Don't do any access logging if the access_logger_gateway is not provided
