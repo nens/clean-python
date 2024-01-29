@@ -57,7 +57,8 @@ def s3_provider(s3_bucket, s3_settings):
     s3_bucket.objects.all().delete()
     # set up a tenant
     ctx.tenant = Tenant(id=22, name="foo")
-    return S3BucketProvider(S3BucketOptions(**s3_settings))
+    yield S3BucketProvider(S3BucketOptions(**s3_settings))
+    ctx.tenant = None
 
 
 @pytest.fixture
