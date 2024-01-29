@@ -2,6 +2,7 @@
 
 from copy import deepcopy
 from datetime import datetime
+from typing import Callable
 from typing import List
 from typing import Optional
 
@@ -81,6 +82,14 @@ class InMemoryGateway(Gateway):
             return False
         del self.data[id]
         return True
+
+    async def update_transactional(self, id: Id, func: Callable[[Json], Json]) -> Json:
+        existing = await self.get(id)
+        if existing is None:
+            raise DoesNotExist("record", id)
+        return await self.update(
+            func(existing), if_unmodified_since=existing["updated_at"]
+        )
 
 
 # This is a copy-paste of InMemoryGateway:
