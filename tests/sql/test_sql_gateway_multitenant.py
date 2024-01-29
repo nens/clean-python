@@ -38,7 +38,8 @@ def sql_gateway():
 @pytest.fixture
 def tenant():
     ctx.tenant = Tenant(id=2, name="foo")
-    return ctx.tenant
+    yield ctx.tenant
+    ctx.tenant = None
 
 
 async def test_no_tenant(sql_gateway):
