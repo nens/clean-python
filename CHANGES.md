@@ -1,7 +1,7 @@
 # Changelog of clean-python
 
 
-0.11.1 (unreleased)
+0.11.1 (2024-01-29)
 -------------------
 
 - Added default type casting to string for json fields in AsyncpgSQLDatabase.
