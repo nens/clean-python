@@ -4,7 +4,7 @@
 0.11.2 (unreleased)
 -------------------
 
-- Nothing changed yet.
+- Replaced ProfyleMiddleWare by VizTracerMiddleware.
 
 
 0.11.1 (2024-01-29)
