@@ -1,7 +1,7 @@
 # Changelog of clean-python
 
 
-0.11.2 (unreleased)
+0.11.2 (2024-01-31)
 -------------------
 
 - Replaced ProfyleMiddleWare by VizTracerMiddleware.
