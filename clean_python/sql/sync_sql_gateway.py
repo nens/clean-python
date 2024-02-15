@@ -27,18 +27,15 @@ T = TypeVar("T", bound="SyncSQLGateway")
 
 
 class SyncSQLGateway(SyncGateway):
-    table: Table | None = None
-    multitenant: bool = False
+    builder: SQLBuilder
     mapper: Mapper = Mapper()
 
     def __init__(self, provider_override: Optional[SyncSQLProvider] = None):
-        assert self.table is not None
-        if self.multitenant and not hasattr(self.table.c, "tenant"):
-            raise ValueError(
-                "Can't use a multitenant SyncSQLGateway without tenant column"
-            )
         self.provider_override = provider_override
-        self.builder = SQLBuilder(self.table, self.multitenant)
+
+    def __init_subclass__(cls, table: Table, multitenant: bool = False) -> None:
+        cls.builder = SQLBuilder(table, multitenant)
+        super().__init_subclass__()
 
     @property
     def provider(self):
@@ -61,7 +58,7 @@ class SyncSQLGateway(SyncGateway):
         rows = self.provider.execute(query)
         if not rows:
             if if_unmodified_since is not None:
-                if self.exists([Filter(field="id", values=[id_])]):
+                if self.exists([Filter.for_id(id_)]):
                     raise Conflict()
             raise DoesNotExist("record", id_)
         assert len(rows) == 1

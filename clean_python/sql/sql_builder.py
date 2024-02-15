@@ -24,7 +24,9 @@ __all__ = ["SQLBuilder"]
 
 
 class SQLBuilder:
-    def __init__(self, table: Table, multitenant: bool):
+    def __init__(self, table: Table, multitenant: bool = False):
+        if multitenant and not hasattr(table.c, "tenant"):
+            raise ValueError("Can't use a multitenant SQLBuilder without tenant column")
         self.table = table
         self.multitenant = multitenant
 

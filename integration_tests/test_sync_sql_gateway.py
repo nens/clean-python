@@ -27,8 +27,8 @@ def test_transaction(database):
         yield test_transaction
 
 
-class TstSQLGateway(SyncSQLGateway):
-    table = test_model
+class TstSQLGateway(SyncSQLGateway, table=test_model):
+    pass
 
 
 @pytest.fixture
