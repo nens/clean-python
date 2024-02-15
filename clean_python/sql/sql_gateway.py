@@ -9,13 +9,10 @@ from typing import TypeVar
 
 import inject
 from sqlalchemy import and_
-from sqlalchemy import asc
-from sqlalchemy import desc
 from sqlalchemy import func
 from sqlalchemy import select
 from sqlalchemy import Table
 from sqlalchemy import true
-from sqlalchemy import update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.sql import Executable
 from sqlalchemy.sql.expression import ColumnElement
@@ -123,15 +120,7 @@ class SQLGateway(Gateway):
         id_ = item.get("id")
         if id_ is None:
             raise DoesNotExist("record", id_)
-        q = self._id_filter_to_sql(id_)
-        if if_unmodified_since is not None:
-            q &= self.table.c.updated_at == if_unmodified_since
-        query = (
-            update(self.table)
-            .where(q)
-            .values(**self.dict_to_row(item))
-            .returning(self.table)
-        )
+        query = self.builder.update(id_, self.dict_to_row(item), if_unmodified_since)
         if self.has_related:
             async with self.transaction() as transaction:
                 result = await transaction.execute(query)
@@ -210,10 +199,7 @@ class SQLGateway(Gateway):
     async def filter(
         self, filters: List[Filter], params: Optional[PageOptions] = None
     ) -> List[Json]:
-        query = select(self.table).where(self._filters_to_sql(filters))
-        if params is not None:
-            sort = asc(params.order_by) if params.ascending else desc(params.order_by)
-            query = query.order_by(sort).limit(params.limit).offset(params.offset)
+        query = self.builder.select(filters, params)
         if self.has_related:
             async with self.transaction() as transaction:
                 result = await transaction.execute(query)
