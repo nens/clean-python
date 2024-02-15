@@ -1,7 +1,6 @@
 import pytest
 from sqlalchemy import Column
 from sqlalchemy import DateTime
-from sqlalchemy import ForeignKey
 from sqlalchemy import Integer
 from sqlalchemy import MetaData
 from sqlalchemy import Table
@@ -22,40 +21,16 @@ writer = Table(
 )
 
 
-book = Table(
-    "book",
-    MetaData(),
-    Column("id", Integer, primary_key=True, autoincrement=True),
-    Column("title", Text, nullable=False),
-    Column(
-        "writer_id",
-        Integer,
-        ForeignKey("writer.id", ondelete="CASCADE", name="book_writer_id_fkey"),
-        nullable=False,
-    ),
-)
-
-
 ALL_FIELDS = "writer.id, writer.value, writer.updated_at"
-BOOK_FIELDS = "book.id, book.title, book.writer_id"
 
 
-class TstSQLGateway(SyncSQLGateway, table=writer):
-    pass
-
-
-class TstRelatedSQLGateway(SyncSQLGateway, table=book):
-    pass
+class TstSQLGateway(SyncSQLGateway):
+    table = writer
 
 
 @pytest.fixture
 def sql_gateway():
     return TstSQLGateway(FakeSyncSQLDatabase())
-
-
-@pytest.fixture
-def related_sql_gateway():
-    return TstRelatedSQLGateway(FakeSyncSQLDatabase())
 
 
 @pytest.mark.parametrize(
