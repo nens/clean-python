@@ -10,7 +10,6 @@ from typing import TypeVar
 import inject
 from sqlalchemy import and_
 from sqlalchemy import asc
-from sqlalchemy import delete
 from sqlalchemy import desc
 from sqlalchemy import func
 from sqlalchemy import select
@@ -31,6 +30,7 @@ from clean_python import Id
 from clean_python import Json
 from clean_python import PageOptions
 
+from .sql_builder import SQLBuilder
 from .sql_provider import SQLDatabase
 from .sql_provider import SQLProvider
 
@@ -45,6 +45,7 @@ class SQLGateway(Gateway):
     nested: bool
     multitenant: bool
     has_related: bool
+    builder: SQLBuilder
 
     def __init__(
         self,
@@ -66,6 +67,7 @@ class SQLGateway(Gateway):
             raise ValueError("Can't use a multitenant SQLGateway without tenant column")
         cls.multitenant = multitenant
         cls.has_related = has_related
+        cls.builder = SQLBuilder(table, multitenant)
         super().__init_subclass__()
 
     def rows_to_dict(self, rows: List[Json]) -> List[Json]:
@@ -106,9 +108,7 @@ class SQLGateway(Gateway):
         return self.rows_to_dict(await self.provider.execute(query))
 
     async def add(self, item: Json) -> Json:
-        query = (
-            insert(self.table).values(**self.dict_to_row(item)).returning(self.table)
-        )
+        query = self.builder.insert(self.dict_to_row(item))
         if self.has_related:
             async with self.transaction() as transaction:
                 (result,) = await transaction.execute(query)
@@ -184,12 +184,7 @@ class SQLGateway(Gateway):
         return result[0]
 
     async def remove(self, id: Id) -> bool:
-        query = (
-            delete(self.table)
-            .where(self._id_filter_to_sql(id))
-            .returning(self.table.c.id)
-        )
-        return bool(await self.execute(query))
+        return bool(await self.execute(self.builder.delete(id)))
 
     def _filter_to_sql(self, filter: Filter) -> ColumnElement:
         try:
