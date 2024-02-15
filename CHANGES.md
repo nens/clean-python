@@ -4,7 +4,11 @@
 0.11.3 (unreleased)
 -------------------
 
-- Nothing changed yet.
+- Moved SQL query building from SQLGateway to a separate SQLBuilder class.
+  Applications that use the SQLGateway should review custom query building functionality.
+
+- Moved SQL row <-> domain model mapping to SQLGateway.mapper. Applications
+  overriding this mapping (dict_to_row, rows_to_dict) should adapt.
 
 
 0.11.2 (2024-01-31)
