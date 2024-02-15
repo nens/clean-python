@@ -55,6 +55,15 @@ class SQLBuilder:
     def _id_filter_to_sql(self, id: Id) -> ColumnElement:
         return self._filters_to_sql([Filter(field="id", values=[id])])
 
+    def _santize_item(self, item: Json) -> Json:
+        known = {c.key for c in self.table.c}
+        result = {k: item[k] for k in item.keys() if k in known}
+        if "id" in result and result["id"] is None:
+            del result["id"]
+        if self.multitenant:
+            result["tenant"] = self.current_tenant
+        return result
+
     def select_for_update(self, id: Id) -> Executable:
         return select(self.table).with_for_update().where(self._id_filter_to_sql(id))
 
@@ -66,9 +75,12 @@ class SQLBuilder:
         return query
 
     def insert(self, item: Json) -> Executable:
-        return insert(self.table).values(**item).returning(self.table)
+        return (
+            insert(self.table).values(**self._santize_item(item)).returning(self.table)
+        )
 
     def upsert(self, item: Json) -> Executable:
+        item = self._santize_item(item)
         return (
             insert(self.table)
             .values(**item)
@@ -83,7 +95,12 @@ class SQLBuilder:
         q = self._id_filter_to_sql(id)
         if if_unmodified_since is not None:
             q &= self.table.c.updated_at == if_unmodified_since
-        return update(self.table).where(q).values(**item).returning(self.table)
+        return (
+            update(self.table)
+            .where(q)
+            .values(**self._santize_item(item))
+            .returning(self.table)
+        )
 
     def delete(self, id: Id) -> Executable:
         return (

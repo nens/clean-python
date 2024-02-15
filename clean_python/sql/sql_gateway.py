@@ -12,12 +12,12 @@ from sqlalchemy import Table
 from sqlalchemy.sql import Executable
 
 from clean_python import Conflict
-from clean_python import ctx
 from clean_python import DoesNotExist
 from clean_python import Filter
 from clean_python import Gateway
 from clean_python import Id
 from clean_python import Json
+from clean_python import Mapper
 from clean_python import PageOptions
 
 from .sql_builder import SQLBuilder
@@ -32,10 +32,9 @@ T = TypeVar("T", bound="SQLGateway")
 
 class SQLGateway(Gateway):
     table: Table
-    nested: bool
     multitenant: bool
     has_related: bool
-    builder: SQLBuilder
+    mapper: Mapper = Mapper()
 
     def __init__(
         self,
@@ -44,6 +43,7 @@ class SQLGateway(Gateway):
     ):
         self.provider_override = provider_override
         self.nested = nested
+        self.builder = SQLBuilder(self.table, self.multitenant)
 
     @property
     def provider(self):
@@ -57,20 +57,7 @@ class SQLGateway(Gateway):
             raise ValueError("Can't use a multitenant SQLGateway without tenant column")
         cls.multitenant = multitenant
         cls.has_related = has_related
-        cls.builder = SQLBuilder(table, multitenant)
         super().__init_subclass__()
-
-    def rows_to_dict(self, rows: List[Json]) -> List[Json]:
-        return rows
-
-    def dict_to_row(self, obj: Json) -> Json:
-        known = {c.key for c in self.table.c}
-        result = {k: obj[k] for k in obj.keys() if k in known}
-        if "id" in result and result["id"] is None:
-            del result["id"]
-        if self.multitenant:
-            result["tenant"] = self.current_tenant
-        return result
 
     @asynccontextmanager
     async def transaction(self: T) -> AsyncIterator[T]:
@@ -80,14 +67,6 @@ class SQLGateway(Gateway):
             async with self.provider.transaction() as provider:
                 yield self.__class__(provider, nested=True)
 
-    @property
-    def current_tenant(self) -> Optional[int]:
-        if not self.multitenant:
-            return None
-        if ctx.tenant is None:
-            raise RuntimeError(f"{self.__class__} requires a tenant in the context")
-        return ctx.tenant.id
-
     async def get_related(self, items: List[Json]) -> None:
         """Implement this to use transactions for consistently getting nested records"""
 
@@ -95,10 +74,10 @@ class SQLGateway(Gateway):
         """Implement this to use transactions for consistently setting nested records"""
 
     async def execute(self, query: Executable) -> List[Json]:
-        return self.rows_to_dict(await self.provider.execute(query))
+        return [self.mapper.to_internal(x) for x in await self.provider.execute(query)]
 
     async def add(self, item: Json) -> Json:
-        query = self.builder.insert(self.dict_to_row(item))
+        query = self.builder.insert(self.mapper.to_external(item))
         if self.has_related:
             async with self.transaction() as transaction:
                 (result,) = await transaction.execute(query)
@@ -113,7 +92,9 @@ class SQLGateway(Gateway):
         id_ = item.get("id")
         if id_ is None:
             raise DoesNotExist("record", id_)
-        query = self.builder.update(id_, self.dict_to_row(item), if_unmodified_since)
+        query = self.builder.update(
+            id_, self.mapper.to_external(item), if_unmodified_since
+        )
         if self.has_related:
             async with self.transaction() as transaction:
                 result = await transaction.execute(query)
@@ -146,7 +127,7 @@ class SQLGateway(Gateway):
     async def upsert(self, item: Json) -> Json:
         if item.get("id") is None:
             return await self.add(item)
-        query = self.builder.upsert(self.dict_to_row(item))
+        query = self.builder.upsert(self.mapper.to_external(item))
         if self.has_related:
             async with self.transaction() as transaction:
                 result = await transaction.execute(query)
