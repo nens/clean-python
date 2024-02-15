@@ -4,7 +4,9 @@
 0.11.3 (unreleased)
 -------------------
 
-- Nothing changed yet.
+- Fixed starlette deprecation warning about lifespans.
+
+- Added `on_shutdown` as an optional parameter for the Fastapi Service.
 
 
 0.11.2 (2024-01-31)
