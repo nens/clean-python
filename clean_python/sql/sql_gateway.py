@@ -13,7 +13,6 @@ from sqlalchemy import func
 from sqlalchemy import select
 from sqlalchemy import Table
 from sqlalchemy import true
-from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.sql import Executable
 from sqlalchemy.sql.expression import ColumnElement
 from sqlalchemy.sql.expression import false
@@ -136,10 +135,9 @@ class SQLGateway(Gateway):
         return result[0]
 
     async def _select_for_update(self, id: Id) -> Json:
+        query = self.builder.select_for_update(id)
         async with self.transaction() as transaction:
-            result = await transaction.execute(
-                select(self.table).with_for_update().where(self._id_filter_to_sql(id)),
-            )
+            result = await transaction.execute(query)
             if not result:
                 raise DoesNotExist("record", id)
             await transaction.get_related(result)
@@ -154,16 +152,7 @@ class SQLGateway(Gateway):
     async def upsert(self, item: Json) -> Json:
         if item.get("id") is None:
             return await self.add(item)
-        values = self.dict_to_row(item)
-        query = (
-            insert(self.table)
-            .values(**values)
-            .on_conflict_do_update(
-                index_elements=["id", "tenant"] if self.multitenant else ["id"],
-                set_=values,
-            )
-            .returning(self.table)
-        )
+        query = self.builder.upsert(self.dict_to_row(item))
         if self.has_related:
             async with self.transaction() as transaction:
                 result = await transaction.execute(query)

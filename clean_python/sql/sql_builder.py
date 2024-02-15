@@ -53,6 +53,9 @@ class SQLBuilder:
     def _id_filter_to_sql(self, id: Id) -> ColumnElement:
         return self._filters_to_sql([Filter(field="id", values=[id])])
 
+    def select_for_update(self, id: Id) -> Executable:
+        return select(self.table).with_for_update().where(self._id_filter_to_sql(id))
+
     def select(self, filters: list[Filter], params: PageOptions | None) -> Executable:
         query = select(self.table).where(self._filters_to_sql(filters))
         if params is not None:
@@ -62,6 +65,17 @@ class SQLBuilder:
 
     def insert(self, item: Json) -> Executable:
         return insert(self.table).values(**item).returning(self.table)
+
+    def upsert(self, item: Json) -> Executable:
+        return (
+            insert(self.table)
+            .values(**item)
+            .on_conflict_do_update(
+                index_elements=["id", "tenant"] if self.multitenant else ["id"],
+                set_=item,
+            )
+            .returning(self.table)
+        )
 
     def update(self, id: Id, item: Json, if_unmodified_since: datetime | None):
         q = self._id_filter_to_sql(id)
