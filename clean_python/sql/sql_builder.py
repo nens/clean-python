@@ -5,8 +5,10 @@ from sqlalchemy import asc
 from sqlalchemy import delete
 from sqlalchemy import desc
 from sqlalchemy import Executable
+from sqlalchemy import func
 from sqlalchemy import select
 from sqlalchemy import Table
+from sqlalchemy import true
 from sqlalchemy import update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.sql.expression import ColumnElement
@@ -88,4 +90,19 @@ class SQLBuilder:
             delete(self.table)
             .where(self._id_filter_to_sql(id))
             .returning(self.table.c.id)
+        )
+
+    def count(self, filters: list[Filter]) -> Executable:
+        return (
+            select(func.count().label("count"))
+            .select_from(self.table)
+            .where(self._filters_to_sql(filters))
+        )
+
+    def exists(self, filters: list[Filter]) -> Executable:
+        return (
+            select(true().label("exists"))
+            .select_from(self.table)
+            .where(self._filters_to_sql(filters))
+            .limit(1)
         )

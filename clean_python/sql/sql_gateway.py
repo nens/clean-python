@@ -8,14 +8,8 @@ from typing import Optional
 from typing import TypeVar
 
 import inject
-from sqlalchemy import and_
-from sqlalchemy import func
-from sqlalchemy import select
 from sqlalchemy import Table
-from sqlalchemy import true
 from sqlalchemy.sql import Executable
-from sqlalchemy.sql.expression import ColumnElement
-from sqlalchemy.sql.expression import false
 
 from clean_python import Conflict
 from clean_python import ctx
@@ -164,27 +158,6 @@ class SQLGateway(Gateway):
     async def remove(self, id: Id) -> bool:
         return bool(await self.execute(self.builder.delete(id)))
 
-    def _filter_to_sql(self, filter: Filter) -> ColumnElement:
-        try:
-            column = getattr(self.table.c, filter.field)
-        except AttributeError:
-            return false()
-        if len(filter.values) == 0:
-            return false()
-        elif len(filter.values) == 1:
-            return column == filter.values[0]
-        else:
-            return column.in_(filter.values)
-
-    def _filters_to_sql(self, filters: List[Filter]) -> ColumnElement:
-        qs = [self._filter_to_sql(x) for x in filters]
-        if self.multitenant:
-            qs.append(self.table.c.tenant == self.current_tenant)
-        return and_(*qs)
-
-    def _id_filter_to_sql(self, id: Id) -> ColumnElement:
-        return self._filters_to_sql([Filter(field="id", values=[id])])
-
     async def filter(
         self, filters: List[Filter], params: Optional[PageOptions] = None
     ) -> List[Json]:
@@ -198,21 +171,10 @@ class SQLGateway(Gateway):
         return result
 
     async def count(self, filters: List[Filter]) -> int:
-        query = (
-            select(func.count().label("count"))
-            .select_from(self.table)
-            .where(self._filters_to_sql(filters))
-        )
-        return (await self.execute(query))[0]["count"]
+        return (await self.execute(self.builder.count(filters)))[0]["count"]
 
     async def exists(self, filters: List[Filter]) -> bool:
-        query = (
-            select(true().label("exists"))
-            .select_from(self.table)
-            .where(self._filters_to_sql(filters))
-            .limit(1)
-        )
-        return len(await self.execute(query)) > 0
+        return len(await self.execute(self.builder.exists(filters))) > 0
 
     async def _get_related_one_to_many(
         self,
