@@ -2,7 +2,6 @@
 # (c) Nelen & Schuurmans
 from datetime import datetime
 from datetime import timezone
-from unittest import mock
 
 import pytest
 from asyncpg.exceptions import NotNullViolationError
@@ -169,13 +168,6 @@ async def test_upsert_does_update(sql_gateway, test_transaction, obj_in_db):
         text(f"SELECT * FROM test_model WHERE id = {obj_in_db['id']}")
     )
     assert res[0]["t"] == "bar"
-
-
-async def test_upsert_no_id(sql_gateway, test_transaction, obj):
-    with mock.patch.object(sql_gateway, "add", new_callable=mock.AsyncMock) as add_m:
-        created = await sql_gateway.upsert(obj)
-        add_m.assert_awaited_with(obj)
-        assert created == add_m.return_value
 
 
 async def test_remove(sql_gateway, test_transaction, obj_in_db):

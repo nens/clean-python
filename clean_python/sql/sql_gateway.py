@@ -104,13 +104,13 @@ class SQLGateway(Gateway):
             result = await self.execute(query)
         if not result:
             if if_unmodified_since is not None:
-                if await self.exists([Filter(field="id", values=[id_])]):
+                if await self.exists([Filter.for_id(id_)]):
                     raise Conflict()
             raise DoesNotExist("record", id_)
         return result[0]
 
     async def _select_for_update(self, id: Id) -> Json:
-        query = self.builder.select_for_update(id)
+        query = self.builder.select([Filter.for_id(id)], for_update=True)
         async with self.transaction() as transaction:
             result = await transaction.execute(query)
             if not result:

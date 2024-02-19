@@ -10,6 +10,9 @@
 - Moved SQL row <-> domain model mapping to SQLGateway.mapper. Applications
   overriding this mapping (dict_to_row, rows_to_dict) should adapt.
 
+- Finished SyncSQLGateway. The functionality mirrors that of the SQLGateway, only
+  it doesn't support transactional updates and nested related models.
+
 
 0.11.2 (2024-01-31)
 -------------------

@@ -20,9 +20,13 @@ from clean_python import Id
 from clean_python import Json
 from clean_python import PageOptions
 
+__all__ = ["SQLBuilder"]
+
 
 class SQLBuilder:
-    def __init__(self, table: Table, multitenant: bool):
+    def __init__(self, table: Table, multitenant: bool = False):
+        if multitenant and not hasattr(table.c, "tenant"):
+            raise ValueError("Can't use a multitenant SQLBuilder without tenant column")
         self.table = table
         self.multitenant = multitenant
 
@@ -64,11 +68,16 @@ class SQLBuilder:
             result["tenant"] = self.current_tenant
         return result
 
-    def select_for_update(self, id: Id) -> Executable:
-        return select(self.table).with_for_update().where(self._id_filter_to_sql(id))
-
-    def select(self, filters: list[Filter], params: PageOptions | None) -> Executable:
-        query = select(self.table).where(self._filters_to_sql(filters))
+    def select(
+        self,
+        filters: list[Filter],
+        params: PageOptions | None = None,
+        for_update: bool = False,
+    ) -> Executable:
+        query = select(self.table)
+        if for_update:
+            query = query.with_for_update()
+        query = query.where(self._filters_to_sql(filters))
         if params is not None:
             sort = asc(params.order_by) if params.ascending else desc(params.order_by)
             query = query.order_by(sort).limit(params.limit).offset(params.offset)
