@@ -1,5 +1,7 @@
 # (c) Nelen & Schuurmans
 
+from contextlib import asynccontextmanager
+from inspect import iscoroutinefunction
 from typing import Any
 from typing import Callable
 from typing import Dict
@@ -12,6 +14,7 @@ from fastapi import FastAPI
 from fastapi import Request
 from fastapi.exceptions import RequestValidationError
 from starlette.types import ASGIApp
+from starlette.types import StatelessLifespan
 
 from clean_python import BadRequest
 from clean_python import Conflict
@@ -77,6 +80,28 @@ async def health_check():
     return {"health": "OK"}
 
 
+async def _maybe_await(func: Callable[[], Any]) -> None:
+    if iscoroutinefunction(func):
+        await func()
+    else:
+        func()
+
+
+def to_lifespan(
+    on_startup: List[Callable[[], Any]],
+    on_shutdown: List[Callable[[], Any]],
+) -> Optional[StatelessLifespan[ASGIApp]]:
+    @asynccontextmanager
+    async def lifespan(app: ASGIApp):
+        for func in on_startup:
+            await _maybe_await(func)
+        yield
+        for func in on_shutdown:
+            await _maybe_await(func)
+
+    return lifespan
+
+
 class Service:
     resources: List[Resource]
 
@@ -93,12 +118,13 @@ class Service:
         description: str,
         hostname: str,
         on_startup: Optional[List[Callable[[], Any]]] = None,
+        on_shutdown: Optional[List[Callable[[], Any]]] = None,
         access_logger_gateway: Optional[Gateway] = None,
     ) -> FastAPI:
         app = FastAPI(
             title=title,
             description=description,
-            on_startup=on_startup,
+            lifespan=to_lifespan(on_startup or [], on_shutdown or []),
             servers=[
                 {"url": f"{x.prefix}", "description": x.description}
                 for x in self.versions
@@ -148,6 +174,7 @@ class Service:
         auth: Optional[TokenVerifierSettings] = None,
         auth_client: Optional[OAuth2SPAClientSettings] = None,
         on_startup: Optional[List[Callable[[], Any]]] = None,
+        on_shutdown: Optional[List[Callable[[], Any]]] = None,
         access_logger_gateway: Optional[Gateway] = None,
     ) -> ASGIApp:
         set_verifier(auth)
@@ -156,6 +183,7 @@ class Service:
             description=description,
             hostname=hostname,
             on_startup=on_startup,
+            on_shutdown=on_shutdown,
             access_logger_gateway=access_logger_gateway,
         )
         kwargs = {

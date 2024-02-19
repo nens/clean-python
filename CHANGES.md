@@ -4,6 +4,10 @@
 0.11.3 (unreleased)
 -------------------
 
+- Fixed starlette deprecation warning about lifespans.
+
+- Added `on_shutdown` as an optional parameter for the Fastapi Service.
+
 - Moved SQL query building from SQLGateway to a separate SQLBuilder class.
   Applications that use the SQLGateway should review custom query building functionality.
 
