@@ -1,7 +1,7 @@
 # Changelog of clean-python
 
 
-0.11.3 (unreleased)
+0.12.0 (2024-02-19)
 -------------------
 
 - Fixed starlette deprecation warning about lifespans.
