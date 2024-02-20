@@ -1,7 +1,7 @@
 # Changelog of clean-python
 
 
-0.12.1 (unreleased)
+0.12.1 (2024-02-20)
 -------------------
 
 - Added `SyncManage` as a synchronous alternative to `Manage`.
