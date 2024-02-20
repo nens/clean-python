@@ -4,7 +4,7 @@
 0.12.1 (unreleased)
 -------------------
 
-- Nothing changed yet.
+- Added `SyncManage` as a synchronous alternative to `Manage`.
 
 
 0.12.0 (2024-02-19)
