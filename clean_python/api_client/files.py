@@ -3,10 +3,10 @@ import hashlib
 import logging
 import os
 import re
+from collections.abc import Callable
 from http import HTTPStatus
 from pathlib import Path
 from typing import BinaryIO
-from collections.abc import Callable
 from urllib.parse import urlparse
 
 import urllib3

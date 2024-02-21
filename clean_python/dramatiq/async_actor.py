@@ -4,9 +4,9 @@ import asyncio
 import logging
 import threading
 import time
+from collections.abc import Awaitable
 from concurrent.futures import TimeoutError
 from typing import Any
-from collections.abc import Awaitable
 from typing import TypeVar
 
 import dramatiq

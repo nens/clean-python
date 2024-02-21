@@ -1,8 +1,8 @@
 # (c) Nelen & Schuurmans
 
 from abc import ABC
-from datetime import datetime
 from collections.abc import Callable
+from datetime import datetime
 
 from .exceptions import DoesNotExist
 from .filter import Filter
@@ -74,9 +74,7 @@ class SyncGateway:
     def add(self, item: Json) -> Json:
         raise NotImplementedError()
 
-    def update(
-        self, item: Json, if_unmodified_since: datetime | None = None
-    ) -> Json:
+    def update(self, item: Json, if_unmodified_since: datetime | None = None) -> Json:
         raise NotImplementedError()
 
     def update_transactional(self, id: Id, func: Callable[[Json], Json]) -> Json:

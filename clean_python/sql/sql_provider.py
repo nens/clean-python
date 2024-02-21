@@ -1,7 +1,7 @@
-from typing import Any
 from collections.abc import AsyncIterator
 from collections.abc import Iterator
 from collections.abc import Sequence
+from typing import Any
 
 from sqlalchemy import text
 from sqlalchemy.sql import Executable

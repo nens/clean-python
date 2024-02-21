@@ -1,8 +1,8 @@
 import json
 import re
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Any
-from collections.abc import AsyncIterator
 
 import asyncpg
 from async_lru import alru_cache

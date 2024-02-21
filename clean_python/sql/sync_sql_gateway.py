@@ -44,9 +44,7 @@ class SyncSQLGateway(SyncGateway):
         (row,) = self.provider.execute(query)
         return self.mapper.to_internal(row)
 
-    def update(
-        self, item: Json, if_unmodified_since: datetime | None = None
-    ) -> Json:
+    def update(self, item: Json, if_unmodified_since: datetime | None = None) -> Json:
         id_ = item.get("id")
         if id_ is None:
             raise DoesNotExist("record", id_)

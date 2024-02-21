@@ -1,8 +1,8 @@
 # (c) Nelen & Schuurmans
 
+from collections.abc import Callable
 from copy import deepcopy
 from datetime import datetime
-from collections.abc import Callable
 
 from clean_python.base.domain import AlreadyExists
 from clean_python.base.domain import Conflict
@@ -139,9 +139,7 @@ class InMemorySyncGateway(SyncGateway):
         self.data[id_] = {"id": id_, **item}
         return deepcopy(self.data[id_])
 
-    def update(
-        self, item: Json, if_unmodified_since: datetime | None = None
-    ) -> Json:
+    def update(self, item: Json, if_unmodified_since: datetime | None = None) -> Json:
         _id = item.get("id")
         if _id is None or _id not in self.data:
             raise DoesNotExist("item", _id)

@@ -1,6 +1,6 @@
 import json as json_lib
-from http import HTTPStatus
 from collections.abc import Callable
+from http import HTTPStatus
 from urllib.parse import quote
 
 from pydantic import AnyHttpUrl

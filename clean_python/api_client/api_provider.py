@@ -1,10 +1,10 @@
 import asyncio
 import re
+from collections.abc import Awaitable
+from collections.abc import Callable
 from http import HTTPStatus
 from io import BytesIO
 from typing import Any
-from collections.abc import Awaitable
-from collections.abc import Callable
 from urllib.parse import quote
 from urllib.parse import urlencode
 from urllib.parse import urljoin

@@ -1,4 +1,3 @@
-
 from pydantic import field_validator
 
 from clean_python import Json

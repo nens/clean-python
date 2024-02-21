@@ -1,10 +1,10 @@
 # (c) Nelen & Schuurmans
 
+from collections.abc import Callable
+from collections.abc import Sequence
 from enum import Enum
 from functools import partial
 from typing import Any
-from collections.abc import Callable
-from collections.abc import Sequence
 
 from fastapi import Depends
 from fastapi.routing import APIRouter

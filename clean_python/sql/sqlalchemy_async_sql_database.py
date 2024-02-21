@@ -1,7 +1,7 @@
 import re
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Any
-from collections.abc import AsyncIterator
 
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncConnection

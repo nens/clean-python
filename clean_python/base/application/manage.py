@@ -2,6 +2,7 @@
 
 from typing import Any
 from typing import Generic
+from typing import List
 from typing import TypeVar
 
 import backoff
@@ -74,14 +75,14 @@ class Manage(Generic[T]):
         return await self.repo.by(key, value, params=params)
 
     async def filter(
-        self, filters: list[Filter], params: PageOptions | None = None
+        self, filters: List[Filter], params: PageOptions | None = None
     ) -> Page[T]:
         return await self.repo.filter(filters, params=params)
 
-    async def count(self, filters: list[Filter]) -> int:
+    async def count(self, filters: List[Filter]) -> int:
         return await self.repo.count(filters)
 
-    async def exists(self, filters: list[Filter]) -> bool:
+    async def exists(self, filters: List[Filter]) -> bool:
         return await self.repo.exists(filters)
 
 
@@ -136,12 +137,12 @@ class SyncManage(Generic[T]):
         return self.repo.by(key, value, params=params)
 
     def filter(
-        self, filters: list[Filter], params: PageOptions | None = None
+        self, filters: List[Filter], params: PageOptions | None = None
     ) -> Page[T]:
         return self.repo.filter(filters, params=params)
 
-    def count(self, filters: list[Filter]) -> int:
+    def count(self, filters: List[Filter]) -> int:
         return self.repo.count(filters)
 
-    def exists(self, filters: list[Filter]) -> bool:
+    def exists(self, filters: List[Filter]) -> bool:
         return self.repo.exists(filters)

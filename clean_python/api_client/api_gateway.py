@@ -127,9 +127,7 @@ class SyncApiGateway(SyncGateway):
         else:
             return True
 
-    def update(
-        self, item: Json, if_unmodified_since: datetime | None = None
-    ) -> Json:
+    def update(self, item: Json, if_unmodified_since: datetime | None = None) -> Json:
         if if_unmodified_since is not None:
             raise NotImplementedError("if_unmodified_since not implemented")
         item = self.mapper.to_external(item)

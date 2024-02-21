@@ -1,7 +1,7 @@
 # (c) Nelen & Schuurmans
 
-from typing import Generic
 from collections.abc import Sequence
+from typing import Generic
 from typing import TypeVar
 
 from pydantic import BaseModel

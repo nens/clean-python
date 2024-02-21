@@ -1,8 +1,8 @@
+from collections.abc import AsyncIterator
+from collections.abc import Iterator
 from contextlib import asynccontextmanager
 from contextlib import contextmanager
 from typing import Any
-from collections.abc import AsyncIterator
-from collections.abc import Iterator
 from unittest import mock
 
 from sqlalchemy.dialects import postgresql
@@ -53,9 +53,7 @@ class FakeSyncSQLDatabase(SyncSQLProvider):
         self.queries: list[list[Executable]] = []
         self.result = mock.Mock(return_value=[])
 
-    def execute(
-        self, query: Executable, _: dict[str, Any] | None = None
-    ) -> list[Json]:
+    def execute(self, query: Executable, _: dict[str, Any] | None = None) -> list[Json]:
         self.queries.append([query])
         return self.result()
 
@@ -71,9 +69,7 @@ class FakeSyncSQLTransaction(SyncSQLProvider):
         self.queries: list[Executable] = []
         self.result = result
 
-    def execute(
-        self, query: Executable, _: dict[str, Any] | None = None
-    ) -> list[Json]:
+    def execute(self, query: Executable, _: dict[str, Any] | None = None) -> list[Json]:
         self.queries.append(query)
         return self.result()
 

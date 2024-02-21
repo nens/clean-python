@@ -1,8 +1,8 @@
 # (c) Nelen & Schuurmans
-from contextlib import asynccontextmanager
-from datetime import datetime
 from collections.abc import AsyncIterator
 from collections.abc import Callable
+from contextlib import asynccontextmanager
+from datetime import datetime
 from typing import TypeVar
 
 import inject

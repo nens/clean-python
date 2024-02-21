@@ -1,9 +1,9 @@
 # (c) Nelen & Schuurmans
 
+from collections.abc import Callable
 from contextlib import asynccontextmanager
 from inspect import iscoroutinefunction
 from typing import Any
-from collections.abc import Callable
 
 from fastapi import Depends
 from fastapi import FastAPI
