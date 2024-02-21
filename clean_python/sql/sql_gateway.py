@@ -3,8 +3,6 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 from collections.abc import AsyncIterator
 from collections.abc import Callable
-from typing import List
-from typing import Optional
 from typing import TypeVar
 
 import inject

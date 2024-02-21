@@ -2,8 +2,6 @@
 
 import os
 from contextvars import ContextVar
-from typing import FrozenSet
-from typing import Optional
 from uuid import UUID
 
 from pydantic import AnyUrl

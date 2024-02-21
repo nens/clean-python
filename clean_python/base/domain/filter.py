@@ -1,7 +1,6 @@
 # (c) Nelen & Schuurmans
 
 from typing import Any
-from typing import List
 
 from .types import Id
 from .value_object import ValueObject

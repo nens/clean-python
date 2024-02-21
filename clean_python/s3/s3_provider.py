@@ -1,7 +1,6 @@
 # (c) Nelen & Schuurmans
 
 import logging
-from typing import Optional
 from typing import TYPE_CHECKING
 
 import aioboto3

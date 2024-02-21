@@ -3,11 +3,7 @@
 from datetime import datetime
 from typing import Any
 from typing import Generic
-from typing import List
-from typing import Optional
-from typing import Type
 from typing import TypeVar
-from typing import Union
 
 from .exceptions import DoesNotExist
 from .filter import Filter

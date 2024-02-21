@@ -1,9 +1,6 @@
 # (c) Nelen & Schuurmans
 
 import logging
-from typing import List
-from typing import Optional
-from typing import Union
 
 from fastapi.encoders import jsonable_encoder
 from fastapi.requests import Request

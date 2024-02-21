@@ -1,9 +1,6 @@
 # (c) Nelen & Schuurmans
 
 from typing import Any
-from typing import List
-from typing import Optional
-from typing import Union
 
 from pydantic import create_model
 from pydantic import ValidationError

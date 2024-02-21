@@ -1,5 +1,4 @@
 import re
-from typing import Tuple
 
 from pydantic import field_validator
 

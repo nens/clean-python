@@ -1,7 +1,6 @@
 # (c) Nelen & Schuurmans
 
 from typing import Any
-from typing import Dict
 from typing import Union
 from uuid import UUID
 

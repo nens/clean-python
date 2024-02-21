@@ -7,10 +7,6 @@ from http import HTTPStatus
 from pathlib import Path
 from typing import BinaryIO
 from collections.abc import Callable
-from typing import Dict
-from typing import Optional
-from typing import Tuple
-from typing import Union
 from urllib.parse import urlparse
 
 import urllib3

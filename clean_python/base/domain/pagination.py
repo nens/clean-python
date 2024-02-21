@@ -1,7 +1,6 @@
 # (c) Nelen & Schuurmans
 
 from typing import Generic
-from typing import Optional
 from collections.abc import Sequence
 from typing import TypeVar
 

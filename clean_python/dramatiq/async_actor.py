@@ -7,8 +7,6 @@ import time
 from concurrent.futures import TimeoutError
 from typing import Any
 from collections.abc import Awaitable
-from typing import Dict
-from typing import Optional
 from typing import TypeVar
 
 import dramatiq

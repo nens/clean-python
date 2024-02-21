@@ -3,7 +3,6 @@
 import os
 import threading
 import time
-from typing import Optional
 from uuid import UUID
 from uuid import uuid4
 

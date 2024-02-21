@@ -3,10 +3,6 @@ import re
 from contextlib import asynccontextmanager
 from typing import Any
 from collections.abc import AsyncIterator
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Tuple
 
 import asyncpg
 from async_lru import alru_cache

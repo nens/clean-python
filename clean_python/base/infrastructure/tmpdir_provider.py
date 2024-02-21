@@ -1,7 +1,6 @@
 # (c) Nelen & Schuurmans
 
 from tempfile import TemporaryDirectory
-from typing import Optional
 
 __all__ = ["TmpDirProvider"]
 

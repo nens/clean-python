@@ -2,10 +2,7 @@ from contextlib import asynccontextmanager
 from contextlib import contextmanager
 from typing import Any
 from collections.abc import AsyncIterator
-from typing import Dict
 from collections.abc import Iterator
-from typing import List
-from typing import Optional
 from unittest import mock
 
 from sqlalchemy.dialects import postgresql

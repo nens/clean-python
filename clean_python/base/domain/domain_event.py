@@ -1,7 +1,6 @@
 # (c) Nelen & Schuurmans
 from collections.abc import Awaitable
 from collections.abc import Callable
-from typing import Type
 from typing import TypeVar
 
 import blinker

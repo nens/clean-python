@@ -2,8 +2,6 @@
 from abc import abstractmethod
 from abc import abstractproperty
 from typing import Generic
-from typing import List
-from typing import Optional
 from typing import TypeVar
 
 from clean_python.base.application.manage import Manage

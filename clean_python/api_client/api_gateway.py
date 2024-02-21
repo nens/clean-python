@@ -1,6 +1,5 @@
 from datetime import datetime
 from http import HTTPStatus
-from typing import Optional
 
 import inject
 

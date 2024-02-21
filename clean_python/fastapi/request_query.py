@@ -1,6 +1,5 @@
 # (c) Nelen & Schuurmans
 
-from typing import List
 
 from fastapi import Query
 from pydantic import field_validator

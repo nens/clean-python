@@ -3,8 +3,6 @@
 from abc import ABC
 from datetime import datetime
 from collections.abc import Callable
-from typing import List
-from typing import Optional
 
 from .exceptions import DoesNotExist
 from .filter import Filter

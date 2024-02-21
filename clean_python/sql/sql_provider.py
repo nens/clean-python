@@ -1,9 +1,6 @@
 from typing import Any
 from collections.abc import AsyncIterator
-from typing import Dict
 from collections.abc import Iterator
-from typing import List
-from typing import Optional
 from collections.abc import Sequence
 
 from sqlalchemy import text

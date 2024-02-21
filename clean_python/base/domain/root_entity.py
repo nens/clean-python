@@ -3,8 +3,6 @@
 import uuid
 from datetime import datetime
 from datetime import timezone
-from typing import Optional
-from typing import Type
 from typing import TypeVar
 
 from .exceptions import BadRequest

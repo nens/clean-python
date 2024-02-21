@@ -1,7 +1,5 @@
 # (c) Nelen & Schuurmans
 
-from typing import Optional
-from typing import Type
 from typing import TypeVar
 
 from pydantic import BaseModel

@@ -5,8 +5,6 @@ from io import BytesIO
 from typing import Any
 from collections.abc import Awaitable
 from collections.abc import Callable
-from typing import Dict
-from typing import Optional
 from urllib.parse import quote
 from urllib.parse import urlencode
 from urllib.parse import urljoin

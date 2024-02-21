@@ -1,10 +1,7 @@
 import re
 from contextlib import contextmanager
 from typing import Any
-from typing import Dict
 from collections.abc import Iterator
-from typing import List
-from typing import Optional
 
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Connection

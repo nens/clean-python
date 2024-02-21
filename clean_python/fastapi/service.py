@@ -4,10 +4,6 @@ from contextlib import asynccontextmanager
 from inspect import iscoroutinefunction
 from typing import Any
 from collections.abc import Callable
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Set
 
 from fastapi import Depends
 from fastapi import FastAPI

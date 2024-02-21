@@ -2,7 +2,6 @@ import base64
 import json
 import time
 from functools import lru_cache
-from typing import Dict
 
 from aiohttp import BasicAuth
 from async_lru import alru_cache

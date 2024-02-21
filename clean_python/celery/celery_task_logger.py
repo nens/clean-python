@@ -4,7 +4,6 @@ import json
 import threading
 import time
 from typing import Any
-from typing import Optional
 
 import inject
 from billiard.einfo import ExceptionInfo

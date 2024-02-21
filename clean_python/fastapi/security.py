@@ -1,4 +1,3 @@
-from typing import Optional
 
 from fastapi import Depends
 from fastapi import Request

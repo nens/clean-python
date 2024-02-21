@@ -4,7 +4,6 @@ import os
 import time
 from collections.abc import Awaitable
 from collections.abc import Callable
-from typing import Optional
 from uuid import UUID
 from uuid import uuid4
 

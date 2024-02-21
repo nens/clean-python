@@ -4,11 +4,7 @@ from enum import Enum
 from functools import partial
 from typing import Any
 from collections.abc import Callable
-from typing import Dict
-from typing import List
-from typing import Optional
 from collections.abc import Sequence
-from typing import Type
 
 from fastapi import Depends
 from fastapi.routing import APIRouter

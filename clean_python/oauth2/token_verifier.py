@@ -3,10 +3,6 @@
 import logging
 import socket
 from typing import Any
-from typing import Dict
-from typing import FrozenSet
-from typing import List
-from typing import Optional
 
 import jwt
 from jwt import PyJWKClient

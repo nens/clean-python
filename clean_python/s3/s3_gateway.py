@@ -2,8 +2,6 @@
 
 import logging
 from pathlib import Path
-from typing import List
-from typing import Optional
 
 import inject
 from botocore.exceptions import ClientError

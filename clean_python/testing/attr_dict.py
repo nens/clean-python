@@ -1,6 +1,5 @@
 # (c) Nelen & Schuurmans
 from typing import Any
-from typing import Dict
 
 __all__ = ["AttrDict"]
 

@@ -1,7 +1,6 @@
 # (c) Nelen & Schuurmans
 
 import time
-from typing import Tuple
 
 from asgiref.sync import sync_to_async
 from fluent.sender import FluentSender

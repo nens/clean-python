@@ -3,8 +3,6 @@
 from copy import deepcopy
 from datetime import datetime
 from collections.abc import Callable
-from typing import List
-from typing import Optional
 
 from clean_python.base.domain import AlreadyExists
 from clean_python.base.domain import Conflict
