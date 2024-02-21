@@ -1,6 +1,7 @@
 from datetime import datetime
 from datetime import timezone
 from unittest import mock
+from uuid import UUID
 
 import pytest
 
@@ -75,3 +76,11 @@ def test_update_give_id(new_id):
     actual = user_without_id.update(id=new_id, name="piet")
 
     assert actual.id == new_id
+
+
+class WithUUID(RootEntity):
+    id: UUID
+
+
+def test_generate_uuid():
+    assert isinstance(WithUUID.create().id, UUID)

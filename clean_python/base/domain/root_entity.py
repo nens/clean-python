@@ -1,5 +1,6 @@
 # (c) Nelen & Schuurmans
 
+import uuid
 from datetime import datetime
 from datetime import timezone
 from typing import Optional
@@ -28,6 +29,9 @@ class RootEntity(ValueObject):
 
     @classmethod
     def create(cls: Type[T], **values) -> T:
+        # Check if cls.id is annotated with UUID; issubclass doesn't work with typing
+        if cls.model_fields["id"].annotation is uuid.UUID:
+            values.setdefault("id", uuid.uuid4())
         values.setdefault("created_at", now())
         values.setdefault("updated_at", values["created_at"])
         return super(RootEntity, cls).create(**values)
