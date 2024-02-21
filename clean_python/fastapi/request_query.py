@@ -1,6 +1,5 @@
 # (c) Nelen & Schuurmans
 
-from typing import List
 
 from fastapi import Query
 from pydantic import field_validator
@@ -39,7 +38,7 @@ class RequestQuery(ValueObject):
             limit=self.limit, offset=self.offset, order_by=order_by, ascending=ascending
         )
 
-    def filters(self) -> List[Filter]:
+    def filters(self) -> list[Filter]:
         result = []
         for name in self.model_fields:
             if name in {"limit", "offset", "order_by"}:

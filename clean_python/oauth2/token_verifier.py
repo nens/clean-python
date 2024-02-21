@@ -3,10 +3,6 @@
 import logging
 import socket
 from typing import Any
-from typing import Dict
-from typing import FrozenSet
-from typing import List
-from typing import Optional
 
 import jwt
 from jwt import PyJWKClient
@@ -34,10 +30,10 @@ logger = logging.getLogger(__name__)
 
 class TokenVerifierSettings(BaseModel):
     issuer: str
-    algorithms: List[str] = ["RS256"]
+    algorithms: list[str] = ["RS256"]
     # optional additional checks:
-    scope: Optional[str] = None
-    admin_users: Optional[List[str]] = None  # 'sub' whitelist
+    scope: str | None = None
+    admin_users: list[str] | None = None  # 'sub' whitelist
     jwks_timeout: float = 1.0
 
 
@@ -51,7 +47,7 @@ class BaseTokenVerifier:
     def force(self, token: Token) -> None:
         raise NotImplementedError()
 
-    def __call__(self, authorization: Optional[str]) -> Token:
+    def __call__(self, authorization: str | None) -> Token:
         raise NotImplementedError()
 
 
@@ -64,7 +60,7 @@ class NoAuthTokenVerifier(BaseTokenVerifier):
     def force(self, token: Token) -> None:
         self.token = token
 
-    def __call__(self, authorization: Optional[str]) -> Token:
+    def __call__(self, authorization: str | None) -> Token:
         return self.token
 
 
@@ -81,12 +77,12 @@ class TokenVerifier(BaseTokenVerifier):
     LEEWAY = 120
 
     def __init__(
-        self, settings: TokenVerifierSettings, logger: Optional[logging.Logger] = None
+        self, settings: TokenVerifierSettings, logger: logging.Logger | None = None
     ):
         self.settings = settings
         self.jwk_client = PyJWKClient(f"{settings.issuer}/.well-known/jwks.json")
 
-    def __call__(self, authorization: Optional[str]) -> Token:
+    def __call__(self, authorization: str | None) -> Token:
         # Step 0: retrieve the token from the Authorization header
         # See https://tools.ietf.org/html/rfc6750#section-2.1,
         # Bearer is case-sensitive and there is exactly 1 separator after.
@@ -139,14 +135,14 @@ class TokenVerifier(BaseTokenVerifier):
         finally:
             socket.setdefaulttimeout(old_timeout)
 
-    def verify_token_use(self, claims: Dict[str, Any]) -> None:
+    def verify_token_use(self, claims: dict[str, Any]) -> None:
         """Check the token_use claim."""
         if claims["token_use"] != "access":
             raise Unauthorized(
                 f"Token has invalid token_use claim: {claims['token_use']}"
             )
 
-    def verify_scope(self, claims_scope: FrozenSet[str]) -> None:
+    def verify_scope(self, claims_scope: frozenset[str]) -> None:
         """Parse scopes and optionally check scope claim."""
         if self.settings.scope is None:
             return

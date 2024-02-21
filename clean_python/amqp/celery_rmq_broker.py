@@ -2,7 +2,6 @@
 
 import json
 import uuid
-from typing import Optional
 
 import pika
 from asgiref.sync import sync_to_async
@@ -20,11 +19,11 @@ class CeleryHeaders(ValueObject):
     task: str
     id: uuid.UUID
     root_id: uuid.UUID
-    parent_id: Optional[uuid.UUID] = None
-    group: Optional[uuid.UUID] = None
-    argsrepr: Optional[str] = None
-    kwargsrepr: Optional[str] = None
-    origin: Optional[str] = None
+    parent_id: uuid.UUID | None = None
+    group: uuid.UUID | None = None
+    argsrepr: str | None = None
+    kwargsrepr: str | None = None
+    origin: str | None = None
 
     def json_dict(self):
         return json.loads(self.model_dump_json())

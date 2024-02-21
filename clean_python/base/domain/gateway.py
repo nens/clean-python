@@ -1,10 +1,8 @@
 # (c) Nelen & Schuurmans
 
 from abc import ABC
+from collections.abc import Callable
 from datetime import datetime
-from typing import Callable
-from typing import List
-from typing import Optional
 
 from .exceptions import DoesNotExist
 from .filter import Filter
@@ -17,17 +15,17 @@ __all__ = ["Gateway", "SyncGateway"]
 
 class Gateway(ABC):
     async def filter(
-        self, filters: List[Filter], params: Optional[PageOptions] = None
-    ) -> List[Json]:
+        self, filters: list[Filter], params: PageOptions | None = None
+    ) -> list[Json]:
         raise NotImplementedError()
 
-    async def count(self, filters: List[Filter]) -> int:
+    async def count(self, filters: list[Filter]) -> int:
         return len(await self.filter(filters, params=None))
 
-    async def exists(self, filters: List[Filter]) -> bool:
+    async def exists(self, filters: list[Filter]) -> bool:
         return len(await self.filter(filters, params=PageOptions(limit=1))) > 0
 
-    async def get(self, id: Id) -> Optional[Json]:
+    async def get(self, id: Id) -> Json | None:
         result = await self.filter([Filter(field="id", values=[id])], params=None)
         return result[0] if result else None
 
@@ -35,7 +33,7 @@ class Gateway(ABC):
         raise NotImplementedError()
 
     async def update(
-        self, item: Json, if_unmodified_since: Optional[datetime] = None
+        self, item: Json, if_unmodified_since: datetime | None = None
     ) -> Json:
         raise NotImplementedError()
 
@@ -59,26 +57,24 @@ class Gateway(ABC):
 
 class SyncGateway:
     def filter(
-        self, filters: List[Filter], params: Optional[PageOptions] = None
-    ) -> List[Json]:
+        self, filters: list[Filter], params: PageOptions | None = None
+    ) -> list[Json]:
         raise NotImplementedError()
 
-    def count(self, filters: List[Filter]) -> int:
+    def count(self, filters: list[Filter]) -> int:
         return len(self.filter(filters, params=None))
 
-    def exists(self, filters: List[Filter]) -> bool:
+    def exists(self, filters: list[Filter]) -> bool:
         return len(self.filter(filters, params=PageOptions(limit=1))) > 0
 
-    def get(self, id: Id) -> Optional[Json]:
+    def get(self, id: Id) -> Json | None:
         result = self.filter([Filter(field="id", values=[id])], params=None)
         return result[0] if result else None
 
     def add(self, item: Json) -> Json:
         raise NotImplementedError()
 
-    def update(
-        self, item: Json, if_unmodified_since: Optional[datetime] = None
-    ) -> Json:
+    def update(self, item: Json, if_unmodified_since: datetime | None = None) -> Json:
         raise NotImplementedError()
 
     def update_transactional(self, id: Id, func: Callable[[Json], Json]) -> Json:

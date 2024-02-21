@@ -1,10 +1,8 @@
 # (c) Nelen & Schuurmans
+from collections.abc import AsyncIterator
+from collections.abc import Callable
 from contextlib import asynccontextmanager
 from datetime import datetime
-from typing import AsyncIterator
-from typing import Callable
-from typing import List
-from typing import Optional
 from typing import TypeVar
 
 import inject
@@ -38,7 +36,7 @@ class SQLGateway(Gateway):
 
     def __init__(
         self,
-        provider_override: Optional[SQLProvider] = None,
+        provider_override: SQLProvider | None = None,
         nested: bool = False,
     ):
         self.provider_override = provider_override
@@ -67,13 +65,13 @@ class SQLGateway(Gateway):
             async with self.provider.transaction() as provider:
                 yield self.__class__(provider, nested=True)
 
-    async def get_related(self, items: List[Json]) -> None:
+    async def get_related(self, items: list[Json]) -> None:
         """Implement this to use transactions for consistently getting nested records"""
 
     async def set_related(self, item: Json, result: Json) -> None:
         """Implement this to use transactions for consistently setting nested records"""
 
-    async def execute(self, query: Executable) -> List[Json]:
+    async def execute(self, query: Executable) -> list[Json]:
         return [self.mapper.to_internal(x) for x in await self.provider.execute(query)]
 
     async def add(self, item: Json) -> Json:
@@ -87,7 +85,7 @@ class SQLGateway(Gateway):
         return result
 
     async def update(
-        self, item: Json, if_unmodified_since: Optional[datetime] = None
+        self, item: Json, if_unmodified_since: datetime | None = None
     ) -> Json:
         id_ = item.get("id")
         if id_ is None:
@@ -140,8 +138,8 @@ class SQLGateway(Gateway):
         return bool(await self.execute(self.builder.delete(id)))
 
     async def filter(
-        self, filters: List[Filter], params: Optional[PageOptions] = None
-    ) -> List[Json]:
+        self, filters: list[Filter], params: PageOptions | None = None
+    ) -> list[Json]:
         query = self.builder.select(filters, params)
         if self.has_related:
             async with self.transaction() as transaction:
@@ -151,15 +149,15 @@ class SQLGateway(Gateway):
             result = await self.execute(query)
         return result
 
-    async def count(self, filters: List[Filter]) -> int:
+    async def count(self, filters: list[Filter]) -> int:
         return (await self.execute(self.builder.count(filters)))[0]["count"]
 
-    async def exists(self, filters: List[Filter]) -> bool:
+    async def exists(self, filters: list[Filter]) -> bool:
         return len(await self.execute(self.builder.exists(filters))) > 0
 
     async def _get_related_one_to_many(
         self,
-        items: List[Json],
+        items: list[Json],
         field_name: str,
         fk_name: str,
     ) -> None:

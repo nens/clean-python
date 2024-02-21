@@ -1,14 +1,10 @@
 # (c) Nelen & Schuurmans
 
+from collections.abc import Callable
+from collections.abc import Sequence
 from enum import Enum
 from functools import partial
 from typing import Any
-from typing import Callable
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Sequence
-from typing import Type
 
 from fastapi import Depends
 from fastapi.routing import APIRouter
@@ -74,7 +70,7 @@ class APIVersion(ValueObject):
         return APIVersion(version=self.version, stability=self.stability.decrease())
 
 
-def http_method(path: str, scope: Optional[str] = None, **route_options):
+def http_method(path: str, scope: str | None = None, **route_options):
     def wrapper(unbound_method: Callable[..., Any]):
         setattr(
             unbound_method,
@@ -99,7 +95,7 @@ delete = partial(http_method, methods=["DELETE"])
 
 class OpenApiTag(ValueObject):
     name: str
-    description: Optional[str]
+    description: str | None
 
 
 class Resource:
@@ -112,7 +108,7 @@ class Resource:
         super().__init_subclass__()
 
     @classmethod
-    def with_version(cls, version: APIVersion) -> Type["Resource"]:
+    def with_version(cls, version: APIVersion) -> type["Resource"]:
         class DynamicResource(cls, version=version, name=cls.name):  # type: ignore
             pass
 
@@ -120,7 +116,7 @@ class Resource:
 
         return DynamicResource
 
-    def get_less_stable(self, resources: Dict[APIVersion, "Resource"]) -> "Resource":
+    def get_less_stable(self, resources: dict[APIVersion, "Resource"]) -> "Resource":
         """Fetch a less stable version of this resource from 'resources'
 
         If it doesn't exist, create it dynamically.
@@ -157,7 +153,7 @@ class Resource:
         )
 
     def get_router(
-        self, version: APIVersion, responses: Optional[Dict[str, Dict[str, Any]]] = None
+        self, version: APIVersion, responses: dict[str, dict[str, Any]] | None = None
     ) -> APIRouter:
         assert version == self.version
         router = APIRouter()
@@ -194,7 +190,7 @@ class Resource:
         return router
 
 
-def clean_resources_same_name(resources: List[Resource]) -> List[Resource]:
+def clean_resources_same_name(resources: list[Resource]) -> list[Resource]:
     dct = {x.version: x for x in resources}
     if len(dct) != len(resources):
         raise RuntimeError(
@@ -208,7 +204,7 @@ def clean_resources_same_name(resources: List[Resource]) -> List[Resource]:
     return list(dct.values())
 
 
-def clean_resources(resources: Sequence[Resource]) -> List[Resource]:
+def clean_resources(resources: Sequence[Resource]) -> list[Resource]:
     """Ensure that resources are consistent:
 
     - ordered by name

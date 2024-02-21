@@ -2,8 +2,6 @@
 
 import os
 from contextvars import ContextVar
-from typing import FrozenSet
-from typing import Optional
 from uuid import UUID
 
 from pydantic import AnyUrl
@@ -19,7 +17,7 @@ class User(ValueObject):
     name: str
 
 
-Scope = FrozenSet[str]
+Scope = frozenset[str]
 
 
 class Tenant(ValueObject):
@@ -43,10 +41,10 @@ class Context:
         self._user_value: ContextVar[User] = ContextVar(
             "user_value", default=User(id="ANONYMOUS", name="anonymous")
         )
-        self._tenant_value: ContextVar[Optional[Tenant]] = ContextVar(
+        self._tenant_value: ContextVar[Tenant | None] = ContextVar(
             "tenant_value", default=None
         )
-        self._correlation_id_value: ContextVar[Optional[UUID]] = ContextVar(
+        self._correlation_id_value: ContextVar[UUID | None] = ContextVar(
             "correlation_id", default=None
         )
 
@@ -67,19 +65,19 @@ class Context:
         self._user_value.set(value)
 
     @property
-    def tenant(self) -> Optional[Tenant]:
+    def tenant(self) -> Tenant | None:
         return self._tenant_value.get()
 
     @tenant.setter
-    def tenant(self, value: Optional[Tenant]) -> None:
+    def tenant(self, value: Tenant | None) -> None:
         self._tenant_value.set(value)
 
     @property
-    def correlation_id(self) -> Optional[UUID]:
+    def correlation_id(self) -> UUID | None:
         return self._correlation_id_value.get()
 
     @correlation_id.setter
-    def correlation_id(self, value: Optional[UUID]) -> None:
+    def correlation_id(self, value: UUID | None) -> None:
         self._correlation_id_value.set(value)
 
 

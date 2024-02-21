@@ -4,11 +4,9 @@ import asyncio
 import logging
 import threading
 import time
+from collections.abc import Awaitable
 from concurrent.futures import TimeoutError
 from typing import Any
-from typing import Awaitable
-from typing import Dict
-from typing import Optional
 from typing import TypeVar
 
 import dramatiq
@@ -39,7 +37,7 @@ class EventLoopThread(threading.Thread):
 
     EVENT_LOOP_START_TIMEOUT = 0.1  # seconds to wait for the event loop to start
 
-    loop: Optional[asyncio.AbstractEventLoop] = None
+    loop: asyncio.AbstractEventLoop | None = None
 
     def __init__(self):
         super().__init__(target=self._start_event_loop)
@@ -111,7 +109,7 @@ class AsyncMiddleware(Middleware):
     which may be used to schedule the coroutines on from the worker threads.
     """
 
-    event_loop_thread: Optional[EventLoopThread] = None
+    event_loop_thread: EventLoopThread | None = None
 
     def run_coroutine(self, coro: Awaitable[R]) -> R:
         assert self.event_loop_thread is not None
@@ -172,8 +170,8 @@ class AsyncActor(dramatiq.Actor):
         self,
         *,
         args: tuple = (),  # type: ignore
-        kwargs: Optional[Dict[str, Any]] = None,
-        delay: Optional[int] = None,
+        kwargs: dict[str, Any] | None = None,
+        delay: int | None = None,
         **options,
     ) -> dramatiq.Message[R]:
         """See dramatiq.actor.Actor.send_with_options.

@@ -1,8 +1,6 @@
 import json as json_lib
+from collections.abc import Callable
 from http import HTTPStatus
-from typing import Callable
-from typing import Dict
-from typing import Optional
 from urllib.parse import quote
 
 from pydantic import AnyHttpUrl
@@ -40,7 +38,7 @@ class SyncApiProvider:
     def __init__(
         self,
         url: AnyHttpUrl,
-        headers_factory: Optional[Callable[[], Dict[str, str]]] = None,
+        headers_factory: Callable[[], dict[str, str]] | None = None,
         retries: int = 3,
         backoff_factor: float = 1.0,
         trailing_slash: bool = False,
@@ -63,11 +61,11 @@ class SyncApiProvider:
         self,
         method: str,
         path: str,
-        params: Optional[Json],
-        json: Optional[Json],
-        fields: Optional[Json],
-        file: Optional[FileFormPost],
-        headers: Optional[Dict[str, str]],
+        params: Json | None,
+        json: Json | None,
+        fields: Json | None,
+        file: FileFormPost | None,
+        headers: dict[str, str] | None,
         timeout: float,
     ):
         actual_headers = {}
@@ -110,13 +108,13 @@ class SyncApiProvider:
         self,
         method: str,
         path: str,
-        params: Optional[Json] = None,
-        json: Optional[Json] = None,
-        fields: Optional[Json] = None,
-        file: Optional[FileFormPost] = None,
-        headers: Optional[Dict[str, str]] = None,
+        params: Json | None = None,
+        json: Json | None = None,
+        fields: Json | None = None,
+        file: FileFormPost | None = None,
+        headers: dict[str, str] | None = None,
         timeout: float = 5.0,
-    ) -> Optional[Json]:
+    ) -> Json | None:
         response = self._request(
             method, path, params, json, fields, file, headers, timeout
         )
@@ -136,11 +134,11 @@ class SyncApiProvider:
         self,
         method: str,
         path: str,
-        params: Optional[Json] = None,
-        json: Optional[Json] = None,
-        fields: Optional[Json] = None,
-        file: Optional[FileFormPost] = None,
-        headers: Optional[Dict[str, str]] = None,
+        params: Json | None = None,
+        json: Json | None = None,
+        fields: Json | None = None,
+        file: FileFormPost | None = None,
+        headers: dict[str, str] | None = None,
         timeout: float = 5.0,
     ) -> Response:
         response = self._request(

@@ -1,10 +1,7 @@
 import re
+from collections.abc import Iterator
 from contextlib import contextmanager
 from typing import Any
-from typing import Dict
-from typing import Iterator
-from typing import List
-from typing import Optional
 
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Connection
@@ -39,8 +36,8 @@ class SQLAlchemySyncSQLDatabase(SyncSQLDatabase):
         self.engine.dispose()
 
     def execute(
-        self, query: Executable, bind_params: Optional[Dict[str, Any]] = None
-    ) -> List[Json]:
+        self, query: Executable, bind_params: dict[str, Any] | None = None
+    ) -> list[Json]:
         with self.transaction() as transaction:
             return transaction.execute(query, bind_params)
 
@@ -69,8 +66,8 @@ class SQLAlchemySyncSQLTransaction(SyncSQLProvider):
         self.connection = connection
 
     def execute(
-        self, query: Executable, bind_params: Optional[Dict[str, Any]] = None
-    ) -> List[Json]:
+        self, query: Executable, bind_params: dict[str, Any] | None = None
+    ) -> list[Json]:
         try:
             result = self.connection.execute(query, bind_params)
         except DBAPIError as e:

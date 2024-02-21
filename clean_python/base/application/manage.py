@@ -3,8 +3,6 @@
 from typing import Any
 from typing import Generic
 from typing import List
-from typing import Optional
-from typing import Type
 from typing import TypeVar
 
 import backoff
@@ -26,9 +24,9 @@ __all__ = ["Manage", "SyncManage"]
 
 class Manage(Generic[T]):
     repo: Repository[T]
-    entity: Type[T]
+    entity: type[T]
 
-    def __init__(self, repo: Optional[Repository[T]] = None):
+    def __init__(self, repo: Repository[T] | None = None):
         assert repo is not None
         self.repo = repo
 
@@ -68,16 +66,16 @@ class Manage(Generic[T]):
     async def destroy(self, id: Id) -> bool:
         return await self.repo.remove(id)
 
-    async def list(self, params: Optional[PageOptions] = None) -> Page[T]:
+    async def list(self, params: PageOptions | None = None) -> Page[T]:
         return await self.repo.all(params)
 
     async def by(
-        self, key: str, value: Any, params: Optional[PageOptions] = None
+        self, key: str, value: Any, params: PageOptions | None = None
     ) -> Page[T]:
         return await self.repo.by(key, value, params=params)
 
     async def filter(
-        self, filters: List[Filter], params: Optional[PageOptions] = None
+        self, filters: List[Filter], params: PageOptions | None = None
     ) -> Page[T]:
         return await self.repo.filter(filters, params=params)
 
@@ -90,9 +88,9 @@ class Manage(Generic[T]):
 
 class SyncManage(Generic[T]):
     repo: SyncRepository[T]
-    entity: Type[T]
+    entity: type[T]
 
-    def __init__(self, repo: Optional[SyncRepository[T]] = None):
+    def __init__(self, repo: SyncRepository[T] | None = None):
         assert repo is not None
         self.repo = repo
 
@@ -132,14 +130,14 @@ class SyncManage(Generic[T]):
     def destroy(self, id: Id) -> bool:
         return self.repo.remove(id)
 
-    def list(self, params: Optional[PageOptions] = None) -> Page[T]:
+    def list(self, params: PageOptions | None = None) -> Page[T]:
         return self.repo.all(params)
 
-    def by(self, key: str, value: Any, params: Optional[PageOptions] = None) -> Page[T]:
+    def by(self, key: str, value: Any, params: PageOptions | None = None) -> Page[T]:
         return self.repo.by(key, value, params=params)
 
     def filter(
-        self, filters: List[Filter], params: Optional[PageOptions] = None
+        self, filters: List[Filter], params: PageOptions | None = None
     ) -> Page[T]:
         return self.repo.filter(filters, params=params)
 

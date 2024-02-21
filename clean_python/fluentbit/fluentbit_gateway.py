@@ -1,7 +1,6 @@
 # (c) Nelen & Schuurmans
 
 import time
-from typing import Tuple
 
 from asgiref.sync import sync_to_async
 from fluent.sender import FluentSender
@@ -13,7 +12,7 @@ from clean_python import SyncGateway
 __all__ = ["FluentbitGateway", "SyncFluentbitGateway"]
 
 
-def unpack_item(item: Json) -> Tuple[str, float, Json]:
+def unpack_item(item: Json) -> tuple[str, float, Json]:
     data = item.copy()
     label = data.pop("tag_suffix", "")
     timestamp = data.pop("time", None)
