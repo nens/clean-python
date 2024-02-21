@@ -39,7 +39,7 @@ def is_token_usable(token: str, leeway: int) -> bool:
     return refresh_on >= int(time.time())
 
 
-def get_auth_headers(client_id: str, client_secret: str) -> Dict[str, str]:
+def get_auth_headers(client_id: str, client_secret: str) -> dict[str, str]:
     return {"Authorization": BasicAuth(client_id, client_secret).encode()}
 
 
@@ -86,7 +86,7 @@ class CCTokenGateway:
             token_str = await self.cached_fetch_token()
         return token_str
 
-    async def fetch_headers(self) -> Dict[str, str]:
+    async def fetch_headers(self) -> dict[str, str]:
         return {"Authorization": f"Bearer {await self.fetch_token()}"}
 
 
@@ -124,5 +124,5 @@ class SyncCCTokenGateway:
             token_str = self.cached_fetch_token()
         return token_str
 
-    def fetch_headers(self) -> Dict[str, str]:
+    def fetch_headers(self) -> dict[str, str]:
         return {"Authorization": f"Bearer {self.fetch_token()}"}

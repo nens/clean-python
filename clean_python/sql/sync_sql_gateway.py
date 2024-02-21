@@ -30,7 +30,7 @@ class SyncSQLGateway(SyncGateway):
     builder: SQLBuilder
     mapper: Mapper = Mapper()
 
-    def __init__(self, provider_override: Optional[SyncSQLProvider] = None):
+    def __init__(self, provider_override: SyncSQLProvider | None = None):
         self.provider_override = provider_override
 
     def __init_subclass__(cls, table: Table, multitenant: bool = False) -> None:
@@ -47,7 +47,7 @@ class SyncSQLGateway(SyncGateway):
         return self.mapper.to_internal(row)
 
     def update(
-        self, item: Json, if_unmodified_since: Optional[datetime] = None
+        self, item: Json, if_unmodified_since: datetime | None = None
     ) -> Json:
         id_ = item.get("id")
         if id_ is None:
@@ -75,15 +75,15 @@ class SyncSQLGateway(SyncGateway):
         return bool(self.provider.execute(self.builder.delete(id)))
 
     def filter(
-        self, filters: List[Filter], params: Optional[PageOptions] = None
-    ) -> List[Json]:
+        self, filters: list[Filter], params: PageOptions | None = None
+    ) -> list[Json]:
         query = self.builder.select(filters, params)
         rows = self.provider.execute(query)
         return [self.mapper.to_internal(x) for x in rows]
 
-    def count(self, filters: List[Filter]) -> int:
+    def count(self, filters: list[Filter]) -> int:
         (row,) = self.provider.execute(self.builder.count(filters))
         return row["count"]
 
-    def exists(self, filters: List[Filter]) -> bool:
+    def exists(self, filters: list[Filter]) -> bool:
         return len(self.provider.execute(self.builder.exists(filters))) > 0

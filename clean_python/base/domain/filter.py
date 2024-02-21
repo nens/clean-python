@@ -11,7 +11,7 @@ __all__ = ["Filter"]
 
 class Filter(ValueObject):
     field: str
-    values: List[Any]
+    values: list[Any]
 
     @classmethod
     def for_id(cls, id: Id) -> "Filter":

@@ -31,19 +31,19 @@ __all__ = [
 
 
 class ValidationErrorEntry(ValueObject):
-    loc: List[Union[str, int]]
+    loc: list[str | int]
     msg: str
     type: str
 
 
 class ValidationErrorResponse(ValueObject):
     message: str
-    detail: List[ValidationErrorEntry]
+    detail: list[ValidationErrorEntry]
 
 
 class DefaultErrorResponse(ValueObject):
     message: str
-    detail: Optional[str]
+    detail: str | None
 
 
 async def not_found_handler(request: Request, exc: DoesNotExist) -> JSONResponse:

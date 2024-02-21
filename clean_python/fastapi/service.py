@@ -3,7 +3,7 @@
 from contextlib import asynccontextmanager
 from inspect import iscoroutinefunction
 from typing import Any
-from typing import Callable
+from collections.abc import Callable
 from typing import Dict
 from typing import List
 from typing import Optional
@@ -47,7 +47,7 @@ from .security import set_verifier
 __all__ = ["Service"]
 
 
-def get_auth_kwargs(auth_client: Optional[OAuth2SPAClientSettings]) -> Dict[str, Any]:
+def get_auth_kwargs(auth_client: OAuth2SPAClientSettings | None) -> dict[str, Any]:
     if auth_client is None:
         return {
             "dependencies": [Depends(JWTBearerTokenSchema()), Depends(set_context)],
@@ -88,9 +88,9 @@ async def _maybe_await(func: Callable[[], Any]) -> None:
 
 
 def to_lifespan(
-    on_startup: List[Callable[[], Any]],
-    on_shutdown: List[Callable[[], Any]],
-) -> Optional[StatelessLifespan[ASGIApp]]:
+    on_startup: list[Callable[[], Any]],
+    on_shutdown: list[Callable[[], Any]],
+) -> StatelessLifespan[ASGIApp] | None:
     @asynccontextmanager
     async def lifespan(app: ASGIApp):
         for func in on_startup:
@@ -103,23 +103,23 @@ def to_lifespan(
 
 
 class Service:
-    resources: List[Resource]
+    resources: list[Resource]
 
     def __init__(self, *args: Resource):
         self.resources = clean_resources(args)
 
     @property
-    def versions(self) -> Set[APIVersion]:
-        return set([x.version for x in self.resources])
+    def versions(self) -> set[APIVersion]:
+        return {x.version for x in self.resources}
 
     def _create_root_app(
         self,
         title: str,
         description: str,
         hostname: str,
-        on_startup: Optional[List[Callable[[], Any]]] = None,
-        on_shutdown: Optional[List[Callable[[], Any]]] = None,
-        access_logger_gateway: Optional[Gateway] = None,
+        on_startup: list[Callable[[], Any]] | None = None,
+        on_shutdown: list[Callable[[], Any]] | None = None,
+        access_logger_gateway: Gateway | None = None,
     ) -> FastAPI:
         app = FastAPI(
             title=title,
@@ -171,11 +171,11 @@ class Service:
         title: str,
         description: str,
         hostname: str,
-        auth: Optional[TokenVerifierSettings] = None,
-        auth_client: Optional[OAuth2SPAClientSettings] = None,
-        on_startup: Optional[List[Callable[[], Any]]] = None,
-        on_shutdown: Optional[List[Callable[[], Any]]] = None,
-        access_logger_gateway: Optional[Gateway] = None,
+        auth: TokenVerifierSettings | None = None,
+        auth_client: OAuth2SPAClientSettings | None = None,
+        on_startup: list[Callable[[], Any]] | None = None,
+        on_shutdown: list[Callable[[], Any]] | None = None,
+        access_logger_gateway: Gateway | None = None,
     ) -> ASGIApp:
         set_verifier(auth)
         app = self._create_root_app(

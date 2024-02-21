@@ -1,9 +1,9 @@
 from contextlib import asynccontextmanager
 from contextlib import contextmanager
 from typing import Any
-from typing import AsyncIterator
+from collections.abc import AsyncIterator
 from typing import Dict
-from typing import Iterator
+from collections.abc import Iterator
 from typing import List
 from typing import Optional
 from unittest import mock
@@ -23,12 +23,12 @@ DIALECT = postgresql.dialect()
 
 class FakeSQLDatabase(SQLProvider):
     def __init__(self):
-        self.queries: List[List[Executable]] = []
+        self.queries: list[list[Executable]] = []
         self.result = mock.Mock(return_value=[])
 
     async def execute(
-        self, query: Executable, _: Optional[Dict[str, Any]] = None
-    ) -> List[Json]:
+        self, query: Executable, _: dict[str, Any] | None = None
+    ) -> list[Json]:
         self.queries.append([query])
         return self.result()
 
@@ -41,24 +41,24 @@ class FakeSQLDatabase(SQLProvider):
 
 class FakeSQLTransaction(SQLProvider):
     def __init__(self, result: mock.Mock):
-        self.queries: List[Executable] = []
+        self.queries: list[Executable] = []
         self.result = result
 
     async def execute(
-        self, query: Executable, _: Optional[Dict[str, Any]] = None
-    ) -> List[Json]:
+        self, query: Executable, _: dict[str, Any] | None = None
+    ) -> list[Json]:
         self.queries.append(query)
         return self.result()
 
 
 class FakeSyncSQLDatabase(SyncSQLProvider):
     def __init__(self):
-        self.queries: List[List[Executable]] = []
+        self.queries: list[list[Executable]] = []
         self.result = mock.Mock(return_value=[])
 
     def execute(
-        self, query: Executable, _: Optional[Dict[str, Any]] = None
-    ) -> List[Json]:
+        self, query: Executable, _: dict[str, Any] | None = None
+    ) -> list[Json]:
         self.queries.append([query])
         return self.result()
 
@@ -71,12 +71,12 @@ class FakeSyncSQLDatabase(SyncSQLProvider):
 
 class FakeSyncSQLTransaction(SyncSQLProvider):
     def __init__(self, result: mock.Mock):
-        self.queries: List[Executable] = []
+        self.queries: list[Executable] = []
         self.result = result
 
     def execute(
-        self, query: Executable, _: Optional[Dict[str, Any]] = None
-    ) -> List[Json]:
+        self, query: Executable, _: dict[str, Any] | None = None
+    ) -> list[Json]:
         self.queries.append(query)
         return self.result()
 

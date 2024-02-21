@@ -2,7 +2,7 @@
 
 from typing import Generic
 from typing import Optional
-from typing import Sequence
+from collections.abc import Sequence
 from typing import TypeVar
 
 from pydantic import BaseModel
@@ -19,11 +19,11 @@ class PageOptions(BaseModel):
     offset: int = 0
     order_by: str = "id"
     ascending: bool = True
-    cursor: Optional[Id] = None
+    cursor: Id | None = None
 
 
 class Page(BaseModel, Generic[T]):
     total: int
     items: Sequence[T]
-    limit: Optional[int] = None
-    offset: Optional[int] = None
+    limit: int | None = None
+    offset: int | None = None

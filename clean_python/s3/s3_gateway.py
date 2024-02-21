@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # (c) Nelen & Schuurmans
 
 import logging
@@ -46,7 +45,7 @@ class S3Gateway(Gateway):
 
     def __init__(
         self,
-        provider_override: Optional[S3BucketProvider] = None,
+        provider_override: S3BucketProvider | None = None,
         multitenant: bool = False,
     ):
         self.provider_override = provider_override
@@ -66,7 +65,7 @@ class S3Gateway(Gateway):
     def _key_to_id(self, key: str) -> Id:
         return key.split("/", 1)[1] if self.multitenant else key
 
-    async def get(self, id: Id) -> Optional[Json]:
+    async def get(self, id: Id) -> Json | None:
         async with self.provider.client as client:
             try:
                 result = await client.head_object(
@@ -86,9 +85,9 @@ class S3Gateway(Gateway):
 
     async def filter(
         self,
-        filters: List[Filter],
-        params: Optional[PageOptions] = PageOptions(limit=AWS_LIMIT),
-    ) -> List[Json]:
+        filters: list[Filter],
+        params: PageOptions | None = PageOptions(limit=AWS_LIMIT),
+    ) -> list[Json]:
         assert params is not None, "pagination is required for S3Gateway"
         assert params.limit <= AWS_LIMIT, f"max {AWS_LIMIT} keys for S3Gateway"
         assert params.offset == 0, "no 'offset' pagination for S3Gateway"
@@ -130,7 +129,7 @@ class S3Gateway(Gateway):
         # S3 doesn't tell us if the object was there in the first place
         return True
 
-    async def remove_multiple(self, ids: List[Id]) -> None:
+    async def remove_multiple(self, ids: list[Id]) -> None:
         if len(ids) == 0:
             return
         assert len(ids) <= AWS_LIMIT, f"max {AWS_LIMIT} keys for S3Gateway"
@@ -188,7 +187,7 @@ class S3Gateway(Gateway):
                 Filename=str(file_path),
             )
 
-    def filters_to_prefix(self, filters: List[Filter]) -> str:
+    def filters_to_prefix(self, filters: list[Filter]) -> str:
         if len(filters) == 0:
             return self._id_to_key("")
         elif len(filters) > 1:
@@ -200,7 +199,7 @@ class S3Gateway(Gateway):
         else:
             raise NotImplementedError(f"Unsupported filter '{filter.field}'")
 
-    async def remove_filtered(self, filters: List[Filter]) -> None:
+    async def remove_filtered(self, filters: list[Filter]) -> None:
         kwargs = {
             "Bucket": self.provider.bucket,
             "MaxKeys": AWS_LIMIT,

@@ -1,6 +1,6 @@
 # (c) Nelen & Schuurmans
-from typing import Awaitable
-from typing import Callable
+from collections.abc import Awaitable
+from collections.abc import Callable
 from typing import Type
 from typing import TypeVar
 
@@ -19,7 +19,7 @@ class DomainEvent:
 
     @classmethod
     def register_handler(
-        cls: Type[T], receiver: Callable[[T], Awaitable[None]]
+        cls: type[T], receiver: Callable[[T], Awaitable[None]]
     ) -> Callable[[T], Awaitable[None]]:
         return cls._signal().connect(receiver)
 

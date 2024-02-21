@@ -26,9 +26,9 @@ __all__ = ["Manage", "SyncManage"]
 
 class Manage(Generic[T]):
     repo: Repository[T]
-    entity: Type[T]
+    entity: type[T]
 
-    def __init__(self, repo: Optional[Repository[T]] = None):
+    def __init__(self, repo: Repository[T] | None = None):
         assert repo is not None
         self.repo = repo
 
@@ -68,31 +68,31 @@ class Manage(Generic[T]):
     async def destroy(self, id: Id) -> bool:
         return await self.repo.remove(id)
 
-    async def list(self, params: Optional[PageOptions] = None) -> Page[T]:
+    async def list(self, params: PageOptions | None = None) -> Page[T]:
         return await self.repo.all(params)
 
     async def by(
-        self, key: str, value: Any, params: Optional[PageOptions] = None
+        self, key: str, value: Any, params: PageOptions | None = None
     ) -> Page[T]:
         return await self.repo.by(key, value, params=params)
 
     async def filter(
-        self, filters: List[Filter], params: Optional[PageOptions] = None
+        self, filters: list[Filter], params: PageOptions | None = None
     ) -> Page[T]:
         return await self.repo.filter(filters, params=params)
 
-    async def count(self, filters: List[Filter]) -> int:
+    async def count(self, filters: list[Filter]) -> int:
         return await self.repo.count(filters)
 
-    async def exists(self, filters: List[Filter]) -> bool:
+    async def exists(self, filters: list[Filter]) -> bool:
         return await self.repo.exists(filters)
 
 
 class SyncManage(Generic[T]):
     repo: SyncRepository[T]
-    entity: Type[T]
+    entity: type[T]
 
-    def __init__(self, repo: Optional[SyncRepository[T]] = None):
+    def __init__(self, repo: SyncRepository[T] | None = None):
         assert repo is not None
         self.repo = repo
 
@@ -132,19 +132,19 @@ class SyncManage(Generic[T]):
     def destroy(self, id: Id) -> bool:
         return self.repo.remove(id)
 
-    def list(self, params: Optional[PageOptions] = None) -> Page[T]:
+    def list(self, params: PageOptions | None = None) -> Page[T]:
         return self.repo.all(params)
 
-    def by(self, key: str, value: Any, params: Optional[PageOptions] = None) -> Page[T]:
+    def by(self, key: str, value: Any, params: PageOptions | None = None) -> Page[T]:
         return self.repo.by(key, value, params=params)
 
     def filter(
-        self, filters: List[Filter], params: Optional[PageOptions] = None
+        self, filters: list[Filter], params: PageOptions | None = None
     ) -> Page[T]:
         return self.repo.filter(filters, params=params)
 
-    def count(self, filters: List[Filter]) -> int:
+    def count(self, filters: list[Filter]) -> int:
         return self.repo.count(filters)
 
-    def exists(self, filters: List[Filter]) -> bool:
+    def exists(self, filters: list[Filter]) -> bool:
         return self.repo.exists(filters)

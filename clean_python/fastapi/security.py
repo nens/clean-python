@@ -15,7 +15,7 @@ from clean_python.oauth2 import TokenVerifierSettings
 
 __all__ = ["get_token", "RequiresScope"]
 
-verifier: Optional[BaseTokenVerifier] = None
+verifier: BaseTokenVerifier | None = None
 
 
 def clear_verifier() -> None:
@@ -24,7 +24,7 @@ def clear_verifier() -> None:
     verifier = None
 
 
-def set_verifier(settings: Optional[TokenVerifierSettings]) -> None:
+def set_verifier(settings: TokenVerifierSettings | None) -> None:
     global verifier
 
     if settings is None:

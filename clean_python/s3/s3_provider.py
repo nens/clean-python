@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # (c) Nelen & Schuurmans
 
 import logging
@@ -23,7 +22,7 @@ class S3BucketOptions(ValueObject):
     access_key: str
     secret_key: str
     bucket: str
-    region: Optional[str] = None
+    region: str | None = None
 
 
 class S3BucketProvider:

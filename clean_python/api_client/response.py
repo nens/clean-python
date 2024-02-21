@@ -9,4 +9,4 @@ __all__ = ["Response"]
 class Response(ValueObject):
     status: HTTPStatus
     data: bytes
-    content_type: Optional[str]
+    content_type: str | None

@@ -30,7 +30,7 @@ __all__ = ["CeleryTaskLogger", "set_task_logger"]
 class CeleryTaskLogger:
     local = threading.local()
 
-    def __init__(self, gateway_override: Optional[SyncGateway] = None):
+    def __init__(self, gateway_override: SyncGateway | None = None):
         self.gateway_override = gateway_override
 
     @property
@@ -110,10 +110,10 @@ class CeleryTaskLogger:
         return self.gateway.add(log_dict)
 
 
-celery_logger: Optional[CeleryTaskLogger] = None
+celery_logger: CeleryTaskLogger | None = None
 
 
-def set_task_logger(logger: Optional[CeleryTaskLogger]):
+def set_task_logger(logger: CeleryTaskLogger | None):
     global celery_logger
     celery_logger = logger
 

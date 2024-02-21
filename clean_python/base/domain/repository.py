@@ -25,7 +25,7 @@ T = TypeVar("T", bound=ValueObject)
 
 
 class Repository(Generic[T]):
-    entity: Type[T]
+    entity: type[T]
 
     def __init__(self, gateway: Gateway):
         self.gateway = gateway
@@ -36,16 +36,16 @@ class Repository(Generic[T]):
         super().__init_subclass__()
         cls.entity = entity
 
-    async def all(self, params: Optional[PageOptions] = None) -> Page[T]:
+    async def all(self, params: PageOptions | None = None) -> Page[T]:
         return await self.filter([], params=params)
 
     async def by(
-        self, key: str, value: Any, params: Optional[PageOptions] = None
+        self, key: str, value: Any, params: PageOptions | None = None
     ) -> Page[T]:
         return await self.filter([Filter(field=key, values=[value])], params=params)
 
     async def filter(
-        self, filters: List[Filter], params: Optional[PageOptions] = None
+        self, filters: list[Filter], params: PageOptions | None = None
     ) -> Page[T]:
         records = await self.gateway.filter(filters, params=params)
         total = len(records)
@@ -67,7 +67,7 @@ class Repository(Generic[T]):
         else:
             return self.entity(**res)
 
-    async def add(self, item: Union[T, Json]) -> T:
+    async def add(self, item: T | Json) -> T:
         if isinstance(item, dict):
             item = self.entity.create(**item)
         created = await self.gateway.add(item.model_dump())
@@ -100,10 +100,10 @@ class Repository(Generic[T]):
     async def remove(self, id: Id) -> bool:
         return await self.gateway.remove(id)
 
-    async def count(self, filters: List[Filter]) -> int:
+    async def count(self, filters: list[Filter]) -> int:
         return await self.gateway.count(filters)
 
-    async def exists(self, filters: List[Filter]) -> bool:
+    async def exists(self, filters: list[Filter]) -> bool:
         return await self.gateway.exists(filters)
 
 
@@ -111,7 +111,7 @@ class Repository(Generic[T]):
 
 
 class SyncRepository(Generic[T]):
-    entity: Type[T]
+    entity: type[T]
 
     def __init__(self, gateway: SyncGateway):
         self.gateway = gateway
@@ -122,14 +122,14 @@ class SyncRepository(Generic[T]):
         super().__init_subclass__()
         cls.entity = entity
 
-    def all(self, params: Optional[PageOptions] = None) -> Page[T]:
+    def all(self, params: PageOptions | None = None) -> Page[T]:
         return self.filter([], params=params)
 
-    def by(self, key: str, value: Any, params: Optional[PageOptions] = None) -> Page[T]:
+    def by(self, key: str, value: Any, params: PageOptions | None = None) -> Page[T]:
         return self.filter([Filter(field=key, values=[value])], params=params)
 
     def filter(
-        self, filters: List[Filter], params: Optional[PageOptions] = None
+        self, filters: list[Filter], params: PageOptions | None = None
     ) -> Page[T]:
         records = self.gateway.filter(filters, params=params)
         total = len(records)
@@ -151,7 +151,7 @@ class SyncRepository(Generic[T]):
         else:
             return self.entity(**res)
 
-    def add(self, item: Union[T, Json]) -> T:
+    def add(self, item: T | Json) -> T:
         if isinstance(item, dict):
             item = self.entity.create(**item)
         created = self.gateway.add(item.model_dump())
@@ -173,8 +173,8 @@ class SyncRepository(Generic[T]):
     def remove(self, id: Id) -> bool:
         return self.gateway.remove(id)
 
-    def count(self, filters: List[Filter]) -> int:
+    def count(self, filters: list[Filter]) -> int:
         return self.gateway.count(filters)
 
-    def exists(self, filters: List[Filter]) -> bool:
+    def exists(self, filters: list[Filter]) -> bool:
         return self.gateway.exists(filters)

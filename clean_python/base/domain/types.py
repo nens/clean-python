@@ -8,5 +8,5 @@ from uuid import UUID
 __all__ = ["Json", "Id"]
 
 
-Json = Dict[str, Any]
+Json = dict[str, Any]
 Id = Union[int, str, UUID]

@@ -40,7 +40,7 @@ class Token(ValueObject):
         return frozenset(self.claims["scope"].split(" "))
 
     @property
-    def tenant(self) -> Optional[Tenant]:
+    def tenant(self) -> Tenant | None:
         if self.claims.get("tenant"):
             return Tenant(id=self.claims["tenant"], name=self.claims["tenant_name"])
         else:

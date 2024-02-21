@@ -23,18 +23,18 @@ T = TypeVar("T", bound="RootEntity")
 
 
 class RootEntity(ValueObject):
-    id: Optional[Id] = None
+    id: Id | None = None
     created_at: datetime
     updated_at: datetime
 
     @classmethod
-    def create(cls: Type[T], **values) -> T:
+    def create(cls: type[T], **values) -> T:
         # Check if cls.id is annotated with UUID; issubclass doesn't work with typing
         if cls.model_fields["id"].annotation is uuid.UUID:
             values.setdefault("id", uuid.uuid4())
         values.setdefault("created_at", now())
         values.setdefault("updated_at", values["created_at"])
-        return super(RootEntity, cls).create(**values)
+        return super().create(**values)
 
     def update(self: T, **values) -> T:
         if "id" in values and self.id is not None and values["id"] != self.id:

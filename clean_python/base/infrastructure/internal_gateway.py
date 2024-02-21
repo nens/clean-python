@@ -36,8 +36,8 @@ class InternalGateway(Gateway, Generic[T]):
         return values
 
     async def filter(
-        self, filters: List[Filter], params: Optional[PageOptions] = None
-    ) -> List[Json]:
+        self, filters: list[Filter], params: PageOptions | None = None
+    ) -> list[Json]:
         page = await self.manage.filter(filters, params)
         return [self.to_internal(x) for x in page.items]
 
@@ -51,14 +51,14 @@ class InternalGateway(Gateway, Generic[T]):
     async def remove(self, id: Id) -> bool:
         return await self.manage.destroy(id)
 
-    async def count(self, filters: List[Filter]) -> int:
+    async def count(self, filters: list[Filter]) -> int:
         return await self.manage.count(filters)
 
-    async def exists(self, filters: List[Filter]) -> bool:
+    async def exists(self, filters: list[Filter]) -> bool:
         return await self.manage.exists(filters)
 
     async def update(
-        self, item: Json, if_unmodified_since: Optional[datetime] = None
+        self, item: Json, if_unmodified_since: datetime | None = None
     ) -> Json:
         assert if_unmodified_since is None  # unsupported
         values = self.to_external(item)

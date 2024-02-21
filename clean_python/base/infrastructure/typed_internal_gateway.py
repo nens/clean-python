@@ -32,7 +32,7 @@ class TypedInternalGateway(Generic[E, T]):
     def _map(self, obj: E) -> T:
         raise NotImplementedError()
 
-    async def get(self, id: int) -> Optional[T]:
+    async def get(self, id: int) -> T | None:
         try:
             result = await self.manage.retrieve(id)
         except DoesNotExist:
@@ -41,8 +41,8 @@ class TypedInternalGateway(Generic[E, T]):
             return self._map(result)
 
     async def filter(
-        self, filters: List[Filter], params: Optional[PageOptions] = None
-    ) -> List[T]:
+        self, filters: list[Filter], params: PageOptions | None = None
+    ) -> list[T]:
         page = await self.manage.filter(filters, params)
         return [self._map(x) for x in page.items]
 
@@ -56,10 +56,10 @@ class TypedInternalGateway(Generic[E, T]):
     async def remove(self, id) -> bool:
         return await self.manage.destroy(id)
 
-    async def count(self, filters: List[Filter]) -> int:
+    async def count(self, filters: list[Filter]) -> int:
         return await self.manage.count(filters)
 
-    async def exists(self, filters: List[Filter]) -> bool:
+    async def exists(self, filters: list[Filter]) -> bool:
         return await self.manage.exists(filters)
 
     async def update(self, values: Json) -> T:
