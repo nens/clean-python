@@ -1,7 +1,7 @@
 # Changelog of clean-python
 
 
-0.12.2 (unreleased)
+0.12.2 (2024-02-21)
 -------------------
 
 - Expanded `Id` to include `UUID`. If a RootEntity's id is annotated with `UUID` it
