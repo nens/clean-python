@@ -9,7 +9,7 @@ from starlette.responses import StreamingResponse
 
 from clean_python import InMemoryGateway
 from clean_python.fastapi import FastAPIAccessLogger
-from clean_python.fastapi import get_correlation_id
+from clean_python.fastapi.asgi import get_correlation_id
 
 SOME_UUID = uuid4()
 
@@ -136,7 +136,7 @@ def call_next_streaming(streaming_response):
 
 
 @mock.patch("time.time", return_value=0.0)
-@mock.patch("clean_python.fastapi.fastapi_access_logger.uuid4", return_value=SOME_UUID)
+@mock.patch("clean_python.fastapi.asgi.uuid4", return_value=SOME_UUID)
 async def test_logging_minimal(
     time,
     uuid4,

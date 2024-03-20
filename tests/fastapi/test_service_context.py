@@ -42,7 +42,7 @@ def client(app):
 def test_default_context(app, client: TestClient):
     response = client.get(app.url_path_for("v1/context"))
 
-    assert response.status_code == HTTPStatus.OK
+    assert response.status_code == HTTPStatus.OK, response.json()
 
     body = response.json()
 
@@ -68,3 +68,14 @@ def test_x_correlation_id_header(app, client: TestClient):
     assert body["correlation_id"] == uid
 
     assert ctx.correlation_id is None
+
+
+def test_x_tenant_id_header(app, client: TestClient):
+    response = client.get(
+        app.url_path_for("v1/context"), headers={"X-Tenant-Id": "abc123"}
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+
+    assert response.json()["tenant"] == {"id": "abc123", "name": "abc123"}
+    assert ctx.tenant.id == "abc123"

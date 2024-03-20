@@ -23,6 +23,8 @@ from clean_python.oauth2 import OAuth2SPAClientSettings
 from clean_python.oauth2 import Token
 from clean_python.oauth2 import TokenVerifierSettings
 
+from .asgi import get_correlation_id
+from .asgi import get_tenant
 from .error_responses import conflict_handler
 from .error_responses import DefaultErrorResponse
 from .error_responses import not_found_handler
@@ -31,7 +33,6 @@ from .error_responses import unauthorized_handler
 from .error_responses import validation_error_handler
 from .error_responses import ValidationErrorResponse
 from .fastapi_access_logger import FastAPIAccessLogger
-from .fastapi_access_logger import get_correlation_id
 from .resource import APIVersion
 from .resource import clean_resources
 from .resource import Resource
@@ -67,7 +68,10 @@ async def set_context(
 ) -> None:
     ctx.path = request.url
     ctx.user = token.user
-    ctx.tenant = token.tenant
+    if token.tenant:  # first try to get tenant from token
+        ctx.tenant = token.tenant
+    else:  # then from request header
+        ctx.tenant = get_tenant(request)
     ctx.correlation_id = get_correlation_id(request)
 
 
