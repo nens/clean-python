@@ -31,7 +31,7 @@ class SQLBuilder:
         self.multitenant = multitenant
 
     @property
-    def current_tenant(self) -> int | None:
+    def current_tenant(self) -> Id | None:
         if not self.multitenant:
             return None
         if ctx.tenant is None:
