@@ -4,8 +4,6 @@ import os
 import time
 from collections.abc import Awaitable
 from collections.abc import Callable
-from uuid import UUID
-from uuid import uuid4
 
 from starlette.background import BackgroundTasks
 from starlette.requests import Request
@@ -13,41 +11,12 @@ from starlette.responses import Response
 
 from clean_python import Gateway
 
-__all__ = ["FastAPIAccessLogger", "get_correlation_id"]
+from .asgi import ensure_correlation_id
+from .asgi import get_correlation_id
+from .asgi import get_view_name
+from .asgi import is_health_check
 
-
-CORRELATION_ID_HEADER = b"x-correlation-id"
-
-
-def get_view_name(request: Request) -> str | None:
-    try:
-        view_name = request.scope["route"].name
-    except KeyError:
-        return None
-
-    return view_name
-
-
-def is_health_check(request: Request) -> bool:
-    return get_view_name(request) == "health_check"
-
-
-def get_correlation_id(request: Request) -> UUID | None:
-    headers = dict(request.scope["headers"])
-    try:
-        return UUID(headers[CORRELATION_ID_HEADER].decode())
-    except (KeyError, ValueError, UnicodeDecodeError):
-        return None
-
-
-def ensure_correlation_id(request: Request) -> None:
-    correlation_id = get_correlation_id(request)
-    if correlation_id is None:
-        # generate an id and update the request inplace
-        correlation_id = uuid4()
-        headers = dict(request.scope["headers"])
-        headers[CORRELATION_ID_HEADER] = str(correlation_id).encode()
-        request.scope["headers"] = list(headers.items())
+__all__ = ["FastAPIAccessLogger"]
 
 
 class FastAPIAccessLogger:
