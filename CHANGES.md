@@ -3,7 +3,7 @@
 0.12.3 (unreleased)
 -------------------
 
-- Nothing changed yet.
+- Change the type of Tenant.id and User.id to `Id`. This allows more types as id.
 
 
 0.12.2 (2024-02-21)
