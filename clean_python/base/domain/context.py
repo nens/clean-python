@@ -7,13 +7,14 @@ from uuid import UUID
 from pydantic import AnyUrl
 from pydantic import FileUrl
 
+from .types import Id
 from .value_object import ValueObject
 
 __all__ = ["ctx", "User", "Tenant", "Scope"]
 
 
 class User(ValueObject):
-    id: str
+    id: Id
     name: str
 
 
@@ -21,7 +22,7 @@ Scope = frozenset[str]
 
 
 class Tenant(ValueObject):
-    id: int
+    id: Id
     name: str
 
 
