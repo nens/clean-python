@@ -1,6 +1,6 @@
 # Changelog of clean-python
 
-0.12.3 (unreleased)
+## 0.12.3 (2024-03-20)
 -------------------
 
 - Change the type of Tenant.id and User.id to `Id`. This allows more types as id.
