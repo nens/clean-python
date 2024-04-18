@@ -73,6 +73,9 @@ class APIVersion(ValueObject):
 def http_method(
     path: str, scope: str | None = None, public: bool = False, **route_options
 ):
+    if public and scope is not None:
+        raise ValueError("cannot set scope for public endpoints")
+
     def wrapper(unbound_method: Callable[..., Any]):
         setattr(
             unbound_method,
@@ -179,6 +182,7 @@ class Resource:
             if not public:
                 route_options["dependencies"].extend(auth_dependencies)
             if scope is not None:
+                assert not public
                 route_options["dependencies"].append(Depends(RequiresScope(scope)))
 
             # Update responses with route_options responses or use latter if not set

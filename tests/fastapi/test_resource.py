@@ -1,4 +1,5 @@
 import pytest
+from fastapi import Depends
 from fastapi.routing import APIRouter
 
 from clean_python.fastapi import APIVersion
@@ -138,6 +139,22 @@ def test_get_less_stable_no_subclass():
         resources[v(1)].get_less_stable(resources)
 
 
+TestDepends = Depends(lambda: True)
+
+
+def test_get_router_auth_dependencies():
+    class TestResource(Resource, version=v(1), name="testing"):
+        @get("/foo/{id}")
+        def get_test(self, id: int):
+            return "ok"
+
+    resource = TestResource()
+
+    router = resource.get_router(v(1), auth_dependencies=[TestDepends], responses={})
+
+    assert router.routes[0].dependencies == [TestDepends]
+
+
 def test_get_router_with_scope():
     class TestResource(Resource, version=v(1), name="testing"):
         @get("/foo/{id}", scope="foo")
@@ -146,11 +163,27 @@ def test_get_router_with_scope():
 
     resource = TestResource()
 
-    router = resource.get_router(v(1), auth_dependencies=[])
+    router = resource.get_router(v(1), auth_dependencies=[TestDepends], responses={})
 
-    assert len(router.routes) == 1
+    assert router.routes[0].dependencies[0] == TestDepends
+    assert isinstance(router.routes[0].dependencies[1].dependency, RequiresScope)
 
-    route = router.routes[0]
-    (dep,) = route.dependencies
-    assert isinstance(dep.dependency, RequiresScope)
-    assert dep.dependency.scope == "foo"
+
+def test_get_router_public_with_scope():
+    with pytest.raises(ValueError):
+        get("/foo/{id}", public=True, scope="foo")
+
+
+def test_get_router_public():
+    class TestResource(Resource, version=v(1), name="testing"):
+        """Foo"""
+
+        @get("/foo", public=True)
+        def foo(self):
+            return "ok"
+
+    resource = TestResource()
+
+    router = resource.get_router(v(1), auth_dependencies=[TestDepends], responses={})
+
+    assert router.routes[0].dependencies == []
