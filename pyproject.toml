@@ -22,7 +22,7 @@ test = [
     "httpx",
     "uvicorn",
     "python-multipart",
-    "pytest-celery"
+    "pytest-celery<1"
 ]
 dramatiq = ["dramatiq==1.15.*"]
 fastapi = ["fastapi==0.109.*"]
