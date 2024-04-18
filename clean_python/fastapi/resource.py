@@ -70,12 +70,14 @@ class APIVersion(ValueObject):
         return APIVersion(version=self.version, stability=self.stability.decrease())
 
 
-def http_method(path: str, scope: str | None = None, **route_options):
+def http_method(
+    path: str, scope: str | None = None, public: bool = False, **route_options
+):
     def wrapper(unbound_method: Callable[..., Any]):
         setattr(
             unbound_method,
             "http_method",
-            (path, scope, route_options),
+            (path, scope, public, route_options),
         )
         return unbound_method
 
@@ -153,13 +155,16 @@ class Resource:
         )
 
     def get_router(
-        self, version: APIVersion, responses: dict[str, dict[str, Any]] | None = None
+        self,
+        version: APIVersion,
+        auth_dependencies: list[Depends],
+        responses: dict[str, dict[str, Any]] | None = None,
     ) -> APIRouter:
         assert version == self.version
         router = APIRouter()
         operation_ids = set()
         for endpoint in self._endpoints():
-            path, scope, route_options = endpoint.http_method
+            path, scope, public, route_options = endpoint.http_method
             operation_id = endpoint.__name__
             if operation_id in operation_ids:
                 raise RuntimeError(
@@ -170,8 +175,10 @@ class Resource:
             # version prefix so that we can uniquely refer to an operation.
             name = version.prefix + "/" + endpoint.__name__
             # 'scope' is implemented using FastAPI's dependency injection system
+            route_options.setdefault("dependencies", [])
+            if not public:
+                route_options["dependencies"].extend(auth_dependencies)
             if scope is not None:
-                route_options.setdefault("dependencies", [])
                 route_options["dependencies"].append(Depends(RequiresScope(scope)))
 
             # Update responses with route_options responses or use latter if not set

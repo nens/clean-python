@@ -22,7 +22,7 @@ def test_get_router_no_endpoints():
     class Cls(Resource, version=v(1)):
         pass
 
-    router = Cls().get_router(v(1))
+    router = Cls().get_router(v(1), auth_dependencies=[])
     assert isinstance(router, APIRouter)
     assert len(router.routes) == 0
 
@@ -34,7 +34,7 @@ def test_get_router_other_version():
             return "ok"
 
     with pytest.raises(AssertionError):
-        TestResource().get_router(v(2))
+        TestResource().get_router(v(2), auth_dependencies=[])
 
 
 def test_get_router():
@@ -45,7 +45,7 @@ def test_get_router():
 
     resource = TestResource()
 
-    router = resource.get_router(v(1))
+    router = resource.get_router(v(1), auth_dependencies=[])
 
     assert len(router.routes) == 1
 
@@ -89,7 +89,7 @@ def test_url_path_for():
             return "ok"
 
     resource = TestResource()
-    router = resource.get_router(v(1))
+    router = resource.get_router(v(1), auth_dependencies=[])
 
     assert router.url_path_for("v1/get_test", id=2) == "/foo/2"
 
@@ -146,7 +146,7 @@ def test_get_router_with_scope():
 
     resource = TestResource()
 
-    router = resource.get_router(v(1))
+    router = resource.get_router(v(1), auth_dependencies=[])
 
     assert len(router.routes) == 1
 
