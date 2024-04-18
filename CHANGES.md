@@ -1,6 +1,6 @@
 # Changelog of clean-python
 
-## 0.12.5 (unreleased)
+## 0.12.5 (2024-04-18)
 ----------------------
 
 - Added ComparisonFilter and corresponding extensions to the sql and fastapi
