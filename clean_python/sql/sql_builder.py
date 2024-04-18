@@ -12,9 +12,11 @@ from sqlalchemy import true
 from sqlalchemy import update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.sql.expression import ColumnElement
+from sqlalchemy.sql.expression import ColumnOperators
 from sqlalchemy.sql.expression import false
 
 from clean_python import ComparisonFilter
+from clean_python import ComparisonOperator
 from clean_python import ctx
 from clean_python import Filter
 from clean_python import Id
@@ -33,10 +35,21 @@ def _regular_filter_to_sql(column: ColumnElement, filter: Filter) -> ColumnEleme
         return column.in_(filter.values)
 
 
+# Maps our operators to SQLAlchemy operators
+comparitor_map = {
+    ComparisonOperator.EQ: ColumnOperators.__eq__,
+    ComparisonOperator.NE: ColumnOperators.__ne__,
+    ComparisonOperator.LT: ColumnOperators.__lt__,
+    ComparisonOperator.LE: ColumnOperators.__le__,
+    ComparisonOperator.GT: ColumnOperators.__gt__,
+    ComparisonOperator.GE: ColumnOperators.__ge__,
+}
+
+
 def _comparison_filter_to_sql(
     column: ColumnElement, filter: ComparisonFilter
 ) -> ColumnElement:
-    return false()
+    return column.operate(comparitor_map[filter.operator], filter.values[0])
 
 
 class SQLBuilder:
