@@ -14,6 +14,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.sql.expression import ColumnElement
 from sqlalchemy.sql.expression import false
 
+from clean_python import ComparisonFilter
 from clean_python import ctx
 from clean_python import Filter
 from clean_python import Id
@@ -21,6 +22,21 @@ from clean_python import Json
 from clean_python import PageOptions
 
 __all__ = ["SQLBuilder"]
+
+
+def _regular_filter_to_sql(column: ColumnElement, filter: Filter) -> ColumnElement:
+    if len(filter.values) == 0:
+        return false()
+    elif len(filter.values) == 1:
+        return column == filter.values[0]
+    else:
+        return column.in_(filter.values)
+
+
+def _comparison_filter_to_sql(
+    column: ColumnElement, filter: ComparisonFilter
+) -> ColumnElement:
+    return false()
 
 
 class SQLBuilder:
@@ -43,12 +59,10 @@ class SQLBuilder:
             column = getattr(self.table.c, filter.field)
         except AttributeError:
             return false()
-        if len(filter.values) == 0:
-            return false()
-        elif len(filter.values) == 1:
-            return column == filter.values[0]
+        if isinstance(filter, ComparisonFilter):
+            return _comparison_filter_to_sql(column, filter)
         else:
-            return column.in_(filter.values)
+            return _regular_filter_to_sql(column, filter)
 
     def _filters_to_sql(self, filters: list[Filter]) -> ColumnElement:
         qs = [self._filter_to_sql(x) for x in filters]
