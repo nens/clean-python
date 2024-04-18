@@ -18,9 +18,12 @@ class DomainEvent:
 
     @classmethod
     def register_handler(
-        cls: type[T], receiver: Callable[[T], Awaitable[None]]
-    ) -> Callable[[T], Awaitable[None]]:
+        cls: type[T], receiver: Callable[[T], None | Awaitable[None]]
+    ) -> Callable[[T], None | Awaitable[None]]:
         return cls._signal().connect(receiver)
+
+    def send(self) -> None:
+        self._signal().send()
 
     async def send_async(self) -> None:
         await self._signal().send_async(self)

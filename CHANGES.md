@@ -3,7 +3,7 @@
 ## 0.12.6 (unreleased)
 ----------------------
 
-- Nothing changed yet.
+- Add synchronous usage of DomainEvent.
 
 
 ## 0.12.5 (2024-04-18)
