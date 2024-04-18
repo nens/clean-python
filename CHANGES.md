@@ -1,6 +1,6 @@
 # Changelog of clean-python
 
-## 0.12.4 (unreleased)
+## 0.12.4 (2024-04-18)
 ----------------------
 
 - Added the option of making API routes public in the fastapi Resource.
