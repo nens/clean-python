@@ -5,6 +5,7 @@
 
 - Nothing changed yet.
 
+- Bumped pyjwt to 2.8.*.
 
 ## 0.12.3 (2024-03-20)
 -------------------

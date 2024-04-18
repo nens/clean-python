@@ -1,7 +1,6 @@
 # (c) Nelen & Schuurmans
 
 import logging
-import socket
 from typing import Any
 
 import jwt
@@ -80,7 +79,10 @@ class TokenVerifier(BaseTokenVerifier):
         self, settings: TokenVerifierSettings, logger: logging.Logger | None = None
     ):
         self.settings = settings
-        self.jwk_client = PyJWKClient(f"{settings.issuer}/.well-known/jwks.json")
+        self.jwk_client = PyJWKClient(
+            f"{settings.issuer}/.well-known/jwks.json",
+            timeout=self.settings.jwks_timeout,
+        )
 
     def __call__(self, authorization: str | None) -> Token:
         # Step 0: retrieve the token from the Authorization header
@@ -95,7 +97,7 @@ class TokenVerifier(BaseTokenVerifier):
         # Step 1: Confirm the structure of the JWT. This check is part of get_kid since
         # jwt.get_unverified_header will raise a JWTError if the structure is wrong.
         try:
-            key = self.get_key(jwt_str, self.settings.jwks_timeout)  # JSON Web Key
+            key = self.get_key(jwt_str)  # JSON Web Key
         except PyJWTError as e:
             raise Unauthorized(f"Token is invalid: {e}")
         # Step 2: Validate the JWT signature and standard claims
@@ -124,16 +126,9 @@ class TokenVerifier(BaseTokenVerifier):
         self.authorize_user(token.user)
         return token
 
-    def get_key(self, token: str, timeout: float = 1.0) -> jwt.PyJWK:
+    def get_key(self, token: str) -> jwt.PyJWK:
         """Return the JSON Web KEY (JWK) corresponding to kid."""
-        # NB: pyjwt does not allow timeouts, but we can set it using the
-        # global value
-        old_timeout = socket.getdefaulttimeout()
-        try:
-            socket.setdefaulttimeout(timeout)
-            return self.jwk_client.get_signing_key_from_jwt(token)
-        finally:
-            socket.setdefaulttimeout(old_timeout)
+        return self.jwk_client.get_signing_key_from_jwt(token)
 
     def verify_token_use(self, claims: dict[str, Any]) -> None:
         """Check the token_use claim."""
