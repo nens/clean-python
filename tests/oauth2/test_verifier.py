@@ -1,7 +1,6 @@
 # (c) Nelen & Schuurmans
 
 import json
-import socket
 import time
 import urllib.request
 from io import BytesIO
@@ -21,7 +20,7 @@ def patched_verifier(settings, jwk_patched):
     return TokenVerifier(settings)
 
 
-def test_verifier_ok(patched_verifier, token_generator, jwk_patched):
+def test_verifier_ok(patched_verifier, token_generator):
     token = token_generator()
     verified_token = patched_verifier("Bearer " + token)
 
@@ -30,9 +29,16 @@ def test_verifier_ok(patched_verifier, token_generator, jwk_patched):
     assert verified_token.tenant is None
     assert verified_token.scope == {"user"}
 
-    jwk_patched.assert_called_once_with(
-        "https://some/auth/server/.well-known/jwks.json"
-    )
+
+def test_jwks_call(token_generator, jwk_patched, settings):
+    token = token_generator()
+    TokenVerifier(settings).get_key(token)
+
+    assert jwk_patched.call_count == 1
+    ((request,), kwargs) = jwk_patched.call_args
+    assert request.get_full_url() == "https://some/auth/server/.well-known/jwks.json"
+    assert request.get_method() == "GET"
+    assert kwargs["timeout"] == settings.jwks_timeout
 
 
 def test_verifier_exp_leeway(patched_verifier, token_generator):
@@ -84,22 +90,6 @@ def test_verifier_bad_header_prefix(patched_verifier, token_generator, prefix):
 def test_verifier_no_header(patched_verifier, header):
     with pytest.raises(Unauthorized):
         patched_verifier(header)
-
-
-@mock.patch.object(urllib.request, "urlopen")
-def test_get_key_timeout(urlopen, patched_verifier, token_generator, public_key):
-    def side_effect():
-        assert socket.getdefaulttimeout() == 0.1
-        return BytesIO(json.dumps({"keys": [public_key]}).encode())
-
-    urlopen.return_value.__enter__.side_effect = side_effect
-
-    assert socket.getdefaulttimeout() is None
-    key = patched_verifier.get_key(token_generator(), timeout=0.1)
-    assert socket.getdefaulttimeout() is None
-
-    assert isinstance(key, jwt.PyJWK)
-    assert key.key_id == public_key["kid"]
 
 
 @mock.patch.object(urllib.request, "urlopen")
