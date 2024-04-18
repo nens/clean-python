@@ -43,22 +43,27 @@ from .security import set_verifier
 __all__ = ["Service"]
 
 
-def get_auth_kwargs(auth_client: OAuth2SPAClientSettings | None) -> dict[str, Any]:
+def get_auth_dependencies(auth_client: OAuth2SPAClientSettings | None) -> list[Depends]:
     if auth_client is None:
-        return {
-            "dependencies": [Depends(JWTBearerTokenSchema()), Depends(set_context)],
-        }
+        return [Depends(JWTBearerTokenSchema()), Depends(set_context)]
     else:
-        return {
-            "dependencies": [
-                Depends(OAuth2SPAClientSchema(client=auth_client)),
-                Depends(set_context),
-            ],
-            "swagger_ui_init_oauth": {
-                "clientId": auth_client.client_id,
-                "usePkceWithAuthorizationCodeGrant": True,
-            },
+        return [
+            Depends(OAuth2SPAClientSchema(client=auth_client)),
+            Depends(set_context),
+        ]
+
+
+def get_swagger_ui_init_oauth(
+    auth_client: OAuth2SPAClientSettings | None,
+) -> dict[str, Any] | None:
+    return (
+        None
+        if auth_client is None
+        else {
+            "clientId": auth_client.client_id,
+            "usePkceWithAuthorizationCodeGrant": True,
         }
+    )
 
 
 async def set_context(
@@ -134,7 +139,9 @@ class Service:
         app.get("/health", include_in_schema=False)(health_check)
         return app
 
-    def _create_versioned_app(self, version: APIVersion, **kwargs) -> FastAPI:
+    def _create_versioned_app(
+        self, version: APIVersion, auth_dependencies: list[Depends], **fastapi_kwargs
+    ) -> FastAPI:
         resources = [x for x in self.resources if x.version == version]
         app = FastAPI(
             version=version.prefix,
@@ -142,7 +149,7 @@ class Service:
                 [x.get_openapi_tag().model_dump() for x in resources],
                 key=lambda x: x["name"],
             ),
-            **kwargs,
+            **fastapi_kwargs,
         )
         for resource in resources:
             app.include_router(
@@ -152,6 +159,7 @@ class Service:
                         "400": {"model": ValidationErrorResponse},
                         "default": {"model": DefaultErrorResponse},
                     },
+                    auth_dependencies=auth_dependencies,
                 )
             )
         app.add_exception_handler(DoesNotExist, not_found_handler)
@@ -182,13 +190,18 @@ class Service:
             on_shutdown=on_shutdown,
             access_logger_gateway=access_logger_gateway,
         )
-        kwargs = {
+        fastapi_kwargs = {
             "title": title,
             "description": description,
-            **get_auth_kwargs(auth_client),
+            "swagger_ui_init_oauth": get_swagger_ui_init_oauth(auth_client),
         }
         versioned_apps = {
-            v: self._create_versioned_app(v, **kwargs) for v in self.versions
+            v: self._create_versioned_app(
+                v,
+                auth_dependencies=get_auth_dependencies(auth_client),
+                **fastapi_kwargs,
+            )
+            for v in self.versions
         }
         for v, versioned_app in versioned_apps.items():
             app.mount("/" + v.prefix, versioned_app)
