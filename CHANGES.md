@@ -3,7 +3,8 @@
 ## 0.12.5 (unreleased)
 ----------------------
 
-- Nothing changed yet.
+- Added ComparisonFilter and corresponding extensions to the sql and fastapi
+  modules. A ComparisonFilter does value comparisons like less than.
 
 
 ## 0.12.4 (2024-04-18)
