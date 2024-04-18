@@ -90,4 +90,4 @@ def assert_query_equal(q: Executable, expected: str, literal_binds: bool = True)
     else:
         actual = str(compiled)
     actual = actual.replace("\n", "").replace("  ", " ")
-    assert actual == expected
+    assert actual == expected, actual

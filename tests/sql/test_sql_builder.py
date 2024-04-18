@@ -9,6 +9,8 @@ from sqlalchemy import MetaData
 from sqlalchemy import Table
 from sqlalchemy import Text
 
+from clean_python import ComparisonFilter
+from clean_python import ComparisonOperator
 from clean_python import Filter
 from clean_python import Json
 from clean_python import PageOptions
@@ -207,4 +209,26 @@ async def test_exists(sql_builder: SQLBuilder, filters: list[Filter], sql: str):
     assert_query_equal(
         query,
         f"SELECT true AS exists FROM writer{sql} LIMIT 1",
+    )
+
+
+@pytest.mark.parametrize(
+    "operator,expected",
+    [
+        (ComparisonOperator.LT, "<"),
+        (ComparisonOperator.LE, "<="),
+        (ComparisonOperator.GE, ">="),
+        (ComparisonOperator.GT, ">"),
+        (ComparisonOperator.EQ, "="),
+        (ComparisonOperator.NE, "!="),
+    ],
+)
+def test_select_comparison_filter(
+    sql_builder: SQLBuilder, operator: ComparisonOperator, expected: str
+):
+    query = sql_builder.select(
+        [ComparisonFilter(field="id", values=[14], operator=operator)], None
+    )
+    assert_query_equal(
+        query, f"SELECT {ALL_FIELDS} FROM writer WHERE writer.id {expected} 14"
     )
