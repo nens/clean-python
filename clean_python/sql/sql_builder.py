@@ -54,7 +54,7 @@ class SQLBuilder:
         qs = [self._filter_to_sql(x) for x in filters]
         if self.multitenant:
             qs.append(self.table.c.tenant == self.current_tenant)
-        return and_(*qs)
+        return and_(true(), *qs)
 
     def _id_filter_to_sql(self, id: Id) -> ColumnElement:
         return self._filters_to_sql([Filter(field="id", values=[id])])

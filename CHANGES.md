@@ -6,6 +6,8 @@
 - Added the option of making API routes public in the fastapi Resource.
   This is done by moving the auth dependencies from app to route level.
 
+- Fixed SQLAlchemy deprecation warning having to do with `and_`.
+
 - Bumped fastapi to 0.110.*.
 
 

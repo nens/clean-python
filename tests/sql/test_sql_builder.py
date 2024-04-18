@@ -35,7 +35,7 @@ def sql_builder() -> SQLBuilder:
 @pytest.mark.parametrize(
     "filters,sql",
     [
-        ([], ""),
+        ([], " WHERE true"),
         ([Filter(field="value", values=[])], " WHERE false"),
         ([Filter(field="value", values=["foo"])], " WHERE writer.value = 'foo'"),
         (
@@ -72,7 +72,7 @@ def test_select_with_pagination(
     sql_builder: SQLBuilder, page_options: PageOptions, sql: str
 ):
     query = sql_builder.select([], page_options)
-    assert_query_equal(query, f"SELECT {ALL_FIELDS} FROM writer{sql}")
+    assert_query_equal(query, f"SELECT {ALL_FIELDS} FROM writer WHERE true{sql}")
 
 
 def test_select_filter_and_pagination(sql_builder: SQLBuilder):
@@ -101,7 +101,7 @@ def test_select_for_update(sql_builder: SQLBuilder):
 @pytest.mark.parametrize(
     "filters,sql",
     [
-        ([], ""),
+        ([], " WHERE true"),
         ([Filter(field="value", values=[])], " WHERE false"),
         ([Filter(field="value", values=["foo"])], " WHERE writer.value = 'foo'"),
         (
@@ -188,7 +188,7 @@ async def test_upsert(sql_builder: SQLBuilder):
 @pytest.mark.parametrize(
     "filters,sql",
     [
-        ([], ""),
+        ([], " WHERE true"),
         ([Filter(field="value", values=[])], " WHERE false"),
         ([Filter(field="value", values=["foo"])], " WHERE writer.value = 'foo'"),
         (
