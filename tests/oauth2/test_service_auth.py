@@ -22,6 +22,10 @@ class FooResource(Resource, version=v(1), name="testing"):
     def scoped(self):
         return "ok"
 
+    @get("/baz", public=True)
+    def public(self):
+        return "ok"
+
     @get("/context")
     def context(self):
         return {
@@ -122,3 +126,9 @@ def test_client_credentials_ok(app, client: TestClient, token_generator):
     )
 
     assert response.status_code == HTTPStatus.OK
+
+
+def test_public_ok(app, client: TestClient, jwk_patched):
+    response = client.get(app.url_path_for("v1/public"))
+    assert response.status_code == HTTPStatus.OK
+    assert not jwk_patched.called

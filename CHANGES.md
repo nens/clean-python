@@ -3,7 +3,10 @@
 ## 0.12.4 (unreleased)
 ----------------------
 
-- Nothing changed yet.
+- Added the option of making API routes public in the fastapi Resource.
+  This is done by moving the auth dependencies from app to route level.
+
+- Bumped fastapi to 0.110.*.
 
 
 ## 0.12.3 (2024-03-20)
