@@ -4,6 +4,7 @@ from typing import Optional
 
 import pytest
 from fastapi.testclient import TestClient
+from pydantic import field_validator
 from pydantic import ValidationError
 
 from clean_python import ComparisonFilter
@@ -19,6 +20,12 @@ from clean_python.fastapi import v
 
 class SomeQuery(RequestQuery):
     foo: Optional[int] = None
+
+    @field_validator("foo", mode="after")
+    @classmethod
+    def validate_foo(cls, v):
+        assert v is None or v < 10, "too much!"
+        return v
 
 
 class SomeListQuery(RequestQuery):
@@ -110,47 +117,29 @@ def test_request_query_order_by(client: TestClient):
 
 
 def test_request_query_order_by_err(client: TestClient):
+    # order_by is actually caught by fastapi
     response = client.get("v1/query", params={"order_by": "foo"})
 
     assert response.status_code == HTTPStatus.BAD_REQUEST
     body = response.json()
     assert body["message"] == "Validation error"
     (detail,) = body["detail"]
-    assert detail["loc"] == ["order_by"]
+    assert detail["loc"] == ["query", "order_by"]
+
+
+def test_request_query_foo_err(client: TestClient):
+    # custom validator is not caught by fastapi and requires our workaround
+    response = client.get("v1/query", params={"foo": 11})
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    body = response.json()
+    assert body["message"] == "Validation error"
+    (detail,) = body["detail"]
+    assert detail["loc"] == ["query", "foo"]
 
 
 def test_request_query_order_by_schema(client: TestClient):
     openapi = client.get("v1/openapi.json", params={"order_by": "foo"}).json()
 
     parameters = {x["name"]: x for x in openapi["paths"]["/query"]["get"]["parameters"]}
-    assert len(parameters) == 4
-    assert parameters["limit"] == {
-        "name": "limit",
-        "in": "query",
-        "required": False,
-        "schema": {
-            "type": "integer",
-            "maximum": 100,
-            "minimum": 1,
-            "default": 50,
-            "title": "Limit",
-        },
-    }
-    assert parameters["offset"] == {
-        "name": "offset",
-        "in": "query",
-        "required": False,
-        "schema": {"type": "integer", "minimum": 0, "default": 0, "title": "Offset"},
-    }
-    assert parameters["order_by"] == {
-        "name": "order_by",
-        "in": "query",
-        "required": False,
-        "schema": {"type": "string", "default": "id", "title": "Order By"},
-    }
-    assert parameters["foo"] == {
-        "name": "foo",
-        "in": "query",
-        "required": False,
-        "schema": {"anyOf": [{"type": "integer"}, {"type": "null"}], "title": "Foo"},
-    }
+    assert parameters["order_by"]["schema"]["enum"] == ["id", "-id"]

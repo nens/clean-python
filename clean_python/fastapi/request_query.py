@@ -2,10 +2,10 @@
 
 from inspect import signature
 from typing import ClassVar
+from typing import Literal
 
 from fastapi import Depends
 from fastapi import Query
-from pydantic import field_validator
 from pydantic import ValidationError
 
 from clean_python import BadRequest
@@ -23,18 +23,9 @@ class RequestQuery(ValueObject):
 
     limit: int = Query(50, ge=1, le=100, description="Page size limit")
     offset: int = Query(0, ge=0, description="Page offset")
-    order_by: str = Query(
-        default="id", enum=["id", "-id"], description="Field to order by"
+    order_by: Literal["id", "-id"] = Query(
+        default="id", description="Field to order by"
     )
-
-    @field_validator("order_by")
-    def validate_order_by_enum(cls, v, _):
-        # the 'enum' parameter doesn't actually do anthing in validation
-        # See: https://github.com/tiangolo/fastapi/issues/2910
-        allowed = cls.model_json_schema()["properties"]["order_by"]["enum"]
-        if v not in allowed:
-            raise ValueError(f"'order_by' must be one of {allowed}")
-        return v
 
     def as_page_options(self) -> PageOptions:
         if self.order_by.startswith("-"):
@@ -92,7 +83,7 @@ class RequestQuery(ValueObject):
                 signature(wrapper).bind(*args, **kwargs)
                 return cls(*args, **kwargs)
             except ValidationError as e:
-                raise BadRequest(e)
+                raise BadRequest(e, loc=("query",))
 
         wrapper.__signature__ = signature(cls)  # type: ignore
         return Depends(wrapper)
