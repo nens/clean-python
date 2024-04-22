@@ -1,10 +1,14 @@
 # (c) Nelen & Schuurmans
 
+from inspect import signature
 from typing import ClassVar
 
+from fastapi import Depends
 from fastapi import Query
 from pydantic import field_validator
+from pydantic import ValidationError
 
+from clean_python import BadRequest
 from clean_python import ComparisonFilter
 from clean_python import Filter
 from clean_python import PageOptions
@@ -70,3 +74,25 @@ class RequestQuery(ValueObject):
             else:
                 result.append(self._regular_filter(name, value))
         return result
+
+    @classmethod
+    def depends(cls) -> Depends:
+        """FastAPI does not directly support pydantic models for query parameters.
+
+        Specifically, pydantic ValidationErrors lead to an internal server error. For this to work,
+        we wrap the RequestQuery, forwarding the type signature.
+
+        Source:
+
+        - https://github.com/tiangolo/fastapi/issues/1474
+        """
+
+        def wrapper(*args, **kwargs):
+            try:
+                signature(wrapper).bind(*args, **kwargs)
+                return cls(*args, **kwargs)
+            except ValidationError as e:
+                raise BadRequest(e)
+
+        wrapper.__signature__ = signature(cls)  # type: ignore
+        return Depends(wrapper)
