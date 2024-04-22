@@ -117,7 +117,7 @@ def test_request_query_order_by(client: TestClient):
 
 
 def test_request_query_order_by_err(client: TestClient):
-    # order_by is actually caught by fastapi
+    # order_by is actually caught by fastapi; it doesn't need our workaround
     response = client.get("v1/query", params={"order_by": "foo"})
 
     assert response.status_code == HTTPStatus.BAD_REQUEST
@@ -139,6 +139,7 @@ def test_request_query_foo_err(client: TestClient):
 
 
 def test_request_query_order_by_schema(client: TestClient):
+    # the Literal value is correctly reflected as an enum in the openapi spec
     openapi = client.get("v1/openapi.json", params={"order_by": "foo"}).json()
 
     parameters = {x["name"]: x for x in openapi["paths"]["/query"]["get"]["parameters"]}
