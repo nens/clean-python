@@ -36,6 +36,7 @@ s3 = ["aioboto3==12.2.*", "boto3==1.33.*"]
 api_client = ["aiohttp==3.9.*", "urllib3==2.0.*"]
 profiler = ["yappi"]
 debugger = ["debugpy"]
+nanoid = ["nanoid==2.0.0"]
 
 [project.urls]
 homepage = "https://github.com/nens/clean-python"
