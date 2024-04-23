@@ -3,7 +3,7 @@
 ## 0.12.7 (unreleased)
 ----------------------
 
-- Nothing changed yet.
+- Added nanoid submodule.
 
 
 ## 0.12.6 (2024-04-18)
