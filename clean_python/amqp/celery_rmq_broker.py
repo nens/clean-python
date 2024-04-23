@@ -1,6 +1,7 @@
 # (c) Nelen & Schuurmans
 
 import json
+import ssl
 import uuid
 from typing import Optional
 
@@ -32,9 +33,27 @@ class CeleryHeaders(ValueObject):
 
 class CeleryRmqBroker(Gateway):
     def __init__(
-        self, broker_url: AnyUrl, queue: str, origin: str, declare_queue: bool = False
+        self,
+        broker_url: AnyUrl,
+        queue: str,
+        origin: str,
+        declare_queue: bool = False,
+        allow_self_signed_certificates: bool = False,
     ):
         self._parameters = pika.URLParameters(str(broker_url))
+
+        # Allow self-signed certificates if broker_url startswith 'ampqs'
+        # and no ssl_options are present.
+        if (
+            str(broker_url).lower().startswith("ampqs")
+            and getattr(self._parameters, "ssl_options", None) is None
+            and allow_self_signed_certificates
+        ):
+            cxt = ssl.SSLContext(protocol=ssl.PROTOCOL_TLS_CLIENT)
+            cxt.check_hostname = False
+            cxt.verify_mode = ssl.CERT_NONE
+            self._parameters.ssl_options = pika.SSLOptions(context=cxt)
+
         self._queue = queue
         self._origin = origin
         self._declare_queue = declare_queue
