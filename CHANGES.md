@@ -1,6 +1,6 @@
 # Changelog of clean-python
 
-## 0.12.7 (unreleased)
+## 0.12.7 (2024-04-23)
 ----------------------
 
 - Added nanoid submodule.
