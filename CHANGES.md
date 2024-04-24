@@ -5,10 +5,6 @@
 
 - Fixed synchronous usage of DomainEvent.
 
-
-## 0.12.7 (2024-04-23)
-----------------------
-
 - Breaking change: the allowed values in `RequestQuery.order_by` should now be
   specified using a literal type (for example `Literal["id", "-id"]`) instead of the
   `enum` keyword argument. The `enum` keyword argument will be silently ignored. Upside
@@ -17,6 +13,10 @@
 - Exceptions raised in validators of `RequestQuery` subclasses now result in a `BadRequest`
   instead of an internal server error. This requires change: instances of `Depends(SomeQuery)`
   must be replaced by `SomeQuery.depends()`.
+
+
+## 0.12.7 (2024-04-23)
+----------------------
 
 - Added nanoid submodule.
 
