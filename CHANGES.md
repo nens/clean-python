@@ -1,6 +1,12 @@
 # Changelog of clean-python
 
-## 0.12.7 (unreleased)
+## 0.12.8 (unreleased)
+----------------------
+
+- Fixed synchronous usage of DomainEvent.
+
+
+## 0.12.7 (2024-04-23)
 ----------------------
 
 - Breaking change: the allowed values in `RequestQuery.order_by` should now be

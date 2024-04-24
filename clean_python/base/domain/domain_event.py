@@ -23,7 +23,7 @@ class DomainEvent:
         return cls._signal().connect(receiver)
 
     def send(self) -> None:
-        self._signal().send()
+        self._signal().send(self)
 
     async def send_async(self) -> None:
         await self._signal().send_async(self)
