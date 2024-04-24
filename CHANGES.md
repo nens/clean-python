@@ -7,8 +7,8 @@
 
 - Breaking change: the allowed values in `RequestQuery.order_by` should now be
   specified using a literal type (for example `Literal["id", "-id"]`) instead of the
-  `enum` keyword argument. The `enum` keyword argument will be silently ignored. Upside
-  of this is that the OpenAPI spec now correctly lists the options for `order_by`.
+  `enum` keyword argument. When using the `enum` keyword argument, an exception will be
+  raised. Upside of this is that the OpenAPI spec now correctly lists the options for `order_by`.
 
 - Exceptions raised in validators of `RequestQuery` subclasses now result in a `BadRequest`
   instead of an internal server error. This requires change: instances of `Depends(SomeQuery)`

@@ -1,8 +1,10 @@
 from http import HTTPStatus
 from typing import List
+from typing import Literal
 from typing import Optional
 
 import pytest
+from fastapi import Query
 from fastapi.testclient import TestClient
 from pydantic import field_validator
 from pydantic import ValidationError
@@ -144,3 +146,15 @@ def test_request_query_order_by_schema(client: TestClient):
 
     parameters = {x["name"]: x for x in openapi["paths"]["/query"]["get"]["parameters"]}
     assert parameters["order_by"]["schema"]["enum"] == ["id", "-id"]
+
+
+def test_request_query_order_by_deprecated_enum_arg():
+    with pytest.raises(ValueError):
+
+        class EnumQuery(RequestQuery):
+            order_by: str = Query(default="id", enum=["id", "-id"])
+
+
+def test_request_query_order_by_correct_enum_arg():
+    class EnumQuery(RequestQuery):
+        order_by: Literal["id", "-id"] = Query(default="id")

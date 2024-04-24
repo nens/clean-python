@@ -27,6 +27,13 @@ class RequestQuery(ValueObject):
         default="id", description="Field to order by"
     )
 
+    def __init_subclass__(cls: type["RequestQuery"]) -> None:
+        if hasattr(cls, "order_by") and "enum" in cls.order_by.json_schema_extra:  # type: ignore
+            raise ValueError(
+                "Specifying order_by options with an enum kwarg is deprecated since clean-python 0.13. Please use the Literal type instead."
+            )
+        super().__init_subclass__()
+
     def as_page_options(self) -> PageOptions:
         if self.order_by.startswith("-"):
             order_by = self.order_by[1:]
