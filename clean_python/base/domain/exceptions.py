@@ -54,19 +54,34 @@ class PreconditionFailed(Exception):
 request_model = create_model("Request")
 
 
+def _prefix_error_details(
+    x: ErrorDetails, prefix: tuple[int | str, ...]
+) -> ErrorDetails:
+    if prefix:
+        x = x.copy()
+        x["loc"] = prefix + x["loc"]
+    return x
+
+
 class BadRequest(Exception):
-    def __init__(self, err_or_msg: ValidationError | str):
+    def __init__(
+        self, err_or_msg: ValidationError | str, loc: tuple[int | str, ...] = ()
+    ):
         self._internal_error = err_or_msg
+        self._loc = loc
         super().__init__(err_or_msg)
 
     def errors(self) -> list[ErrorDetails]:
         if isinstance(self._internal_error, ValidationError):
-            return self._internal_error.errors()
+            return [
+                _prefix_error_details(x, self._loc)
+                for x in self._internal_error.errors()
+            ]
         return [
             ErrorDetails(
                 type="value_error",
                 msg=self._internal_error,
-                loc=[],  # type: ignore
+                loc=self._loc,
                 input=None,
             )
         ]

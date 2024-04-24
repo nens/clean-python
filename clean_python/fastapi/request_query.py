@@ -1,10 +1,14 @@
 # (c) Nelen & Schuurmans
 
+from inspect import signature
 from typing import ClassVar
+from typing import Literal
 
+from fastapi import Depends
 from fastapi import Query
-from pydantic import field_validator
+from pydantic import ValidationError
 
+from clean_python import BadRequest
 from clean_python import ComparisonFilter
 from clean_python import Filter
 from clean_python import PageOptions
@@ -14,23 +18,31 @@ __all__ = ["RequestQuery"]
 
 
 class RequestQuery(ValueObject):
+    """This class standardizes filtering and pagination for list endpoints.
+
+    Example usage in a Resource:
+
+        @get("/books")
+        def list_books(self, q: RequestQuery = RequestQuery.depends()):
+            return self.manage.filter(q.filters(), q.as_page_options())
+    """
+
     SEPARATOR: ClassVar[str] = "__"
     NON_FILTERS: ClassVar[frozenset[str]] = frozenset({"limit", "offset", "order_by"})
 
     limit: int = Query(50, ge=1, le=100, description="Page size limit")
     offset: int = Query(0, ge=0, description="Page offset")
-    order_by: str = Query(
-        default="id", enum=["id", "-id"], description="Field to order by"
+    order_by: Literal["id", "-id"] = Query(
+        default="id", description="Field to order by"
     )
 
-    @field_validator("order_by")
-    def validate_order_by_enum(cls, v, _):
-        # the 'enum' parameter doesn't actually do anthing in validation
-        # See: https://github.com/tiangolo/fastapi/issues/2910
-        allowed = cls.model_json_schema()["properties"]["order_by"]["enum"]
-        if v not in allowed:
-            raise ValueError(f"'order_by' must be one of {allowed}")
-        return v
+    def __init_subclass__(cls: type["RequestQuery"]) -> None:
+        if hasattr(cls, "order_by") and "enum" in cls.order_by.json_schema_extra:  # type: ignore
+            raise ValueError(
+                "Specifying order_by options with an enum kwarg is deprecated since "
+                "clean-python 0.13. Please use the Literal type instead."
+            )
+        super().__init_subclass__()
 
     def as_page_options(self) -> PageOptions:
         if self.order_by.startswith("-"):
@@ -70,3 +82,25 @@ class RequestQuery(ValueObject):
             else:
                 result.append(self._regular_filter(name, value))
         return result
+
+    @classmethod
+    def depends(cls) -> Depends:
+        """FastAPI does not directly support pydantic models for query parameters.
+
+        Specifically, pydantic ValidationErrors lead to an internal server error. For this to work,
+        we wrap the RequestQuery, forwarding the type signature.
+
+        Source:
+
+        - https://github.com/tiangolo/fastapi/issues/1474
+        """
+
+        def wrapper(*args, **kwargs):
+            try:
+                signature(wrapper).bind(*args, **kwargs)
+                return cls(*args, **kwargs)
+            except ValidationError as e:
+                raise BadRequest(e, loc=("query",))
+
+        wrapper.__signature__ = signature(cls)  # type: ignore
+        return Depends(wrapper)

@@ -1,17 +1,33 @@
+from http import HTTPStatus
 from typing import List
+from typing import Literal
 from typing import Optional
 
 import pytest
+from fastapi import Query
+from fastapi.testclient import TestClient
+from pydantic import field_validator
 from pydantic import ValidationError
 
 from clean_python import ComparisonFilter
 from clean_python import Filter
+from clean_python import InMemoryGateway
 from clean_python import PageOptions
+from clean_python.fastapi import get
 from clean_python.fastapi import RequestQuery
+from clean_python.fastapi import Resource
+from clean_python.fastapi import Service
+from clean_python.fastapi import v
 
 
 class SomeQuery(RequestQuery):
     foo: Optional[int] = None
+
+    @field_validator("foo", mode="after")
+    @classmethod
+    def validate_foo(cls, v):
+        assert v is None or v < 10, "too much!"
+        return v
 
 
 class SomeListQuery(RequestQuery):
@@ -71,3 +87,74 @@ class ComparisonQuery(RequestQuery):
 )
 def test_filters_comparison(values, expected):
     assert ComparisonQuery(**values).filters() == [expected]
+
+
+class FooResource(Resource, version=v(1), name="testing"):
+    @get("/query")
+    def query(self, q: SomeQuery = SomeQuery.depends()):
+        return q.model_dump()
+
+
+@pytest.fixture
+def app():
+    return Service(FooResource()).create_app(
+        title="test",
+        description="testing",
+        hostname="testserver",
+        access_logger_gateway=InMemoryGateway([]),
+    )
+
+
+@pytest.fixture
+def client(app):
+    return TestClient(app)
+
+
+def test_request_query_order_by(client: TestClient):
+    response = client.get("v1/query", params={"order_by": "-id"})
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+
+    assert response.json()["order_by"] == "-id"
+
+
+def test_request_query_order_by_err(client: TestClient):
+    # order_by is actually caught by fastapi; it doesn't need our workaround
+    response = client.get("v1/query", params={"order_by": "foo"})
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    body = response.json()
+    assert body["message"] == "Validation error"
+    (detail,) = body["detail"]
+    assert detail["loc"] == ["query", "order_by"]
+
+
+def test_request_query_foo_err(client: TestClient):
+    # custom validator is not caught by fastapi and requires our workaround
+    response = client.get("v1/query", params={"foo": 11})
+
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    body = response.json()
+    assert body["message"] == "Validation error"
+    (detail,) = body["detail"]
+    assert detail["loc"] == ["query", "foo"]
+
+
+def test_request_query_order_by_schema(client: TestClient):
+    # the Literal value is correctly reflected as an enum in the openapi spec
+    openapi = client.get("v1/openapi.json", params={"order_by": "foo"}).json()
+
+    parameters = {x["name"]: x for x in openapi["paths"]["/query"]["get"]["parameters"]}
+    assert parameters["order_by"]["schema"]["enum"] == ["id", "-id"]
+
+
+def test_request_query_order_by_deprecated_enum_arg():
+    with pytest.raises(ValueError):
+
+        class EnumQuery(RequestQuery):
+            order_by: str = Query(default="id", enum=["id", "-id"])
+
+
+def test_request_query_order_by_correct_enum_arg():
+    class EnumQuery(RequestQuery):
+        order_by: Literal["id", "-id"] = Query(default="id")
