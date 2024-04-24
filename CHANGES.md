@@ -12,6 +12,8 @@
   instead of an internal server error. This requires change: instances of `Depends(SomeQuery)`
   must be replaced by `SomeQuery.depends()`.
 
+- Added nanoid submodule.
+
 
 ## 0.12.6 (2024-04-18)
 ----------------------
