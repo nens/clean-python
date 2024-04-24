@@ -1,6 +1,6 @@
 # Changelog of clean-python
 
-## 0.12.8 (unreleased)
+## 0.13.0 (2024-04-24)
 ----------------------
 
 - Fixed synchronous usage of DomainEvent.
