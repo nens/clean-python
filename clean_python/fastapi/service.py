@@ -1,17 +1,16 @@
 # (c) Nelen & Schuurmans
 
+from collections.abc import Callable
+from contextlib import asynccontextmanager
+from inspect import iscoroutinefunction
 from typing import Any
-from typing import Callable
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Set
 
 from fastapi import Depends
 from fastapi import FastAPI
 from fastapi import Request
 from fastapi.exceptions import RequestValidationError
 from starlette.types import ASGIApp
+from starlette.types import StatelessLifespan
 
 from clean_python import BadRequest
 from clean_python import Conflict
@@ -44,22 +43,27 @@ from .security import set_verifier
 __all__ = ["Service"]
 
 
-def get_auth_kwargs(auth_client: Optional[OAuth2SPAClientSettings]) -> Dict[str, Any]:
+def get_auth_dependencies(auth_client: OAuth2SPAClientSettings | None) -> list[Depends]:
     if auth_client is None:
-        return {
-            "dependencies": [Depends(JWTBearerTokenSchema()), Depends(set_context)],
-        }
+        return [Depends(JWTBearerTokenSchema()), Depends(set_context)]
     else:
-        return {
-            "dependencies": [
-                Depends(OAuth2SPAClientSchema(client=auth_client)),
-                Depends(set_context),
-            ],
-            "swagger_ui_init_oauth": {
-                "clientId": auth_client.client_id,
-                "usePkceWithAuthorizationCodeGrant": True,
-            },
+        return [
+            Depends(OAuth2SPAClientSchema(client=auth_client)),
+            Depends(set_context),
+        ]
+
+
+def get_swagger_ui_init_oauth(
+    auth_client: OAuth2SPAClientSettings | None,
+) -> dict[str, Any] | None:
+    return (
+        None
+        if auth_client is None
+        else {
+            "clientId": auth_client.client_id,
+            "usePkceWithAuthorizationCodeGrant": True,
         }
+    )
 
 
 async def set_context(
@@ -77,28 +81,51 @@ async def health_check():
     return {"health": "OK"}
 
 
+async def _maybe_await(func: Callable[[], Any]) -> None:
+    if iscoroutinefunction(func):
+        await func()
+    else:
+        func()
+
+
+def to_lifespan(
+    on_startup: list[Callable[[], Any]],
+    on_shutdown: list[Callable[[], Any]],
+) -> StatelessLifespan[ASGIApp] | None:
+    @asynccontextmanager
+    async def lifespan(app: ASGIApp):
+        for func in on_startup:
+            await _maybe_await(func)
+        yield
+        for func in on_shutdown:
+            await _maybe_await(func)
+
+    return lifespan
+
+
 class Service:
-    resources: List[Resource]
+    resources: list[Resource]
 
     def __init__(self, *args: Resource):
         self.resources = clean_resources(args)
 
     @property
-    def versions(self) -> Set[APIVersion]:
-        return set([x.version for x in self.resources])
+    def versions(self) -> set[APIVersion]:
+        return {x.version for x in self.resources}
 
     def _create_root_app(
         self,
         title: str,
         description: str,
         hostname: str,
-        on_startup: Optional[List[Callable[[], Any]]] = None,
-        access_logger_gateway: Optional[Gateway] = None,
+        on_startup: list[Callable[[], Any]] | None = None,
+        on_shutdown: list[Callable[[], Any]] | None = None,
+        access_logger_gateway: Gateway | None = None,
     ) -> FastAPI:
         app = FastAPI(
             title=title,
             description=description,
-            on_startup=on_startup,
+            lifespan=to_lifespan(on_startup or [], on_shutdown or []),
             servers=[
                 {"url": f"{x.prefix}", "description": x.description}
                 for x in self.versions
@@ -112,7 +139,9 @@ class Service:
         app.get("/health", include_in_schema=False)(health_check)
         return app
 
-    def _create_versioned_app(self, version: APIVersion, **kwargs) -> FastAPI:
+    def _create_versioned_app(
+        self, version: APIVersion, auth_dependencies: list[Depends], **fastapi_kwargs
+    ) -> FastAPI:
         resources = [x for x in self.resources if x.version == version]
         app = FastAPI(
             version=version.prefix,
@@ -120,7 +149,7 @@ class Service:
                 [x.get_openapi_tag().model_dump() for x in resources],
                 key=lambda x: x["name"],
             ),
-            **kwargs,
+            **fastapi_kwargs,
         )
         for resource in resources:
             app.include_router(
@@ -130,6 +159,7 @@ class Service:
                         "400": {"model": ValidationErrorResponse},
                         "default": {"model": DefaultErrorResponse},
                     },
+                    auth_dependencies=auth_dependencies,
                 )
             )
         app.add_exception_handler(DoesNotExist, not_found_handler)
@@ -145,10 +175,11 @@ class Service:
         title: str,
         description: str,
         hostname: str,
-        auth: Optional[TokenVerifierSettings] = None,
-        auth_client: Optional[OAuth2SPAClientSettings] = None,
-        on_startup: Optional[List[Callable[[], Any]]] = None,
-        access_logger_gateway: Optional[Gateway] = None,
+        auth: TokenVerifierSettings | None = None,
+        auth_client: OAuth2SPAClientSettings | None = None,
+        on_startup: list[Callable[[], Any]] | None = None,
+        on_shutdown: list[Callable[[], Any]] | None = None,
+        access_logger_gateway: Gateway | None = None,
     ) -> ASGIApp:
         set_verifier(auth)
         app = self._create_root_app(
@@ -156,15 +187,21 @@ class Service:
             description=description,
             hostname=hostname,
             on_startup=on_startup,
+            on_shutdown=on_shutdown,
             access_logger_gateway=access_logger_gateway,
         )
-        kwargs = {
+        fastapi_kwargs = {
             "title": title,
             "description": description,
-            **get_auth_kwargs(auth_client),
+            "swagger_ui_init_oauth": get_swagger_ui_init_oauth(auth_client),
         }
         versioned_apps = {
-            v: self._create_versioned_app(v, **kwargs) for v in self.versions
+            v: self._create_versioned_app(
+                v,
+                auth_dependencies=get_auth_dependencies(auth_client),
+                **fastapi_kwargs,
+            )
+            for v in self.versions
         }
         for v, versioned_app in versioned_apps.items():
             app.mount("/" + v.prefix, versioned_app)

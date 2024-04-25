@@ -10,7 +10,7 @@ license = {text = "MIT"}
 classifiers = ["Programming Language :: Python"]
 keywords = []
 requires-python = ">=3.10"
-dependencies = ["pydantic==2.5.*", "inject==4.*", "asgiref==3.7.*", "blinker==1.7.*", "async-lru==2.0.*", "backoff==2.2.*"]
+dependencies = ["pydantic==2.6.*", "inject==4.*", "asgiref==3.7.*", "blinker==1.7.*", "async-lru==2.0.*", "backoff==2.2.*"]
 dynamic = ["version"]
 
 [project.optional-dependencies]
@@ -22,11 +22,11 @@ test = [
     "httpx",
     "uvicorn",
     "python-multipart",
-    "pytest-celery"
+    "pytest-celery<1"
 ]
 dramatiq = ["dramatiq==1.15.*"]
-fastapi = ["fastapi==0.109.*"]
-auth = ["pyjwt==2.6.*", "cryptography==42.0.*"]  # pyjwt[crypto]
+fastapi = ["fastapi==0.110.*"]
+auth = ["pyjwt==2.8.*", "cryptography==42.0.*"]  # pyjwt[crypto]
 amqp = ["pika==1.3.*"]
 celery = ["celery==5.3.*"]
 fluentbit = ["fluent-logger"]
@@ -36,6 +36,7 @@ s3 = ["aioboto3==12.2.*", "boto3==1.33.*"]
 api_client = ["aiohttp==3.9.*", "urllib3==2.0.*"]
 profiler = ["yappi"]
 debugger = ["debugpy"]
+nanoid = ["nanoid==2.0.0"]
 
 [project.urls]
 homepage = "https://github.com/nens/clean-python"

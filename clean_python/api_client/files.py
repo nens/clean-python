@@ -3,14 +3,10 @@ import hashlib
 import logging
 import os
 import re
+from collections.abc import Callable
 from http import HTTPStatus
 from pathlib import Path
 from typing import BinaryIO
-from typing import Callable
-from typing import Dict
-from typing import Optional
-from typing import Tuple
-from typing import Union
 from urllib.parse import urlparse
 
 import urllib3
@@ -57,11 +53,11 @@ def download_file(
     url: str,
     target: Path,
     chunk_size: int = 16777216,
-    timeout: Optional[Union[float, urllib3.Timeout]] = 5.0,
-    pool: Optional[urllib3.PoolManager] = None,
-    callback_func: Optional[Callable[[int, int], None]] = None,
-    headers_factory: Optional[Callable[[], Dict[str, str]]] = None,
-) -> Tuple[Path, int]:
+    timeout: float | urllib3.Timeout | None = 5.0,
+    pool: urllib3.PoolManager | None = None,
+    callback_func: Callable[[int, int], None] | None = None,
+    headers_factory: Callable[[], dict[str, str]] | None = None,
+) -> tuple[Path, int]:
     """Download a file to a specified path on disk.
 
     It is assumed that the file server supports multipart downloads (range
@@ -126,10 +122,10 @@ def download_fileobj(
     url: str,
     fileobj: BinaryIO,
     chunk_size: int = 16777216,
-    timeout: Optional[Union[float, urllib3.Timeout]] = 5.0,
-    pool: Optional[urllib3.PoolManager] = None,
-    callback_func: Optional[Callable[[int, int], None]] = None,
-    headers_factory: Optional[Callable[[], Dict[str, str]]] = None,
+    timeout: float | urllib3.Timeout | None = 5.0,
+    pool: urllib3.PoolManager | None = None,
+    callback_func: Callable[[int, int], None] | None = None,
+    headers_factory: Callable[[], dict[str, str]] | None = None,
 ) -> int:
     """Download a url to a file object using multiple requests.
 
@@ -178,7 +174,7 @@ def download_fileobj(
     while True:
         # download a chunk
         stop = start + chunk_size - 1
-        headers = {"Range": "bytes={}-{}".format(start, stop), **base_headers}
+        headers = {"Range": f"bytes={start}-{stop}", **base_headers}
 
         response = pool.request(
             "GET",
@@ -200,9 +196,9 @@ def download_fileobj(
         # parse content-range header (e.g. "bytes 0-3/7") for next iteration
         content_range = response.headers["Content-Range"]
 
-        start, stop, total = [
+        start, stop, total = (
             int(x) for x in CONTENT_RANGE_REGEXP.findall(content_range)[0]
-        ]
+        )
 
         if callable(callback_func):
             download_bytes: int = total if stop + 1 >= total else stop
@@ -219,11 +215,11 @@ def upload_file(
     url: str,
     file_path: Path,
     chunk_size: int = 16777216,
-    timeout: Optional[Union[float, urllib3.Timeout]] = None,
-    pool: Optional[urllib3.PoolManager] = None,
-    md5: Optional[bytes] = None,
-    callback_func: Optional[Callable[[int, int], None]] = None,
-    headers_factory: Optional[Callable[[], Dict[str, str]]] = None,
+    timeout: float | urllib3.Timeout | None = None,
+    pool: urllib3.PoolManager | None = None,
+    md5: bytes | None = None,
+    callback_func: Callable[[int, int], None] | None = None,
+    headers_factory: Callable[[], dict[str, str]] | None = None,
 ) -> int:
     """Upload a file at specified file path to a url.
 
@@ -281,7 +277,7 @@ def upload_file(
 def _iter_chunks(
     fileobj: BinaryIO,
     chunk_size: int,
-    callback_func: Optional[Callable[[int], None]] = None,
+    callback_func: Callable[[int], None] | None = None,
 ):
     """Yield chunks from a file stream"""
     uploaded_bytes: int = 0
@@ -303,7 +299,7 @@ class _SeekableChunkIterator:
         self,
         fileobj: BinaryIO,
         chunk_size: int,
-        callback_func: Optional[Callable[[int], None]] = None,
+        callback_func: Callable[[int], None] | None = None,
     ):
         self.fileobj = fileobj
         self.chunk_size = chunk_size
@@ -323,11 +319,11 @@ def upload_fileobj(
     url: str,
     fileobj: BinaryIO,
     chunk_size: int = 16777216,
-    timeout: Optional[Union[float, urllib3.Timeout]] = None,
-    pool: Optional[urllib3.PoolManager] = None,
-    md5: Optional[bytes] = None,
-    callback_func: Optional[Callable[[int, int], None]] = None,
-    headers_factory: Optional[Callable[[], Dict[str, str]]] = None,
+    timeout: float | urllib3.Timeout | None = None,
+    pool: urllib3.PoolManager | None = None,
+    md5: bytes | None = None,
+    callback_func: Callable[[int, int], None] | None = None,
+    headers_factory: Callable[[], dict[str, str]] | None = None,
 ) -> int:
     """Upload a file object to a url.
 
@@ -371,13 +367,13 @@ def upload_fileobj(
     # We will get hard to understand tracebacks if the fileobj is not
     # in binary mode. So use a trick to see if fileobj is in binary mode:
     if not isinstance(fileobj.read(0), bytes):
-        raise IOError(
+        raise OSError(
             "The file object is not in binary mode. Please open with mode='rb'."
         )
 
     file_size = fileobj.seek(0, 2)  # go to EOF
     if file_size == 0:
-        raise IOError("The file object is empty.")
+        raise OSError("The file object is empty.")
 
     if pool is None:
         pool = get_pool()

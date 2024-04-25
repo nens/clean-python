@@ -31,3 +31,18 @@ def test_bad_request_from_validation_error():
         err = BadRequest(e)
 
     assert str(err) == "validation error: 'title' Field required"
+
+
+def test_bad_request_from_validation_error_prefix_loc():
+    try:
+        Book()
+    except ValidationError as e:
+        err = BadRequest(e, loc=("foo", 2))
+
+    assert err.errors()[0]["loc"] == ("foo", 2, "title")
+
+
+def test_bad_request_from_msg_prefix_loc():
+    err = BadRequest("bla", loc=("foo", 2))
+
+    assert err.errors()[0]["loc"] == ("foo", 2)

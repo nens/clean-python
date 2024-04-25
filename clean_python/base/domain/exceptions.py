@@ -1,9 +1,6 @@
 # (c) Nelen & Schuurmans
 
 from typing import Any
-from typing import List
-from typing import Optional
-from typing import Union
 
 from pydantic import create_model
 from pydantic import ValidationError
@@ -24,7 +21,7 @@ __all__ = [
 
 
 class DoesNotExist(Exception):
-    def __init__(self, name: str, id: Optional[Id] = None):
+    def __init__(self, name: str, id: Id | None = None):
         super().__init__()
         self.name = name
         self.id = id
@@ -37,7 +34,7 @@ class DoesNotExist(Exception):
 
 
 class Conflict(Exception):
-    def __init__(self, msg: Optional[str] = None):
+    def __init__(self, msg: str | None = None):
         super().__init__(msg)
 
 
@@ -57,19 +54,34 @@ class PreconditionFailed(Exception):
 request_model = create_model("Request")
 
 
+def _prefix_error_details(
+    x: ErrorDetails, prefix: tuple[int | str, ...]
+) -> ErrorDetails:
+    if prefix:
+        x = x.copy()
+        x["loc"] = prefix + x["loc"]
+    return x
+
+
 class BadRequest(Exception):
-    def __init__(self, err_or_msg: Union[ValidationError, str]):
+    def __init__(
+        self, err_or_msg: ValidationError | str, loc: tuple[int | str, ...] = ()
+    ):
         self._internal_error = err_or_msg
+        self._loc = loc
         super().__init__(err_or_msg)
 
-    def errors(self) -> List[ErrorDetails]:
+    def errors(self) -> list[ErrorDetails]:
         if isinstance(self._internal_error, ValidationError):
-            return self._internal_error.errors()
+            return [
+                _prefix_error_details(x, self._loc)
+                for x in self._internal_error.errors()
+            ]
         return [
             ErrorDetails(
                 type="value_error",
                 msg=self._internal_error,
-                loc=[],  # type: ignore
+                loc=self._loc,
                 input=None,
             )
         ]

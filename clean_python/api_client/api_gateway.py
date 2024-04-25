@@ -1,6 +1,5 @@
 from datetime import datetime
 from http import HTTPStatus
-from typing import Optional
 
 import inject
 
@@ -22,7 +21,7 @@ class ApiGateway(Gateway):
     path: str
     mapper = Mapper()
 
-    def __init__(self, provider_override: Optional[ApiProvider] = None):
+    def __init__(self, provider_override: ApiProvider | None = None):
         self.provider_override = provider_override
 
     def __init_subclass__(cls, path: str) -> None:
@@ -35,7 +34,7 @@ class ApiGateway(Gateway):
     def provider(self) -> ApiProvider:
         return self.provider_override or inject.instance(ApiProvider)
 
-    async def get(self, id: Id) -> Optional[Json]:
+    async def get(self, id: Id) -> Json | None:
         try:
             result = await self.provider.request("GET", self.path.format(id=id))
             assert result is not None
@@ -62,7 +61,7 @@ class ApiGateway(Gateway):
             return True
 
     async def update(
-        self, item: Json, if_unmodified_since: Optional[datetime] = None
+        self, item: Json, if_unmodified_since: datetime | None = None
     ) -> Json:
         if if_unmodified_since is not None:
             raise NotImplementedError("if_unmodified_since not implemented")
@@ -89,7 +88,7 @@ class SyncApiGateway(SyncGateway):
     path: str
     mapper = Mapper()
 
-    def __init__(self, provider_override: Optional[SyncApiProvider] = None):
+    def __init__(self, provider_override: SyncApiProvider | None = None):
         self.provider_override = provider_override
 
     def __init_subclass__(cls, path: str) -> None:
@@ -102,7 +101,7 @@ class SyncApiGateway(SyncGateway):
     def provider(self) -> SyncApiProvider:
         return self.provider_override or inject.instance(SyncApiProvider)
 
-    def get(self, id: Id) -> Optional[Json]:
+    def get(self, id: Id) -> Json | None:
         try:
             result = self.provider.request("GET", self.path.format(id=id))
             assert result is not None
@@ -128,9 +127,7 @@ class SyncApiGateway(SyncGateway):
         else:
             return True
 
-    def update(
-        self, item: Json, if_unmodified_since: Optional[datetime] = None
-    ) -> Json:
+    def update(self, item: Json, if_unmodified_since: datetime | None = None) -> Json:
         if if_unmodified_since is not None:
             raise NotImplementedError("if_unmodified_since not implemented")
         item = self.mapper.to_external(item)

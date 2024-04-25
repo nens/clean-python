@@ -3,7 +3,6 @@
 import os
 import threading
 import time
-from typing import Optional
 from uuid import UUID
 from uuid import uuid4
 
@@ -52,7 +51,7 @@ class DramatiqTaskLogger:
     def __init__(
         self,
         hostname: str,
-        gateway_override: Optional[Gateway] = None,
+        gateway_override: Gateway | None = None,
     ):
         self.origin = f"{hostname}-{os.getpid()}"
         self.gateway_override = gateway_override

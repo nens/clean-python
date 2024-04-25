@@ -2,9 +2,8 @@
 
 import os
 import time
-from typing import Awaitable
-from typing import Callable
-from typing import Optional
+from collections.abc import Awaitable
+from collections.abc import Callable
 from uuid import UUID
 from uuid import uuid4
 
@@ -20,7 +19,7 @@ __all__ = ["FastAPIAccessLogger", "get_correlation_id"]
 CORRELATION_ID_HEADER = b"x-correlation-id"
 
 
-def get_view_name(request: Request) -> Optional[str]:
+def get_view_name(request: Request) -> str | None:
     try:
         view_name = request.scope["route"].name
     except KeyError:
@@ -33,7 +32,7 @@ def is_health_check(request: Request) -> bool:
     return get_view_name(request) == "health_check"
 
 
-def get_correlation_id(request: Request) -> Optional[UUID]:
+def get_correlation_id(request: Request) -> UUID | None:
     headers = dict(request.scope["headers"])
     try:
         return UUID(headers[CORRELATION_ID_HEADER].decode())

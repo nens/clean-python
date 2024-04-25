@@ -1,10 +1,7 @@
+from collections.abc import AsyncIterator
+from collections.abc import Iterator
+from collections.abc import Sequence
 from typing import Any
-from typing import AsyncIterator
-from typing import Dict
-from typing import Iterator
-from typing import List
-from typing import Optional
-from typing import Sequence
 
 from sqlalchemy import text
 from sqlalchemy.sql import Executable
@@ -16,8 +13,8 @@ __all__ = ["SQLProvider", "SQLDatabase", "SyncSQLProvider", "SyncSQLDatabase"]
 
 class SQLProvider:
     async def execute(
-        self, query: Executable, bind_params: Optional[Dict[str, Any]] = None
-    ) -> List[Json]:
+        self, query: Executable, bind_params: dict[str, Any] | None = None
+    ) -> list[Json]:
         raise NotImplementedError()
 
     async def transaction(self) -> AsyncIterator["SQLProvider"]:
@@ -49,8 +46,8 @@ class SQLDatabase(SQLProvider):
 
 class SyncSQLProvider:
     def execute(
-        self, query: Executable, bind_params: Optional[Dict[str, Any]] = None
-    ) -> List[Json]:
+        self, query: Executable, bind_params: dict[str, Any] | None = None
+    ) -> list[Json]:
         raise NotImplementedError()
 
     def transaction(self) -> Iterator["SyncSQLProvider"]:

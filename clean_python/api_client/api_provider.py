@@ -1,12 +1,10 @@
 import asyncio
 import re
+from collections.abc import Awaitable
+from collections.abc import Callable
 from http import HTTPStatus
 from io import BytesIO
 from typing import Any
-from typing import Awaitable
-from typing import Callable
-from typing import Dict
-from typing import Optional
 from urllib.parse import quote
 from urllib.parse import urlencode
 from urllib.parse import urljoin
@@ -58,7 +56,7 @@ def check_exception(status: HTTPStatus, body: Json) -> None:
 JSON_CONTENT_TYPE_REGEX = re.compile(r"^application\/[^+]*[+]?(json);?.*$")
 
 
-def is_json_content_type(content_type: Optional[str]) -> bool:
+def is_json_content_type(content_type: str | None) -> bool:
     if not content_type:
         return False
     return bool(JSON_CONTENT_TYPE_REGEX.match(content_type))
@@ -76,7 +74,7 @@ def join(url: str, path: str, trailing_slash: bool = False) -> str:
     return result
 
 
-def add_query_params(url: str, params: Optional[Json]) -> str:
+def add_query_params(url: str, params: Json | None) -> str:
     if params is None:
         return url
     return url + "?" + urlencode(params, doseq=True)
@@ -113,7 +111,7 @@ class ApiProvider:
     def __init__(
         self,
         url: AnyHttpUrl,
-        headers_factory: Optional[Callable[[], Awaitable[Dict[str, str]]]] = None,
+        headers_factory: Callable[[], Awaitable[dict[str, str]]] | None = None,
         retries: int = 3,
         backoff_factor: float = 1.0,
         trailing_slash: bool = False,
@@ -140,11 +138,11 @@ class ApiProvider:
         self,
         method: str,
         path: str,
-        params: Optional[Json],
-        json: Optional[Json],
-        fields: Optional[Json],
-        file: Optional[FileFormPost],
-        headers: Optional[Dict[str, str]],
+        params: Json | None,
+        json: Json | None,
+        fields: Json | None,
+        file: FileFormPost | None,
+        headers: dict[str, str] | None,
         timeout: float,
     ) -> ClientResponse:
         if file is not None:
@@ -188,13 +186,13 @@ class ApiProvider:
         self,
         method: str,
         path: str,
-        params: Optional[Json] = None,
-        json: Optional[Json] = None,
-        fields: Optional[Json] = None,
-        file: Optional[FileFormPost] = None,
-        headers: Optional[Dict[str, str]] = None,
+        params: Json | None = None,
+        json: Json | None = None,
+        fields: Json | None = None,
+        file: FileFormPost | None = None,
+        headers: dict[str, str] | None = None,
         timeout: float = 5.0,
-    ) -> Optional[Json]:
+    ) -> Json | None:
         response = await self._request_with_retry(
             method, path, params, json, fields, file, headers, timeout
         )
@@ -214,11 +212,11 @@ class ApiProvider:
         self,
         method: str,
         path: str,
-        params: Optional[Json] = None,
-        json: Optional[Json] = None,
-        fields: Optional[Json] = None,
-        file: Optional[FileFormPost] = None,
-        headers: Optional[Dict[str, str]] = None,
+        params: Json | None = None,
+        json: Json | None = None,
+        fields: Json | None = None,
+        file: FileFormPost | None = None,
+        headers: dict[str, str] | None = None,
         timeout: float = 5.0,
     ) -> Response:
         response = await self._request_with_retry(

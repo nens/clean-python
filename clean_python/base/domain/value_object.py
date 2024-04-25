@@ -1,7 +1,5 @@
 # (c) Nelen & Schuurmans
 
-from typing import Optional
-from typing import Type
 from typing import TypeVar
 
 from pydantic import BaseModel
@@ -27,7 +25,7 @@ class ValueObject(BaseModel):
             raise BadRequest(e)
 
     @classmethod
-    def create(cls: Type[T], **values) -> T:
+    def create(cls: type[T], **values) -> T:
         try:
             return cls(**values)
         except ValidationError as e:
@@ -47,7 +45,7 @@ K = TypeVar("K", bound="ValueObjectWithId")
 
 
 class ValueObjectWithId(ValueObject):
-    id: Optional[Id] = None
+    id: Id | None = None
 
     def update(self: K, **values) -> K:
         if "id" in values and self.id is not None and values["id"] != self.id:

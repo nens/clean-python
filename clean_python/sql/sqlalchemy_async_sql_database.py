@@ -1,10 +1,7 @@
 import re
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Any
-from typing import AsyncIterator
-from typing import Dict
-from typing import List
-from typing import Optional
 
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncConnection
@@ -60,8 +57,8 @@ class SQLAlchemyAsyncSQLDatabase(SQLDatabase):
         self.engine.sync_engine.dispose()
 
     async def execute(
-        self, query: Executable, bind_params: Optional[Dict[str, Any]] = None
-    ) -> List[Json]:
+        self, query: Executable, bind_params: dict[str, Any] | None = None
+    ) -> list[Json]:
         async with self.transaction() as transaction:
             return await transaction.execute(query, bind_params)
 
@@ -89,8 +86,8 @@ class SQLAlchemyAsyncSQLTransaction(SQLProvider):
         self.connection = connection
 
     async def execute(
-        self, query: Executable, bind_params: Optional[Dict[str, Any]] = None
-    ) -> List[Json]:
+        self, query: Executable, bind_params: dict[str, Any] | None = None
+    ) -> list[Json]:
         try:
             result = await self.connection.execute(query, bind_params)
         except DBAPIError as e:

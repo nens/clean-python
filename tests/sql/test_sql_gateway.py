@@ -67,7 +67,7 @@ def related_sql_gateway():
 @pytest.mark.parametrize(
     "filters,sql",
     [
-        ([], ""),
+        ([], " WHERE true"),
         ([Filter(field="value", values=[])], " WHERE false"),
         ([Filter(field="value", values=["foo"])], " WHERE writer.value = 'foo'"),
         (
@@ -113,7 +113,7 @@ async def test_filter_with_pagination(sql_gateway, page_options, sql):
     assert len(sql_gateway.provider.queries) == 1
     assert_query_equal(
         sql_gateway.provider.queries[0][0],
-        f"SELECT {ALL_FIELDS} FROM writer{sql}",
+        f"SELECT {ALL_FIELDS} FROM writer WHERE true{sql}",
     )
 
 
@@ -137,7 +137,7 @@ async def test_filter_with_pagination_and_filter(sql_gateway):
 @pytest.mark.parametrize(
     "filters,sql",
     [
-        ([], ""),
+        ([], " WHERE true"),
         ([Filter(field="value", values=[])], " WHERE false"),
         ([Filter(field="value", values=["foo"])], " WHERE writer.value = 'foo'"),
         (
@@ -434,7 +434,7 @@ async def test_update_transactional(sql_gateway):
 @pytest.mark.parametrize(
     "filters,sql",
     [
-        ([], ""),
+        ([], " WHERE true"),
         ([Filter(field="value", values=[])], " WHERE false"),
         ([Filter(field="value", values=["foo"])], " WHERE writer.value = 'foo'"),
         (

@@ -1,10 +1,8 @@
 # (c) Nelen & Schuurmans
 
+from collections.abc import Callable
 from copy import deepcopy
 from datetime import datetime
-from typing import Callable
-from typing import List
-from typing import Optional
 
 from clean_python.base.domain import AlreadyExists
 from clean_python.base.domain import Conflict
@@ -22,7 +20,7 @@ __all__ = ["InMemoryGateway", "InMemorySyncGateway"]
 class InMemoryGateway(Gateway):
     """For testing purposes"""
 
-    def __init__(self, data: List[Json]):
+    def __init__(self, data: list[Json]):
         self.data = {x["id"]: deepcopy(x) for x in data}
 
     def _get_next_id(self) -> int:
@@ -31,7 +29,7 @@ class InMemoryGateway(Gateway):
         else:
             return max(self.data) + 1
 
-    def _paginate(self, objs: List[Json], params: PageOptions) -> List[Json]:
+    def _paginate(self, objs: list[Json], params: PageOptions) -> list[Json]:
         objs = sorted(
             objs,
             key=lambda x: (x.get(params.order_by) is None, x.get(params.order_by)),
@@ -40,8 +38,8 @@ class InMemoryGateway(Gateway):
         return objs[params.offset : params.offset + params.limit]
 
     async def filter(
-        self, filters: List[Filter], params: Optional[PageOptions] = None
-    ) -> List[Json]:
+        self, filters: list[Filter], params: PageOptions | None = None
+    ) -> list[Json]:
         result = []
         for x in self.data.values():
             for filter in filters:
@@ -66,7 +64,7 @@ class InMemoryGateway(Gateway):
         return deepcopy(self.data[id_])
 
     async def update(
-        self, item: Json, if_unmodified_since: Optional[datetime] = None
+        self, item: Json, if_unmodified_since: datetime | None = None
     ) -> Json:
         _id = item.get("id")
         if _id is None or _id not in self.data:
@@ -98,7 +96,7 @@ class InMemoryGateway(Gateway):
 class InMemorySyncGateway(SyncGateway):
     """For testing purposes"""
 
-    def __init__(self, data: List[Json]):
+    def __init__(self, data: list[Json]):
         self.data = {x["id"]: deepcopy(x) for x in data}
 
     def _get_next_id(self) -> int:
@@ -107,7 +105,7 @@ class InMemorySyncGateway(SyncGateway):
         else:
             return max(self.data) + 1
 
-    def _paginate(self, objs: List[Json], params: PageOptions) -> List[Json]:
+    def _paginate(self, objs: list[Json], params: PageOptions) -> list[Json]:
         objs = sorted(
             objs,
             key=lambda x: (x.get(params.order_by) is None, x.get(params.order_by)),
@@ -116,8 +114,8 @@ class InMemorySyncGateway(SyncGateway):
         return objs[params.offset : params.offset + params.limit]
 
     def filter(
-        self, filters: List[Filter], params: Optional[PageOptions] = None
-    ) -> List[Json]:
+        self, filters: list[Filter], params: PageOptions | None = None
+    ) -> list[Json]:
         result = []
         for x in self.data.values():
             for filter in filters:
@@ -141,9 +139,7 @@ class InMemorySyncGateway(SyncGateway):
         self.data[id_] = {"id": id_, **item}
         return deepcopy(self.data[id_])
 
-    def update(
-        self, item: Json, if_unmodified_since: Optional[datetime] = None
-    ) -> Json:
+    def update(self, item: Json, if_unmodified_since: datetime | None = None) -> Json:
         _id = item.get("id")
         if _id is None or _id not in self.data:
             raise DoesNotExist("item", _id)

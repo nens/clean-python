@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 # (c) Nelen & Schuurmans
 
 import logging
-from typing import Optional
 from typing import TYPE_CHECKING
 
 import aioboto3
@@ -23,7 +21,7 @@ class S3BucketOptions(ValueObject):
     access_key: str
     secret_key: str
     bucket: str
-    region: Optional[str] = None
+    region: str | None = None
 
 
 class S3BucketProvider:

@@ -1,5 +1,4 @@
 import re
-from typing import Tuple
 
 from pydantic import field_validator
 
@@ -56,7 +55,7 @@ class KeyMapper(DomainService):
     def to_key_prefix(self, *args: Id) -> str:
         return self.to_key(*(args + ("",)))
 
-    def from_key(self, key: str) -> Tuple[Id, ...]:
+    def from_key(self, key: str) -> tuple[Id, ...]:
         match = re.fullmatch(self.regex, key)
         if match is None:
             raise ValueError("key does not match expected pattern")

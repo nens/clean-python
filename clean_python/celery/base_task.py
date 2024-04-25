@@ -1,6 +1,4 @@
 from contextvars import copy_context
-from typing import Optional
-from typing import Tuple
 from uuid import UUID
 from uuid import uuid4
 
@@ -18,11 +16,11 @@ HEADER_FIELD = "clean_python_context"
 
 
 class TaskHeaders(ValueObject):
-    tenant: Optional[Tenant]
-    correlation_id: Optional[UUID]
+    tenant: Tenant | None
+    correlation_id: UUID | None
 
     @classmethod
-    def from_kwargs(cls, kwargs: Json) -> Tuple["TaskHeaders", Json]:
+    def from_kwargs(cls, kwargs: Json) -> tuple["TaskHeaders", Json]:
         if HEADER_FIELD in kwargs:
             kwargs = kwargs.copy()
             headers = kwargs.pop(HEADER_FIELD)

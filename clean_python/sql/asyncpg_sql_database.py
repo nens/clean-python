@@ -1,12 +1,8 @@
 import json
 import re
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Any
-from typing import AsyncIterator
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Tuple
 
 import asyncpg
 from async_lru import alru_cache
@@ -40,8 +36,8 @@ def convert_unique_violation_error(
 
 
 def compile(
-    query: Executable, bind_params: Optional[Dict[str, Any]] = None
-) -> Tuple[Any, ...]:
+    query: Executable, bind_params: dict[str, Any] | None = None
+) -> tuple[Any, ...]:
     # Rendering SQLAlchemy expressions to SQL, see:
     # - https://docs.sqlalchemy.org/en/20/faq/sqlexpressions.html
     # Note that this circumvents the SQLAlchemy caching system and almost certainly
@@ -91,8 +87,8 @@ class AsyncpgSQLDatabase(SQLDatabase):
         await pool.close()
 
     async def execute(
-        self, query: Executable, bind_params: Optional[Dict[str, Any]] = None
-    ) -> List[Json]:
+        self, query: Executable, bind_params: dict[str, Any] | None = None
+    ) -> list[Json]:
         # compile before acquiring the connection
         args = compile(query, bind_params)
         pool = await self.get_pool()
@@ -136,8 +132,8 @@ class AsyncpgSQLTransaction(SQLProvider):
         self.connection = connection
 
     async def execute(
-        self, query: Executable, bind_params: Optional[Dict[str, Any]] = None
-    ) -> List[Json]:
+        self, query: Executable, bind_params: dict[str, Any] | None = None
+    ) -> list[Json]:
         try:
             result = await self.connection.fetch(*compile(query, bind_params))
         except asyncpg.exceptions.UniqueViolationError as e:
