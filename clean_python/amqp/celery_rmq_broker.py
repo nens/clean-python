@@ -3,6 +3,7 @@
 import json
 import ssl
 import uuid
+from typing import Optional
 
 import pika
 from asgiref.sync import sync_to_async
@@ -20,11 +21,11 @@ class CeleryHeaders(ValueObject):
     task: str
     id: uuid.UUID
     root_id: uuid.UUID
-    parent_id: uuid.UUID | None = None
-    group: uuid.UUID | None = None
-    argsrepr: str | None = None
-    kwargsrepr: str | None = None
-    origin: str | None = None
+    parent_id: Optional[uuid.UUID] = None
+    group: Optional[uuid.UUID] = None
+    argsrepr: Optional[str] = None
+    kwargsrepr: Optional[str] = None
+    origin: Optional[str] = None
 
     def json_dict(self):
         return json.loads(self.model_dump_json())
@@ -44,14 +45,12 @@ class CeleryRmqBroker(Gateway):
         # Allow self-signed certificates if broker_url startswith 'ampqs'
         # and no ssl_options are present.
         if (
-            str(broker_url).lower().startswith("ampqs")
-            and getattr(self._parameters, "ssl_options", None) is None
+            str(broker_url).lower().startswith("amqps")
             and allow_self_signed_certificates
         ):
-            cxt = ssl.SSLContext(protocol=ssl.PROTOCOL_TLS_CLIENT)
-            cxt.check_hostname = False
-            cxt.verify_mode = ssl.CERT_NONE
-            self._parameters.ssl_options = pika.SSLOptions(context=cxt)
+            context: ssl.SSLContext = self._parameters.ssl_options.context
+            context.check_hostname = False
+            context.verify_mode = ssl.CERT_NONE
 
         self._queue = queue
         self._origin = origin
