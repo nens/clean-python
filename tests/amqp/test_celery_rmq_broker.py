@@ -1,3 +1,4 @@
+import ssl
 from unittest import mock
 
 import pytest
@@ -32,3 +33,16 @@ async def test_celery_rmq_broker(connection, celery_rmq_broker):
     assert call_kwargs["properties"].headers["origin"] == "host"
     assert call_kwargs["properties"].headers["argsrepr"] == '["foo", 15]'
     assert call_kwargs["properties"].headers["kwargsrepr"] == "{}"
+
+
+def test_celery_broker_self_signed_certificates():
+    broker = CeleryRmqBroker(
+        "amqps://rmq:1234//",
+        "some_queue",
+        "host",
+        False,
+        allow_self_signed_certificates=True,
+    )
+
+    assert broker._parameters.ssl_options.context.check_hostname is False
+    assert broker._parameters.ssl_options.context.verify_mode is ssl.CERT_NONE

@@ -3,7 +3,7 @@
 ## 0.13.1 (unreleased)
 ----------------------
 
-- Nothing changed yet.
+- Allow self-signed certificates in CeleryRmqBroker.
 
 
 ## 0.13.0 (2024-04-24)
