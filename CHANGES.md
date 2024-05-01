@@ -1,6 +1,6 @@
 # Changelog of clean-python
 
-## 0.13.1 (unreleased)
+## 0.13.1 (2024-05-01)
 ----------------------
 
 - Allow self-signed certificates in CeleryRmqBroker.
