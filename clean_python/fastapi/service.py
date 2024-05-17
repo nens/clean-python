@@ -19,7 +19,7 @@ from clean_python import DoesNotExist
 from clean_python import Gateway
 from clean_python import PermissionDenied
 from clean_python import Unauthorized
-from clean_python.oauth2 import OAuth2SPAClientSettings
+from clean_python.oauth2 import OAuth2Settings
 from clean_python.oauth2 import Token
 from clean_python.oauth2 import TokenVerifierSettings
 
@@ -38,34 +38,34 @@ from .resource import Resource
 from .schema import add_cached_openapi_yaml
 from .security import get_token
 from .security import JWTBearerTokenSchema
-from .security import OAuth2SPAClientSchema
+from .security import OAuth2Schema
 from .security import set_verifier
 
 __all__ = ["Service"]
 
 
 def get_auth_dependencies(
-    auth: TokenVerifierSettings | None, auth_client: OAuth2SPAClientSettings | None
+    auth: TokenVerifierSettings | None, oauth2: OAuth2Settings | None
 ) -> list[Depends]:
     if auth is None:
         return []
-    if auth_client is None:
+    if oauth2 is None:
         return [Depends(JWTBearerTokenSchema()), Depends(set_token_context)]
     else:
         return [
-            Depends(OAuth2SPAClientSchema(client=auth_client)),
+            Depends(OAuth2Schema(settings=oauth2)),
             Depends(set_token_context),
         ]
 
 
 def get_swagger_ui_init_oauth(
-    auth_client: OAuth2SPAClientSettings | None,
+    oauth2: OAuth2Settings | None,
 ) -> dict[str, Any] | None:
     return (
         None
-        if auth_client is None
+        if oauth2 is None or oauth2.client_id is None
         else {
-            "clientId": auth_client.client_id,
+            "clientId": oauth2.client_id,
             "usePkceWithAuthorizationCodeGrant": True,
         }
     )
@@ -182,7 +182,7 @@ class Service:
         description: str,
         hostname: str,
         auth: TokenVerifierSettings | None = None,
-        auth_client: OAuth2SPAClientSettings | None = None,
+        oauth2: OAuth2Settings | None = None,
         on_startup: list[Callable[[], Any]] | None = None,
         on_shutdown: list[Callable[[], Any]] | None = None,
         access_logger_gateway: Gateway | None = None,
@@ -200,12 +200,12 @@ class Service:
             "title": title,
             "description": description,
             "dependencies": [Depends(set_request_context)],
-            "swagger_ui_init_oauth": get_swagger_ui_init_oauth(auth_client),
+            "swagger_ui_init_oauth": get_swagger_ui_init_oauth(oauth2),
         }
         versioned_apps = {
             v: self._create_versioned_app(
                 v,
-                auth_dependencies=get_auth_dependencies(auth, auth_client),
+                auth_dependencies=get_auth_dependencies(auth, oauth2),
                 **fastapi_kwargs,
             )
             for v in self.versions

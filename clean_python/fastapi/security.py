@@ -6,7 +6,7 @@ from fastapi.security import OAuth2AuthorizationCodeBearer
 from clean_python import PermissionDenied
 from clean_python.oauth2 import BaseTokenVerifier
 from clean_python.oauth2 import NoAuthTokenVerifier
-from clean_python.oauth2 import OAuth2SPAClientSettings
+from clean_python.oauth2 import OAuth2Settings
 from clean_python.oauth2 import Token
 from clean_python.oauth2 import TokenVerifier
 from clean_python.oauth2 import TokenVerifierSettings
@@ -49,18 +49,19 @@ class RequiresScope:
             raise PermissionDenied(f"this operation requires '{self.scope}' scope")
 
 
-class OAuth2SPAClientSchema(OAuth2AuthorizationCodeBearer):
+class OAuth2Schema(OAuth2AuthorizationCodeBearer):
     """A fastapi 'dependable' configuring the openapi schema for the
     OAuth2 Authorization Code Flow with PKCE extension.
 
     This includes the JWT Bearer token configuration.
     """
 
-    def __init__(self, client: OAuth2SPAClientSettings):
+    def __init__(self, settings: OAuth2Settings):
         super().__init__(
             scheme_name="OAuth2Bearer",
-            authorizationUrl=str(client.authorization_url),
-            tokenUrl=str(client.token_url),
+            authorizationUrl=str(settings.authorization_url),
+            tokenUrl=str(settings.token_url),
+            scopes=settings.scopes,
         )
 
     async def __call__(self) -> None:

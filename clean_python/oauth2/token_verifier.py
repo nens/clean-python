@@ -21,7 +21,7 @@ __all__ = [
     "TokenVerifier",
     "NoAuthTokenVerifier",
     "TokenVerifierSettings",
-    "OAuth2SPAClientSettings",
+    "OAuth2Settings",
 ]
 
 logger = logging.getLogger(__name__)
@@ -36,10 +36,12 @@ class TokenVerifierSettings(BaseModel):
     jwks_timeout: float = 1.0
 
 
-class OAuth2SPAClientSettings(BaseModel):
-    client_id: str
+class OAuth2Settings(BaseModel):
+    # this is primarily meant for documenting how OAuth2 works (in the schema)
     token_url: AnyHttpUrl
     authorization_url: AnyHttpUrl
+    scopes: dict[str, str] = {}  # explanation of all possible scopes
+    client_id: str | None = None  # when given, Swagger login function is enabled
 
 
 class BaseTokenVerifier:
