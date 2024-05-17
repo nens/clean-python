@@ -132,3 +132,13 @@ def test_public_ok(app, client: TestClient, jwk_patched):
     response = client.get(app.url_path_for("v1/public"))
     assert response.status_code == HTTPStatus.OK
     assert not jwk_patched.called
+
+
+def test_auth_schema(client: TestClient):
+    response = client.get("v1/openapi.json")
+
+    assert response.status_code == HTTPStatus.OK
+    schema = response.json()
+
+    assert schema["components"]["securitySchemes"] == {}
+    assert schema["paths"]["/foo"]["get"]["security"] == {}
