@@ -47,8 +47,6 @@ def test_default_context(app, client: TestClient):
     body = response.json()
 
     assert body["path"] == "http://testserver/v1/context"
-    assert body["user"] == {"id": "DEV", "name": "dev"}
-    assert body["tenant"] is None
     UUID(body["correlation_id"])  # randomly generated uuid
 
     assert ctx.correlation_id is None

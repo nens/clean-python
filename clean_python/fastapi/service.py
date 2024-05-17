@@ -44,13 +44,17 @@ from .security import set_verifier
 __all__ = ["Service"]
 
 
-def get_auth_dependencies(auth_client: OAuth2SPAClientSettings | None) -> list[Depends]:
+def get_auth_dependencies(
+    auth: TokenVerifierSettings | None, auth_client: OAuth2SPAClientSettings | None
+) -> list[Depends]:
+    if auth is None:
+        return []
     if auth_client is None:
-        return [Depends(JWTBearerTokenSchema()), Depends(set_context)]
+        return [Depends(JWTBearerTokenSchema()), Depends(set_token_context)]
     else:
         return [
             Depends(OAuth2SPAClientSchema(client=auth_client)),
-            Depends(set_context),
+            Depends(set_token_context),
         ]
 
 
@@ -67,14 +71,14 @@ def get_swagger_ui_init_oauth(
     )
 
 
-async def set_context(
-    request: Request,
-    token: Token = Depends(get_token),
-) -> None:
+async def set_request_context(request: Request) -> None:
     ctx.path = request.url
+    ctx.correlation_id = get_correlation_id(request)
+
+
+async def set_token_context(token: Token = Depends(get_token)) -> None:
     ctx.user = token.user
     ctx.tenant = token.tenant
-    ctx.correlation_id = get_correlation_id(request)
 
 
 async def health_check():
@@ -195,12 +199,13 @@ class Service:
         fastapi_kwargs = {
             "title": title,
             "description": description,
+            "dependencies": [Depends(set_request_context)],
             "swagger_ui_init_oauth": get_swagger_ui_init_oauth(auth_client),
         }
         versioned_apps = {
             v: self._create_versioned_app(
                 v,
-                auth_dependencies=get_auth_dependencies(auth_client),
+                auth_dependencies=get_auth_dependencies(auth, auth_client),
                 **fastapi_kwargs,
             )
             for v in self.versions

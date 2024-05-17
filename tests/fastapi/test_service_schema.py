@@ -59,11 +59,6 @@ def expected_schema() -> Json:
                             "description": "Default Response",
                         },
                     },
-                    # "security": [
-                    #     {"OAuth2Bearer": []},
-                    #     {"OAuth2Bearer": []},
-                    #     {"OAuth2Bearer": []},
-                    # ],
                     "summary": "foo endpoint, for testing",
                     "tags": ["testing"],
                 }
@@ -114,14 +109,7 @@ def expected_schema() -> Json:
                     "title": "ValidationErrorResponse",
                     "type": "object",
                 },
-            },
-            "securitySchemes": {
-                "OAuth2Bearer": {
-                    "bearerFormat": "JWT",
-                    "scheme": "bearer",
-                    "type": "http",
-                }
-            },
+            }
         },
     }
 
@@ -148,9 +136,6 @@ def test_schema(client: TestClient, expected_schema: Json):
 
     actual = response.json()
 
-    for path in actual["paths"].values():
-        for operation in path.values():
-            del operation["security"]
     del actual["servers"]
 
     assert actual == expected_schema
@@ -163,9 +148,5 @@ def test_schema_yaml(client: TestClient, expected_schema: Json):
     assert response.headers["content-type"] == "text/yaml; charset=utf-8"
 
     actual = yaml.safe_load(response.content.decode("utf-8"))
-
-    for path in actual["paths"].values():
-        for operation in path.values():
-            del operation["security"]
 
     assert actual == expected_schema
