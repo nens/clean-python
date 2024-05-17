@@ -33,3 +33,4 @@ repos:
       exclude: 'tests*|benchmarks*'
       additional_dependencies:
         - 'pydantic==2.6.*'
+        - 'types-pyyaml'
