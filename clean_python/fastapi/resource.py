@@ -180,6 +180,9 @@ class Resource:
             # 'scope' is implemented using FastAPI's dependency injection system
             route_options.setdefault("dependencies", [])
             if not public:
+                assert (
+                    len(auth_dependencies) > 0
+                ), "when not using auth, explicitly specify public=True on each endpoint"
                 route_options["dependencies"].extend(auth_dependencies)
             if scope is not None:
                 assert not public

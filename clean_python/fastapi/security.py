@@ -58,7 +58,7 @@ class OAuth2Schema(OAuth2AuthorizationCodeBearer):
 
     def __init__(self, settings: OAuth2Settings):
         super().__init__(
-            scheme_name="OAuth2Bearer",
+            scheme_name="OAuth2",
             authorizationUrl=str(settings.authorization_url),
             tokenUrl=str(settings.token_url),
             scopes=settings.scopes,
@@ -75,7 +75,7 @@ class JWTBearerTokenSchema(HTTPBearer):
     """
 
     def __init__(self):
-        super().__init__(scheme_name="OAuth2Bearer", bearerFormat="JWT")
+        super().__init__(scheme_name="Bearer", bearerFormat="JWT")
 
     async def __call__(self) -> None:
         pass

@@ -133,11 +133,31 @@ def test_public_ok(app, client: TestClient, jwk_patched):
     assert not jwk_patched.called
 
 
-def test_auth_schema(app, client: TestClient):
+def test_auth_security_schemes(app, client: TestClient):
     response = client.get("v1/openapi.json")
 
     assert response.status_code == HTTPStatus.OK
     schema = response.json()
 
-    assert schema["components"]["securitySchemes"] == {}
-    assert schema["paths"]["/foo"]["get"]["security"] == {}
+    schemes = schema["components"]["securitySchemes"]
+
+    assert len(schemes) == 1
+
+    # don't know how to get the version of the parametrized fixture here
+    if list(schemes)[0] == "Bearer":
+        assert schemes["Bearer"] == {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT",
+        }
+    elif list(schemes[0]) == "OAuth2":
+        assert schemes["OAuth2"] == {
+            "type": "oauth2",
+            "flows": {
+                "authorizationCode": {
+                    "authorizationUrl": "https://server/token",
+                    "scopes": {},
+                    "tokenUrl": "https://server/token",
+                }
+            },
+        }
