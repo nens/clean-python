@@ -35,6 +35,7 @@ from .fastapi_access_logger import get_correlation_id
 from .resource import APIVersion
 from .resource import clean_resources
 from .resource import Resource
+from .schema import add_cached_openapi_yaml
 from .security import get_token
 from .security import JWTBearerTokenSchema
 from .security import OAuth2SPAClientSchema
@@ -168,6 +169,7 @@ class Service:
         app.add_exception_handler(BadRequest, validation_error_handler)
         app.add_exception_handler(PermissionDenied, permission_denied_handler)
         app.add_exception_handler(Unauthorized, unauthorized_handler)
+        add_cached_openapi_yaml(app)
         return app
 
     def create_app(
