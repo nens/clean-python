@@ -3,7 +3,15 @@
 ## 0.13.2 (unreleased)
 ----------------------
 
-- Nothing changed yet.
+- Added YAML version of the openapi spec under my.domain/v1/openapi.yaml.
+
+- Fixed a 'mutable default' issue in setting dependencies on API Routes. One result of this issue
+  was that securitySchemas were included multiple times in the openapi spec.
+
+- Don't set the user and tenant in a service without auth or in a public endpoint.
+
+- Drop the clean_python.oauth2.OAuth2SPAClientSettings in favor of OAuth2Settings with an
+  optional client_id.
 
 
 ## 0.13.1 (2024-05-01)
