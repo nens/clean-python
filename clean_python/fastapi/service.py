@@ -38,7 +38,6 @@ from .resource import clean_resources
 from .resource import Resource
 from .schema import add_cached_openapi_yaml
 from .security import default_scope_verifier
-from .security import get_token
 from .security import set_auth_scheme
 
 __all__ = ["Service"]
@@ -60,11 +59,6 @@ def get_swagger_ui_init_oauth(
 async def set_request_context(request: Request) -> None:
     ctx.path = request.url
     ctx.correlation_id = get_correlation_id(request)
-
-
-async def set_token_context(token: Token = Depends(get_token)) -> None:
-    ctx.user = token.user
-    ctx.tenant = token.tenant
 
 
 async def health_check():

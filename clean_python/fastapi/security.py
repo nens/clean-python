@@ -57,10 +57,12 @@ def _set_token_context(token: Token) -> None:
 
 
 class OAuth2Schema(OAuth2AuthorizationCodeBearer):
-    """A fastapi 'dependable' configuring the openapi schema for the
-    OAuth2 Authorization Code Flow with PKCE extension.
+    """A fastapi 'dependable' to verify bearer tokens obtained through OAuth2.
 
-    This includes the JWT Bearer token configuration.
+    This verification includes authentication and scope verification.
+
+    Because this class derives from a FastAPI built in, the openapi schema for the
+    OAuth2 Authorization Code Flow is automatically configured.
     """
 
     def __init__(
@@ -81,6 +83,13 @@ class OAuth2Schema(OAuth2AuthorizationCodeBearer):
     async def __call__(
         self, request: Request, security_scopes: SecurityScopes
     ) -> Token:
+        """FastAPI magically fills these parameters:
+
+        - 'request' with the current request
+        - 'security_scopes' with the union of all Security(..., scopes) in use for
+          the current operation. Note that this also automatically configures the
+          "security requirements" in the openapi spec for this operation.
+        """
         token = self._verifier(request.headers.get("Authorization"))
         self._scope_verifier(token, security_scopes.scopes)
         _set_token_context(token)
@@ -88,7 +97,7 @@ class OAuth2Schema(OAuth2AuthorizationCodeBearer):
 
 
 class JWTBearerTokenSchema(HTTPBearer):
-    """A fastapi 'dependable' configuring the openapi schema for JWT Bearer tokens."""
+    """See OAuth2Schema. The only difference here is the different openapi schema used."""
 
     def __init__(
         self,
