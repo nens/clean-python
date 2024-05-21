@@ -150,7 +150,7 @@ def test_auth_security_schemes(app, client: TestClient):
             "scheme": "bearer",
             "bearerFormat": "JWT",
         }
-    elif list(schemes[0]) == "OAuth2":
+    elif list(schemes)[0] == "OAuth2":
         assert schemes["OAuth2"] == {
             "type": "oauth2",
             "flows": {

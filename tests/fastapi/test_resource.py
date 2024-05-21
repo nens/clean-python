@@ -140,6 +140,7 @@ def test_get_less_stable_no_subclass():
 
 
 TestDepends = Depends(lambda: True)
+TestDepends2 = Depends(lambda: False)
 
 
 def test_get_router_auth_dependencies():
@@ -153,6 +154,19 @@ def test_get_router_auth_dependencies():
     router = resource.get_router(v(1), auth_dependencies=[TestDepends], responses={})
 
     assert router.routes[0].dependencies == [TestDepends]
+
+
+def test_get_router_auth_dependencies_extend():
+    class TestResource(Resource, version=v(1), name="testing"):
+        @get("/foo/{id}", dependencies=[TestDepends2])
+        def get_test(self, id: int):
+            return "ok"
+
+    resource = TestResource()
+
+    router = resource.get_router(v(1), auth_dependencies=[TestDepends], responses={})
+
+    assert router.routes[0].dependencies == [TestDepends2, TestDepends]
 
 
 def test_get_router_with_scope():

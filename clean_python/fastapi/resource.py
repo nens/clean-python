@@ -177,13 +177,15 @@ class Resource:
             # The 'name' is used for reverse lookups (request.path_for): include the
             # version prefix so that we can uniquely refer to an operation.
             name = version.prefix + "/" + endpoint.__name__
-            # 'scope' is implemented using FastAPI's dependency injection system
-            route_options.setdefault("dependencies", [])
+
+            # Copy both 'route_options' and 'dependencies' to allow inplace changes
+            route_options = route_options.copy()
+            dependencies = route_options.pop("dependencies", []).copy()
             if not public:
-                route_options["dependencies"].extend(auth_dependencies)
+                dependencies.extend(auth_dependencies)
             if scope is not None:
                 assert not public
-                route_options["dependencies"].append(Depends(RequiresScope(scope)))
+                dependencies.append(Depends(RequiresScope(scope)))
 
             # Update responses with route_options responses or use latter if not set
             if "responses" in route_options:
@@ -196,6 +198,7 @@ class Resource:
                 operation_id=endpoint.__name__,
                 name=name,
                 responses=responses,
+                dependencies=dependencies,
                 **route_options,
             )
         return router
