@@ -162,3 +162,17 @@ def test_auth_security_schemes(app, client: TestClient):
                 }
             },
         }
+
+
+def test_auth_security_scopes(client: TestClient):
+    response = client.get("v1/openapi.json")
+
+    assert response.status_code == HTTPStatus.OK
+    schema = response.json()
+
+    security = schema["paths"]["/bar"]["get"]["security"]
+
+    if "Bearer" in security:
+        assert security["Bearer"] == []
+    elif "OAuth2" in security:
+        assert security["OAuth"] == ["admin"]

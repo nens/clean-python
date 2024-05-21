@@ -1,52 +1,59 @@
-from fastapi import Depends
+from typing import Callable
+
 from fastapi import Request
 from fastapi.security import HTTPBearer
 from fastapi.security import OAuth2AuthorizationCodeBearer
+from fastapi.security import SecurityScopes
 
+from clean_python import ctx
 from clean_python import PermissionDenied
-from clean_python.oauth2 import BaseTokenVerifier
-from clean_python.oauth2 import NoAuthTokenVerifier
+from clean_python import Scope
 from clean_python.oauth2 import OAuth2Settings
 from clean_python.oauth2 import Token
 from clean_python.oauth2 import TokenVerifier
 from clean_python.oauth2 import TokenVerifierSettings
 
-__all__ = ["get_token", "RequiresScope"]
+__all__ = ["get_token", "default_scope_verifier"]
 
-verifier: BaseTokenVerifier | None = None
-
-
-def clear_verifier() -> None:
-    global verifier
-
-    verifier = None
+# the scheme is stored globally enabling for the "get_token" callable
+scheme: Callable[..., Token] | None = None
 
 
-def set_verifier(settings: TokenVerifierSettings | None) -> None:
-    global verifier
+def set_auth_scheme(
+    auth: TokenVerifierSettings | None,
+    oauth2: OAuth2Settings | None,
+    scope_verifier: Callable[[Token, Scope], None],
+) -> Callable[..., Token] | None:
+    global scheme
 
-    if settings is None:
-        verifier = NoAuthTokenVerifier()
+    if auth is None:
+        scheme = None
+    elif oauth2 is None:
+        scheme = JWTBearerTokenSchema(auth, scope_verifier)
     else:
-        verifier = TokenVerifier(settings=settings)
+        scheme = OAuth2Schema(auth, oauth2, scope_verifier)
+
+    return scheme
 
 
 def get_token(request: Request) -> Token:
     """A fastapi 'dependable' yielding the validated token"""
-    global verifier
+    global scheme
+    assert scheme is not None
+    return scheme(request)
 
-    assert verifier is not None
-    return verifier(request.headers.get("Authorization"))
+
+def default_scope_verifier(token: Token, endpoint_scopes: Scope) -> None:
+    """Verifies whether any of the endpoint_scopes is in the token."""
+    if not all(x in token.scope for x in endpoint_scopes):
+        raise PermissionDenied(
+            f"this operation requires '{' '.join(endpoint_scopes)}' scope"
+        )
 
 
-class RequiresScope:
-    def __init__(self, scope: str):
-        assert scope.replace(" ", "") == scope, "spaces are not allowed in a scope"
-        self.scope = scope
-
-    async def __call__(self, token: Token = Depends(get_token)) -> None:
-        if self.scope not in token.scope:
-            raise PermissionDenied(f"this operation requires '{self.scope}' scope")
+def _set_token_context(token: Token) -> None:
+    ctx.user = token.user
+    ctx.tenant = token.tenant
 
 
 class OAuth2Schema(OAuth2AuthorizationCodeBearer):
@@ -56,26 +63,46 @@ class OAuth2Schema(OAuth2AuthorizationCodeBearer):
     This includes the JWT Bearer token configuration.
     """
 
-    def __init__(self, settings: OAuth2Settings):
+    def __init__(
+        self,
+        auth: TokenVerifierSettings,
+        oauth2: OAuth2Settings,
+        scope_verifier=Callable[[Token, list[Scope]], None],
+    ):
+        self._verifier = TokenVerifier(settings=auth)
+        self._scope_verifier = scope_verifier
         super().__init__(
             scheme_name="OAuth2",
-            authorizationUrl=str(settings.authorization_url),
-            tokenUrl=str(settings.token_url),
-            scopes=settings.scopes,
+            authorizationUrl=str(oauth2.authorization_url),
+            tokenUrl=str(oauth2.token_url),
+            scopes=oauth2.scopes,
         )
 
-    async def __call__(self) -> None:
-        pass
+    async def __call__(
+        self, request: Request, security_scopes: SecurityScopes
+    ) -> Token:
+        token = self._verifier(request.headers.get("Authorization"))
+        self._scope_verifier(token, security_scopes.scopes)
+        _set_token_context(token)
+        return token
 
 
 class JWTBearerTokenSchema(HTTPBearer):
-    """A fastapi 'dependable' configuring the openapi schema for JWT Bearer tokens.
+    """A fastapi 'dependable' configuring the openapi schema for JWT Bearer tokens."""
 
-    Note: for the client-side OAuth2 flow, use OAuth2SPAClientSchema instead.
-    """
-
-    def __init__(self):
+    def __init__(
+        self,
+        auth: TokenVerifierSettings,
+        scope_verifier=Callable[[Token, list[Scope]], None],
+    ):
+        self._verifier = TokenVerifier(settings=auth)
+        self._scope_verifier = scope_verifier
         super().__init__(scheme_name="Bearer", bearerFormat="JWT")
 
-    async def __call__(self) -> None:
-        pass
+    async def __call__(
+        self, request: Request, security_scopes: SecurityScopes
+    ) -> Token:
+        token = self._verifier(request.headers.get("Authorization"))
+        self._scope_verifier(token, security_scopes.scopes)
+        _set_token_context(token)
+        return token

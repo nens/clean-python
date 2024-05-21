@@ -18,6 +18,7 @@ from clean_python import ctx
 from clean_python import DoesNotExist
 from clean_python import Gateway
 from clean_python import PermissionDenied
+from clean_python import Scope
 from clean_python import Unauthorized
 from clean_python.oauth2 import OAuth2Settings
 from clean_python.oauth2 import Token
@@ -36,26 +37,11 @@ from .resource import APIVersion
 from .resource import clean_resources
 from .resource import Resource
 from .schema import add_cached_openapi_yaml
+from .security import default_scope_verifier
 from .security import get_token
-from .security import JWTBearerTokenSchema
-from .security import OAuth2Schema
-from .security import set_verifier
+from .security import set_auth_scheme
 
 __all__ = ["Service"]
-
-
-def get_auth_dependencies(
-    auth: TokenVerifierSettings | None, oauth2: OAuth2Settings | None
-) -> list[Depends]:
-    if auth is None:
-        return []
-    if oauth2 is None:
-        return [Depends(JWTBearerTokenSchema()), Depends(set_token_context)]
-    else:
-        return [
-            Depends(OAuth2Schema(settings=oauth2)),
-            Depends(set_token_context),
-        ]
 
 
 def get_swagger_ui_init_oauth(
@@ -145,7 +131,10 @@ class Service:
         return app
 
     def _create_versioned_app(
-        self, version: APIVersion, auth_dependencies: list[Depends], **fastapi_kwargs
+        self,
+        version: APIVersion,
+        auth_scheme: Callable[..., Token] | None,
+        **fastapi_kwargs,
     ) -> FastAPI:
         resources = [x for x in self.resources if x.version == version]
         app = FastAPI(
@@ -164,7 +153,7 @@ class Service:
                         "400": {"model": ValidationErrorResponse},
                         "default": {"model": DefaultErrorResponse},
                     },
-                    auth_dependencies=auth_dependencies,
+                    auth_scheme=auth_scheme,
                 )
             )
         app.add_exception_handler(DoesNotExist, not_found_handler)
@@ -183,11 +172,12 @@ class Service:
         hostname: str,
         auth: TokenVerifierSettings | None = None,
         oauth2: OAuth2Settings | None = None,
+        scope_verifier: Callable[[Token, Scope], None] = default_scope_verifier,
         on_startup: list[Callable[[], Any]] | None = None,
         on_shutdown: list[Callable[[], Any]] | None = None,
         access_logger_gateway: Gateway | None = None,
     ) -> ASGIApp:
-        set_verifier(auth)
+        auth_scheme = set_auth_scheme(auth, oauth2, scope_verifier)
         app = self._create_root_app(
             title=title,
             description=description,
@@ -203,11 +193,7 @@ class Service:
             "swagger_ui_init_oauth": get_swagger_ui_init_oauth(oauth2),
         }
         versioned_apps = {
-            v: self._create_versioned_app(
-                v,
-                auth_dependencies=get_auth_dependencies(auth, oauth2),
-                **fastapi_kwargs,
-            )
+            v: self._create_versioned_app(v, auth_scheme=auth_scheme, **fastapi_kwargs)
             for v in self.versions
         }
         for v, versioned_app in versioned_apps.items():
