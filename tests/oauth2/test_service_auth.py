@@ -43,6 +43,7 @@ def app(request, settings: TokenVerifierSettings):
         oauth2 = OAuth2Settings(
             token_url="https://server/token",
             authorization_url="https://server/token",
+            scopes={"*": "All", "foo": "Only Foo"},
         )
     return Service(FooResource()).create_app(
         title="test",
@@ -156,7 +157,7 @@ def test_auth_security_schemes(app, client: TestClient):
             "flows": {
                 "authorizationCode": {
                     "authorizationUrl": "https://server/token",
-                    "scopes": {},
+                    "scopes": {"*": "All", "foo": "Only Foo"},
                     "tokenUrl": "https://server/token",
                 }
             },
