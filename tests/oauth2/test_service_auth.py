@@ -23,6 +23,10 @@ class FooResource(Resource, version=v(1), name="testing"):
     def scoped(self):
         return "ok"
 
+    @get("/bar2", scope=["admin", "user"])
+    def two_scopes(self):
+        return "ok"
+
     @get("/baz", public=True)
     def public(self):
         return "ok"
@@ -162,6 +166,9 @@ def test_auth_security_scopes(client: TestClient):
     assert response.status_code == HTTPStatus.OK
     schema = response.json()
 
-    security = schema["paths"]["/bar"]["get"]["security"]
+    assert schema["paths"]["/bar"]["get"]["security"] == [{"OAuth2": ["admin"]}]
 
-    assert security == [{"OAuth2": ["admin"]}]
+    # two scopes means: AND  https://github.com/OAI/OpenAPI-Specification/issues/287#issuecomment-76398547
+    assert schema["paths"]["/bar2"]["get"]["security"] == [
+        {"OAuth2": ["admin", "user"]}
+    ]
