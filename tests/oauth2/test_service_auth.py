@@ -5,11 +5,12 @@ from fastapi.testclient import TestClient
 
 from clean_python import ctx
 from clean_python import InMemoryGateway
+from clean_python.fastapi import AuthSettings
 from clean_python.fastapi import get
 from clean_python.fastapi import Resource
 from clean_python.fastapi import Service
 from clean_python.fastapi import v
-from clean_python.oauth2 import OAuth2SPAClientSettings
+from clean_python.oauth2 import OAuth2Settings
 from clean_python.oauth2 import TokenVerifierSettings
 
 
@@ -20,6 +21,10 @@ class FooResource(Resource, version=v(1), name="testing"):
 
     @get("/bar", scope="admin")
     def scoped(self):
+        return "ok"
+
+    @get("/bar2", scope=["admin", "user"])
+    def two_scopes(self):
         return "ok"
 
     @get("/baz", public=True)
@@ -35,22 +40,20 @@ class FooResource(Resource, version=v(1), name="testing"):
         }
 
 
-@pytest.fixture(params=["noclient", "client"])
-def app(request, settings: TokenVerifierSettings):
-    if request.param == "noclient":
-        auth_client = None
-    elif request.param == "client":
-        auth_client = OAuth2SPAClientSettings(
-            client_id="123",
-            token_url="https://server/token",
-            authorization_url="https://server/token",
-        )
+@pytest.fixture
+def app(settings: TokenVerifierSettings):
     return Service(FooResource()).create_app(
         title="test",
         description="testing",
         hostname="testserver",
-        auth=settings,
-        auth_client=auth_client,
+        auth=AuthSettings(
+            token=settings,
+            oauth2=OAuth2Settings(
+                token_url="https://server/token",
+                authorization_url="https://server/authorize",
+                scopes={"*": "All", "foo": "Only Foo"},
+            ),
+        ),
         access_logger_gateway=InMemoryGateway([]),
     )
 
@@ -132,3 +135,40 @@ def test_public_ok(app, client: TestClient, jwk_patched):
     response = client.get(app.url_path_for("v1/public"))
     assert response.status_code == HTTPStatus.OK
     assert not jwk_patched.called
+
+
+def test_auth_security_schemes(app, client: TestClient):
+    response = client.get("v1/openapi.json")
+
+    assert response.status_code == HTTPStatus.OK
+    schema = response.json()
+
+    schemes = schema["components"]["securitySchemes"]
+
+    assert schemes == {
+        "OAuth2": {
+            "type": "oauth2",
+            "flows": {
+                "authorizationCode": {
+                    "authorizationUrl": "https://server/authorize",
+                    "scopes": {"*": "All", "foo": "Only Foo"},
+                    "tokenUrl": "https://server/token",
+                }
+            },
+        }
+    }
+
+
+def test_auth_security_scopes(client: TestClient):
+    # https://github.com/OAI/OpenAPI-Specification/issues/287#issuecomment-76398547
+    response = client.get("v1/openapi.json")
+
+    assert response.status_code == HTTPStatus.OK
+    schema = response.json()
+
+    assert schema["paths"]["/bar"]["get"]["security"] == [{"OAuth2": ["admin"]}]
+
+    # two scopes means: AND  https://github.com/OAI/OpenAPI-Specification/issues/287#issuecomment-76398547
+    assert schema["paths"]["/bar2"]["get"]["security"] == [
+        {"OAuth2": ["admin", "user"]}
+    ]

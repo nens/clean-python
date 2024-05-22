@@ -6,12 +6,12 @@ from enum import Enum
 from functools import partial
 from typing import Any
 
-from fastapi import Depends
+from fastapi import Security
 from fastapi.routing import APIRouter
 
 from clean_python import ValueObject
 
-from .security import RequiresScope
+from .security import OAuth2Schema
 
 __all__ = [
     "Resource",
@@ -71,10 +71,17 @@ class APIVersion(ValueObject):
 
 
 def http_method(
-    path: str, scope: str | None = None, public: bool = False, **route_options
+    path: str,
+    scope: str | list[str] | None = None,
+    public: bool = False,
+    **route_options,
 ):
     if public and scope is not None:
         raise ValueError("cannot set scope for public endpoints")
+    if isinstance(scope, str):
+        scope = [scope]
+    for x in scope or []:
+        assert x.replace(" ", "") == x, "spaces are not allowed in a scope"
 
     def wrapper(unbound_method: Callable[..., Any]):
         setattr(
@@ -160,7 +167,7 @@ class Resource:
     def get_router(
         self,
         version: APIVersion,
-        auth_dependencies: list[Depends],
+        auth_scheme: OAuth2Schema | None,
         responses: dict[str, dict[str, Any]] | None = None,
     ) -> APIRouter:
         assert version == self.version
@@ -177,13 +184,12 @@ class Resource:
             # The 'name' is used for reverse lookups (request.path_for): include the
             # version prefix so that we can uniquely refer to an operation.
             name = version.prefix + "/" + endpoint.__name__
-            # 'scope' is implemented using FastAPI's dependency injection system
-            route_options.setdefault("dependencies", [])
-            if not public:
-                route_options["dependencies"].extend(auth_dependencies)
-            if scope is not None:
-                assert not public
-                route_options["dependencies"].append(Depends(RequiresScope(scope)))
+
+            # Copy both 'route_options' and 'dependencies' to allow inplace changes
+            route_options = route_options.copy()
+            dependencies = route_options.pop("dependencies", []).copy()
+            if not public and auth_scheme is not None:
+                dependencies.append(Security(auth_scheme, scopes=scope))
 
             # Update responses with route_options responses or use latter if not set
             if "responses" in route_options:
@@ -196,6 +202,7 @@ class Resource:
                 operation_id=endpoint.__name__,
                 name=name,
                 responses=responses,
+                dependencies=dependencies,
                 **route_options,
             )
         return router

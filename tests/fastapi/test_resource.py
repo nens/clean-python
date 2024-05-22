@@ -1,10 +1,12 @@
+from unittest.mock import Mock
+
 import pytest
 from fastapi import Depends
+from fastapi import params
 from fastapi.routing import APIRouter
 
 from clean_python.fastapi import APIVersion
 from clean_python.fastapi import get
-from clean_python.fastapi import RequiresScope
 from clean_python.fastapi import Resource
 from clean_python.fastapi import Stability
 from clean_python.fastapi import v
@@ -23,7 +25,7 @@ def test_get_router_no_endpoints():
     class Cls(Resource, version=v(1)):
         pass
 
-    router = Cls().get_router(v(1), auth_dependencies=[])
+    router = Cls().get_router(v(1), auth_scheme=None)
     assert isinstance(router, APIRouter)
     assert len(router.routes) == 0
 
@@ -35,7 +37,7 @@ def test_get_router_other_version():
             return "ok"
 
     with pytest.raises(AssertionError):
-        TestResource().get_router(v(2), auth_dependencies=[])
+        TestResource().get_router(v(2), auth_scheme=None)
 
 
 def test_get_router():
@@ -46,7 +48,7 @@ def test_get_router():
 
     resource = TestResource()
 
-    router = resource.get_router(v(1), auth_dependencies=[])
+    router = resource.get_router(v(1), auth_scheme=None)
 
     assert len(router.routes) == 1
 
@@ -90,7 +92,7 @@ def test_url_path_for():
             return "ok"
 
     resource = TestResource()
-    router = resource.get_router(v(1), auth_dependencies=[])
+    router = resource.get_router(v(1), auth_scheme=None)
 
     assert router.url_path_for("v1/get_test", id=2) == "/foo/2"
 
@@ -142,17 +144,37 @@ def test_get_less_stable_no_subclass():
 TestDepends = Depends(lambda: True)
 
 
-def test_get_router_auth_dependencies():
+def test_get_router_auth_scheme():
     class TestResource(Resource, version=v(1), name="testing"):
         @get("/foo/{id}")
         def get_test(self, id: int):
             return "ok"
 
     resource = TestResource()
+    auth_scheme = Mock()
 
-    router = resource.get_router(v(1), auth_dependencies=[TestDepends], responses={})
+    router = resource.get_router(v(1), auth_scheme=auth_scheme, responses={})
 
-    assert router.routes[0].dependencies == [TestDepends]
+    (actual,) = router.routes[0].dependencies
+    assert isinstance(actual, params.Security)
+    assert actual.dependency is auth_scheme
+    assert actual.scopes == []
+
+
+def test_get_router_auth_dependencies_extend():
+    class TestResource(Resource, version=v(1), name="testing"):
+        @get("/foo/{id}", dependencies=[TestDepends])
+        def get_test(self, id: int):
+            return "ok"
+
+    resource = TestResource()
+    auth_scheme = Mock()
+
+    router = resource.get_router(v(1), auth_scheme=auth_scheme, responses={})
+
+    dep1, dep2 = router.routes[0].dependencies
+    assert dep1 is TestDepends
+    assert isinstance(dep2, params.Security)
 
 
 def test_get_router_with_scope():
@@ -162,11 +184,27 @@ def test_get_router_with_scope():
             return "ok"
 
     resource = TestResource()
+    auth_scheme = Mock()
 
-    router = resource.get_router(v(1), auth_dependencies=[TestDepends], responses={})
+    router = resource.get_router(v(1), auth_scheme=auth_scheme, responses={})
 
-    assert router.routes[0].dependencies[0] == TestDepends
-    assert isinstance(router.routes[0].dependencies[1].dependency, RequiresScope)
+    (actual,) = router.routes[0].dependencies
+    assert actual.scopes == ["foo"]
+
+
+def test_get_router_with_multiple_scopes():
+    class TestResource(Resource, version=v(1), name="testing"):
+        @get("/foo/{id}", scope=["foo", "bar"])
+        def get_test(self, id: int):
+            return "ok"
+
+    resource = TestResource()
+    auth_scheme = Mock()
+
+    router = resource.get_router(v(1), auth_scheme=auth_scheme, responses={})
+
+    (actual,) = router.routes[0].dependencies
+    assert actual.scopes == ["foo", "bar"]
 
 
 def test_get_router_public_with_scope():
@@ -184,6 +222,6 @@ def test_get_router_public():
 
     resource = TestResource()
 
-    router = resource.get_router(v(1), auth_dependencies=[TestDepends], responses={})
+    router = resource.get_router(v(1), auth_scheme=Mock(), responses={})
 
     assert router.routes[0].dependencies == []

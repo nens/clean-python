@@ -6,7 +6,6 @@ from typing import Any
 import jwt
 from jwt import PyJWKClient
 from jwt.exceptions import PyJWTError
-from pydantic import AnyHttpUrl
 from pydantic import BaseModel
 from pydantic import ValidationError
 
@@ -21,7 +20,7 @@ __all__ = [
     "TokenVerifier",
     "NoAuthTokenVerifier",
     "TokenVerifierSettings",
-    "OAuth2SPAClientSettings",
+    "OAuth2Settings",
 ]
 
 logger = logging.getLogger(__name__)
@@ -36,10 +35,15 @@ class TokenVerifierSettings(BaseModel):
     jwks_timeout: float = 1.0
 
 
-class OAuth2SPAClientSettings(BaseModel):
-    client_id: str
-    token_url: AnyHttpUrl
-    authorization_url: AnyHttpUrl
+class OAuth2Settings(BaseModel):
+    # this is primarily meant for documenting how OAuth2 works (in the schema)
+    token_url: str = ""
+    authorization_url: str = ""
+    scopes: dict[str, str] = {}  # explanation of all possible scopes
+    client_id: str | None = None  # when given, Swagger login function is enabled
+
+    def login_enabled(self) -> bool:
+        return bool(self.token_url and self.authorization_url and self.client_id)
 
 
 class BaseTokenVerifier:
@@ -75,9 +79,7 @@ class TokenVerifier(BaseTokenVerifier):
     # allow 2 minutes leeway for verifying token expiry:
     LEEWAY = 120
 
-    def __init__(
-        self, settings: TokenVerifierSettings, logger: logging.Logger | None = None
-    ):
+    def __init__(self, settings: TokenVerifierSettings):
         self.settings = settings
         self.jwk_client = PyJWKClient(
             f"{settings.issuer}/.well-known/jwks.json",

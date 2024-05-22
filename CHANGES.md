@@ -3,7 +3,15 @@
 ## 0.13.2 (unreleased)
 ----------------------
 
-- Nothing changed yet.
+- Added YAML version of the openapi spec under my.domain/v1/openapi.yaml.
+
+- Fixed an issue introduced in 0.12.4 with the securitySchemas in the openapi spec. Now there
+  is always 1 securitySchema named "OAuth2.
+
+- Replace the `auth` setting in the `fastapi.Service` with a different type, which encompasses
+  the (original) token verifier settings, oauth2 settings, and a new scope_verifier callable.
+
+- Scopes supplied per-endpoint are now documented in the OpenAPI schema.
 
 
 ## 0.13.1 (2024-05-01)

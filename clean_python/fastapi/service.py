@@ -19,9 +19,6 @@ from clean_python import DoesNotExist
 from clean_python import Gateway
 from clean_python import PermissionDenied
 from clean_python import Unauthorized
-from clean_python.oauth2 import OAuth2SPAClientSettings
-from clean_python.oauth2 import Token
-from clean_python.oauth2 import TokenVerifierSettings
 
 from .error_responses import conflict_handler
 from .error_responses import DefaultErrorResponse
@@ -35,44 +32,29 @@ from .fastapi_access_logger import get_correlation_id
 from .resource import APIVersion
 from .resource import clean_resources
 from .resource import Resource
-from .security import get_token
-from .security import JWTBearerTokenSchema
-from .security import OAuth2SPAClientSchema
-from .security import set_verifier
+from .schema import add_cached_openapi_yaml
+from .security import AuthSettings
+from .security import OAuth2Schema
+from .security import set_auth_scheme
 
 __all__ = ["Service"]
 
 
-def get_auth_dependencies(auth_client: OAuth2SPAClientSettings | None) -> list[Depends]:
-    if auth_client is None:
-        return [Depends(JWTBearerTokenSchema()), Depends(set_context)]
-    else:
-        return [
-            Depends(OAuth2SPAClientSchema(client=auth_client)),
-            Depends(set_context),
-        ]
-
-
 def get_swagger_ui_init_oauth(
-    auth_client: OAuth2SPAClientSettings | None,
+    auth: AuthSettings | None = None,
 ) -> dict[str, Any] | None:
     return (
         None
-        if auth_client is None
+        if auth is None or not auth.oauth2.login_enabled()
         else {
-            "clientId": auth_client.client_id,
+            "clientId": auth.oauth2.client_id,
             "usePkceWithAuthorizationCodeGrant": True,
         }
     )
 
 
-async def set_context(
-    request: Request,
-    token: Token = Depends(get_token),
-) -> None:
+async def set_request_context(request: Request) -> None:
     ctx.path = request.url
-    ctx.user = token.user
-    ctx.tenant = token.tenant
     ctx.correlation_id = get_correlation_id(request)
 
 
@@ -140,7 +122,7 @@ class Service:
         return app
 
     def _create_versioned_app(
-        self, version: APIVersion, auth_dependencies: list[Depends], **fastapi_kwargs
+        self, version: APIVersion, auth_scheme: OAuth2Schema | None, **fastapi_kwargs
     ) -> FastAPI:
         resources = [x for x in self.resources if x.version == version]
         app = FastAPI(
@@ -159,7 +141,7 @@ class Service:
                         "400": {"model": ValidationErrorResponse},
                         "default": {"model": DefaultErrorResponse},
                     },
-                    auth_dependencies=auth_dependencies,
+                    auth_scheme=auth_scheme,
                 )
             )
         app.add_exception_handler(DoesNotExist, not_found_handler)
@@ -168,6 +150,7 @@ class Service:
         app.add_exception_handler(BadRequest, validation_error_handler)
         app.add_exception_handler(PermissionDenied, permission_denied_handler)
         app.add_exception_handler(Unauthorized, unauthorized_handler)
+        add_cached_openapi_yaml(app)
         return app
 
     def create_app(
@@ -175,13 +158,12 @@ class Service:
         title: str,
         description: str,
         hostname: str,
-        auth: TokenVerifierSettings | None = None,
-        auth_client: OAuth2SPAClientSettings | None = None,
+        auth: AuthSettings | None = None,
         on_startup: list[Callable[[], Any]] | None = None,
         on_shutdown: list[Callable[[], Any]] | None = None,
         access_logger_gateway: Gateway | None = None,
     ) -> ASGIApp:
-        set_verifier(auth)
+        auth_scheme = set_auth_scheme(auth)
         app = self._create_root_app(
             title=title,
             description=description,
@@ -193,14 +175,11 @@ class Service:
         fastapi_kwargs = {
             "title": title,
             "description": description,
-            "swagger_ui_init_oauth": get_swagger_ui_init_oauth(auth_client),
+            "dependencies": [Depends(set_request_context)],
+            "swagger_ui_init_oauth": get_swagger_ui_init_oauth(auth),
         }
         versioned_apps = {
-            v: self._create_versioned_app(
-                v,
-                auth_dependencies=get_auth_dependencies(auth_client),
-                **fastapi_kwargs,
-            )
+            v: self._create_versioned_app(v, auth_scheme=auth_scheme, **fastapi_kwargs)
             for v in self.versions
         }
         for v, versioned_app in versioned_apps.items():
