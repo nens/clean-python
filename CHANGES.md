@@ -5,15 +5,11 @@
 
 - Added YAML version of the openapi spec under my.domain/v1/openapi.yaml.
 
-- Fixed an issue introduced in 0.12.4 with the securitySchemas in the openapi spec.
+- Fixed an issue introduced in 0.12.4 with the securitySchemas in the openapi spec. Now there
+  is always 1 securitySchema named "OAuth2.
 
-- Don't set the user and tenant in a service without auth or in a public endpoint.
-
-- Replace the `oauth2.OAuth2SPAClientSettings` with `oauth2.OAuth2Settings` with an
-  optional client_id. In this way, OAuth2 settings not imply usage of Swagger as client.
-
-- Rerfactored the scope checker; a custom `scope_verifier` can now be injected when construction
-  of the FastAPI `Service`.
+- Replace the `auth` setting in the `fastapi.Service` with a different type, which encompasses
+  the (original) token verifier settings, oauth2 settings, and a new scope_verifier callable.
 
 - Scopes supplied per-endpoint are now documented in the OpenAPI schema.
 

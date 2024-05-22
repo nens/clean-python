@@ -11,7 +11,7 @@ from fastapi.routing import APIRouter
 
 from clean_python import ValueObject
 
-from .security import AuthScheme
+from .security import OAuth2Schema
 
 __all__ = [
     "Resource",
@@ -167,7 +167,7 @@ class Resource:
     def get_router(
         self,
         version: APIVersion,
-        auth_scheme: AuthScheme | None,
+        auth_scheme: OAuth2Schema | None,
         responses: dict[str, dict[str, Any]] | None = None,
     ) -> APIRouter:
         assert version == self.version

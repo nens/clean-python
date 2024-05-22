@@ -19,8 +19,6 @@ from clean_python import DoesNotExist
 from clean_python import Gateway
 from clean_python import PermissionDenied
 from clean_python import Unauthorized
-from clean_python.oauth2 import OAuth2Settings
-from clean_python.oauth2 import TokenVerifierSettings
 
 from .error_responses import conflict_handler
 from .error_responses import DefaultErrorResponse
@@ -35,22 +33,21 @@ from .resource import APIVersion
 from .resource import clean_resources
 from .resource import Resource
 from .schema import add_cached_openapi_yaml
-from .security import AuthScheme
-from .security import default_scope_verifier
-from .security import ScopeVerifier
+from .security import AuthSettings
+from .security import OAuth2Schema
 from .security import set_auth_scheme
 
 __all__ = ["Service"]
 
 
 def get_swagger_ui_init_oauth(
-    oauth2: OAuth2Settings | None,
+    auth: AuthSettings | None = None,
 ) -> dict[str, Any] | None:
     return (
         None
-        if oauth2 is None or oauth2.client_id is None
+        if auth is None or not auth.oauth2.login_enabled()
         else {
-            "clientId": oauth2.client_id,
+            "clientId": auth.oauth2.client_id,
             "usePkceWithAuthorizationCodeGrant": True,
         }
     )
@@ -125,10 +122,7 @@ class Service:
         return app
 
     def _create_versioned_app(
-        self,
-        version: APIVersion,
-        auth_scheme: AuthScheme | None,
-        **fastapi_kwargs,
+        self, version: APIVersion, auth_scheme: OAuth2Schema | None, **fastapi_kwargs
     ) -> FastAPI:
         resources = [x for x in self.resources if x.version == version]
         app = FastAPI(
@@ -164,14 +158,12 @@ class Service:
         title: str,
         description: str,
         hostname: str,
-        auth: TokenVerifierSettings | None = None,
-        oauth2: OAuth2Settings | None = None,
-        scope_verifier: ScopeVerifier = default_scope_verifier,
+        auth: AuthSettings | None = None,
         on_startup: list[Callable[[], Any]] | None = None,
         on_shutdown: list[Callable[[], Any]] | None = None,
         access_logger_gateway: Gateway | None = None,
     ) -> ASGIApp:
-        auth_scheme = set_auth_scheme(auth, oauth2, scope_verifier)
+        auth_scheme = set_auth_scheme(auth)
         app = self._create_root_app(
             title=title,
             description=description,
@@ -184,7 +176,7 @@ class Service:
             "title": title,
             "description": description,
             "dependencies": [Depends(set_request_context)],
-            "swagger_ui_init_oauth": get_swagger_ui_init_oauth(oauth2),
+            "swagger_ui_init_oauth": get_swagger_ui_init_oauth(auth),
         }
         versioned_apps = {
             v: self._create_versioned_app(v, auth_scheme=auth_scheme, **fastapi_kwargs)
