@@ -98,4 +98,6 @@ async def test_auth_scheme_call(auth_scheme: OAuth2Schema, token_verifier_cls: M
 
     token_verifier_cls.return_value.assert_called_once_with("blabla")
     assert actual is token_verifier_cls.return_value.return_value
-    auth_scheme._scope_verifier.assert_called_once_with(request, ["foo", "bar"], token)
+    auth_scheme._scope_verifier.assert_called_once_with(
+        request, frozenset(["foo", "bar"]), token
+    )

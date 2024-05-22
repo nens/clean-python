@@ -48,7 +48,7 @@ class OAuth2Schema(OAuth2AuthorizationCodeBearer):
           "security requirements" in the openapi spec for this operation.
         """
         token = self._verifier(request.headers.get("Authorization"))
-        self._scope_verifier(request, security_scopes.scopes, token)
+        self._scope_verifier(request, frozenset(security_scopes.scopes), token)
         ctx.user = token.user
         ctx.tenant = token.tenant
         return token
