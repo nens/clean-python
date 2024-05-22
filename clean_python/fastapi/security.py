@@ -15,15 +15,18 @@ from clean_python.oauth2 import TokenVerifierSettings
 
 __all__ = ["get_token", "default_scope_verifier"]
 
+AuthScheme = Callable[[Request, SecurityScopes], Token]
+ScopeVerifier = Callable[[Request, Scope, Token], None]
+
 # the scheme is stored globally enabling for the "get_token" callable
-scheme: Callable[..., Token] | None = None
+scheme: AuthScheme | None = None
 
 
 def set_auth_scheme(
     auth: TokenVerifierSettings | None,
     oauth2: OAuth2Settings | None,
-    scope_verifier: Callable[[Token, Scope], None],
-) -> Callable[..., Token] | None:
+    scope_verifier: ScopeVerifier,
+) -> AuthScheme | None:
     global scheme
 
     if auth is None:
@@ -40,10 +43,12 @@ def get_token(request: Request) -> Token:
     """A fastapi 'dependable' yielding the validated token"""
     global scheme
     assert scheme is not None
-    return scheme(request)
+    return scheme(request, SecurityScopes())
 
 
-def default_scope_verifier(token: Token, endpoint_scopes: Scope) -> None:
+def default_scope_verifier(
+    request: Request, endpoint_scopes: Scope, token: Token
+) -> None:
     """Verifies whether any of the endpoint_scopes is in the token."""
     if not all(x in token.scope for x in endpoint_scopes):
         raise PermissionDenied(
@@ -69,7 +74,7 @@ class OAuth2Schema(OAuth2AuthorizationCodeBearer):
         self,
         auth: TokenVerifierSettings,
         oauth2: OAuth2Settings,
-        scope_verifier=Callable[[Token, list[Scope]], None],
+        scope_verifier: ScopeVerifier,
     ):
         self._verifier = TokenVerifier(settings=auth)
         self._scope_verifier = scope_verifier
@@ -91,7 +96,7 @@ class OAuth2Schema(OAuth2AuthorizationCodeBearer):
           "security requirements" in the openapi spec for this operation.
         """
         token = self._verifier(request.headers.get("Authorization"))
-        self._scope_verifier(token, security_scopes.scopes)
+        self._scope_verifier(request, security_scopes.scopes, token)
         _set_token_context(token)
         return token
 
@@ -102,7 +107,7 @@ class JWTBearerTokenSchema(HTTPBearer):
     def __init__(
         self,
         auth: TokenVerifierSettings,
-        scope_verifier=Callable[[Token, list[Scope]], None],
+        scope_verifier: ScopeVerifier,
     ):
         self._verifier = TokenVerifier(settings=auth)
         self._scope_verifier = scope_verifier
@@ -112,6 +117,6 @@ class JWTBearerTokenSchema(HTTPBearer):
         self, request: Request, security_scopes: SecurityScopes
     ) -> Token:
         token = self._verifier(request.headers.get("Authorization"))
-        self._scope_verifier(token, security_scopes.scopes)
+        self._scope_verifier(request, security_scopes.scopes, token)
         _set_token_context(token)
         return token

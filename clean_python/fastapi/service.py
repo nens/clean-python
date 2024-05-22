@@ -18,10 +18,8 @@ from clean_python import ctx
 from clean_python import DoesNotExist
 from clean_python import Gateway
 from clean_python import PermissionDenied
-from clean_python import Scope
 from clean_python import Unauthorized
 from clean_python.oauth2 import OAuth2Settings
-from clean_python.oauth2 import Token
 from clean_python.oauth2 import TokenVerifierSettings
 
 from .error_responses import conflict_handler
@@ -37,7 +35,9 @@ from .resource import APIVersion
 from .resource import clean_resources
 from .resource import Resource
 from .schema import add_cached_openapi_yaml
+from .security import AuthScheme
 from .security import default_scope_verifier
+from .security import ScopeVerifier
 from .security import set_auth_scheme
 
 __all__ = ["Service"]
@@ -127,7 +127,7 @@ class Service:
     def _create_versioned_app(
         self,
         version: APIVersion,
-        auth_scheme: Callable[..., Token] | None,
+        auth_scheme: AuthScheme | None,
         **fastapi_kwargs,
     ) -> FastAPI:
         resources = [x for x in self.resources if x.version == version]
@@ -166,7 +166,7 @@ class Service:
         hostname: str,
         auth: TokenVerifierSettings | None = None,
         oauth2: OAuth2Settings | None = None,
-        scope_verifier: Callable[[Token, Scope], None] = default_scope_verifier,
+        scope_verifier: ScopeVerifier = default_scope_verifier,
         on_startup: list[Callable[[], Any]] | None = None,
         on_shutdown: list[Callable[[], Any]] | None = None,
         access_logger_gateway: Gateway | None = None,

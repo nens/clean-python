@@ -10,7 +10,8 @@ from fastapi import Security
 from fastapi.routing import APIRouter
 
 from clean_python import ValueObject
-from clean_python.oauth2 import Token
+
+from .security import AuthScheme
 
 __all__ = [
     "Resource",
@@ -166,7 +167,7 @@ class Resource:
     def get_router(
         self,
         version: APIVersion,
-        auth_scheme: Callable[..., Token] | None,
+        auth_scheme: AuthScheme | None,
         responses: dict[str, dict[str, Any]] | None = None,
     ) -> APIRouter:
         assert version == self.version

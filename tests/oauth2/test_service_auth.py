@@ -165,6 +165,7 @@ def test_auth_security_schemes(app, client: TestClient):
 
 
 def test_auth_security_scopes(client: TestClient):
+    # https://github.com/OAI/OpenAPI-Specification/issues/287#issuecomment-76398547
     response = client.get("v1/openapi.json")
 
     assert response.status_code == HTTPStatus.OK
@@ -172,7 +173,7 @@ def test_auth_security_scopes(client: TestClient):
 
     security = schema["paths"]["/bar"]["get"]["security"]
 
-    if "Bearer" in security:
+    if list(security)[0] == "Bearer":
         assert security["Bearer"] == []
-    elif "OAuth2" in security:
+    elif list(security)[0] == "OAuth2":
         assert security["OAuth"] == ["admin"]
