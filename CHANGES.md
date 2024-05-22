@@ -1,6 +1,6 @@
 # Changelog of clean-python
 
-## 0.13.2 (unreleased)
+## 0.14.0 (2024-05-22)
 ----------------------
 
 - Added YAML version of the openapi spec under my.domain/v1/openapi.yaml.
