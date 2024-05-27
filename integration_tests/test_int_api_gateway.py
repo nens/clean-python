@@ -17,10 +17,18 @@ async def fake_token():
 
 
 @pytest.fixture
-def provider(fastapi_example_app) -> ApiProvider:
+def tenant_context() -> Tenant:
     ctx.tenant = Tenant(id=2, name="")
-    yield ApiProvider(fastapi_example_app + "/", fake_token)
+    yield ctx.tenant
     ctx.tenant = None
+
+
+@pytest.fixture
+async def provider(fastapi_example_app, tenant_context) -> ApiProvider:
+    provider = ApiProvider(fastapi_example_app + "/", fake_token)
+    await provider.connect()
+    yield provider
+    await provider.disconnect()
 
 
 @pytest.fixture

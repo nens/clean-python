@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 import aioboto3
 from botocore.client import Config
 
+from clean_python import Provider
 from clean_python import ValueObject
 
 if TYPE_CHECKING:
@@ -24,18 +25,13 @@ class S3BucketOptions(ValueObject):
     region: str | None = None
 
 
-class S3BucketProvider:
+class S3BucketProvider(Provider):
     def __init__(self, options: S3BucketOptions):
         self.options = options
 
-    @property
-    def bucket(self) -> str:
-        return self.options.bucket
-
-    @property
-    def client(self) -> "S3Client":
-        session = aioboto3.Session()
-        return session.client(
+    async def connect(self) -> None:
+        self._session = aioboto3.Session()
+        self._client = await self._session.client(
             "s3",
             endpoint_url=self.options.url,
             aws_access_key_id=self.options.access_key,
@@ -50,4 +46,15 @@ class S3BucketProvider:
                 },
             ),
             use_ssl=self.options.url.startswith("https"),
-        )
+        ).__aenter__()
+
+    async def disconnect(self) -> None:
+        await self._client.close()
+
+    @property
+    def bucket(self) -> str:
+        return self.options.bucket
+
+    @property
+    def client(self) -> "S3Client":
+        return self._client

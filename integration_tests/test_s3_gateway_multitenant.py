@@ -52,13 +52,20 @@ def s3_bucket(s3_settings):
 
 
 @pytest.fixture
-def s3_provider(s3_bucket, s3_settings):
+def tenant_context():
+    ctx.tenant = Tenant(id=22, name="foo")
+    yield ctx.tenant
+    ctx.tenant = None
+
+
+@pytest.fixture
+async def s3_provider(s3_bucket, s3_settings, tenant_context):
     # wipe contents before each test
     s3_bucket.objects.all().delete()
-    # set up a tenant
-    ctx.tenant = Tenant(id=22, name="foo")
-    yield S3BucketProvider(S3BucketOptions(**s3_settings))
-    ctx.tenant = None
+    provider = S3BucketProvider(S3BucketOptions(**s3_settings))
+    await provider.connect()
+    yield provider
+    await provider.disconnect()
 
 
 @pytest.fixture

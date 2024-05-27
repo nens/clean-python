@@ -42,12 +42,15 @@ def response():
 
 
 @pytest.fixture
-def api_provider_no_mock() -> mock.AsyncMock:
-    return ApiProvider(
+async def api_provider_no_mock() -> mock.AsyncMock:
+    provider = ApiProvider(
         url="http://testserver/foo/",
         headers_factory=fake_token,
         retries=0,
     )
+    await provider.connect()
+    yield provider
+    await provider.disconnect()
 
 
 @pytest.fixture
@@ -221,8 +224,13 @@ async def test_session_closed(api_provider: ApiProvider, request_m):
 
 
 @pytest.fixture
-def retry_provider():
-    return ApiProvider(url="http://testserver/foo/", retries=1, backoff_factor=0.001)
+async def retry_provider():
+    provider = ApiProvider(
+        url="http://testserver/foo/", retries=1, backoff_factor=0.001
+    )
+    await provider.connect()
+    yield provider
+    await provider.disconnect()
 
 
 @pytest.fixture

@@ -64,16 +64,15 @@ class S3Gateway(Gateway):
         return key.split("/", 1)[1] if self.multitenant else key
 
     async def get(self, id: Id) -> Json | None:
-        async with self.provider.client as client:
-            try:
-                result = await client.head_object(
-                    Bucket=self.provider.bucket, Key=self._id_to_key(id)
-                )
-            except ClientError as e:
-                if e.response["Error"]["Code"] == "404":
-                    return None
-                else:
-                    raise e
+        try:
+            result = await self.provider.client.head_object(
+                Bucket=self.provider.bucket, Key=self._id_to_key(id)
+            )
+        except ClientError as e:
+            if e.response["Error"]["Code"] == "404":
+                return None
+            else:
+                raise e
         return {
             "id": str(id),
             "last_modified": result["LastModified"],
@@ -97,8 +96,7 @@ class S3Gateway(Gateway):
         }
         if params.cursor is not None:
             kwargs["StartAfter"] = self._id_to_key(params.cursor)
-        async with self.provider.client as client:
-            result = await client.list_objects_v2(**kwargs)
+        result = await self.provider.client.list_objects_v2(**kwargs)
         # Example response:
         #     {
         #         'Key': 'object-in-s3',
@@ -119,11 +117,10 @@ class S3Gateway(Gateway):
         ]
 
     async def remove(self, id: Id) -> bool:
-        async with self.provider.client as client:
-            await client.delete_object(
-                Bucket=self.provider.bucket,
-                Key=self._id_to_key(id),
-            )
+        await self.provider.client.delete_object(
+            Bucket=self.provider.bucket,
+            Key=self._id_to_key(id),
+        )
         # S3 doesn't tell us if the object was there in the first place
         return True
 
@@ -131,26 +128,24 @@ class S3Gateway(Gateway):
         if len(ids) == 0:
             return
         assert len(ids) <= AWS_LIMIT, f"max {AWS_LIMIT} keys for S3Gateway"
-        async with self.provider.client as client:
-            await client.delete_objects(
-                Bucket=self.provider.bucket,
-                Delete={
-                    "Objects": [{"Key": self._id_to_key(x)} for x in ids],
-                    "Quiet": True,
-                },
-            )
+        await self.provider.client.delete_objects(
+            Bucket=self.provider.bucket,
+            Delete={
+                "Objects": [{"Key": self._id_to_key(x)} for x in ids],
+                "Quiet": True,
+            },
+        )
 
     async def _create_presigned_url(
         self,
         id: Id,
         client_method: str,
     ) -> AnyHttpUrl:
-        async with self.provider.client as client:
-            return await client.generate_presigned_url(
-                client_method,
-                Params={"Bucket": self.provider.bucket, "Key": self._id_to_key(id)},
-                ExpiresIn=DEFAULT_EXPIRY,
-            )
+        return await self.provider.client.generate_presigned_url(
+            client_method,
+            Params={"Bucket": self.provider.bucket, "Key": self._id_to_key(id)},
+            ExpiresIn=DEFAULT_EXPIRY,
+        )
 
     async def create_download_url(self, id: Id) -> AnyHttpUrl:
         return await self._create_presigned_url(id, "get_object")
@@ -162,12 +157,11 @@ class S3Gateway(Gateway):
         if file_path.exists():
             raise FileExistsError()
         try:
-            async with self.provider.client as client:
-                await client.download_file(
-                    Bucket=self.provider.bucket,
-                    Key=self._id_to_key(id),
-                    Filename=str(file_path),
-                )
+            await self.provider.client.download_file(
+                Bucket=self.provider.bucket,
+                Key=self._id_to_key(id),
+                Filename=str(file_path),
+            )
         except ClientError as e:
             if e.response["Error"]["Code"] == "404":
                 file_path.unlink(missing_ok=True)
@@ -178,12 +172,11 @@ class S3Gateway(Gateway):
     async def upload_file(self, id: Id, file_path: Path) -> None:
         if not file_path.is_file():
             raise FileNotFoundError()
-        async with self.provider.client as client:
-            await client.upload_file(
-                Bucket=self.provider.bucket,
-                Key=self._id_to_key(id),
-                Filename=str(file_path),
-            )
+        await self.provider.client.upload_file(
+            Bucket=self.provider.bucket,
+            Key=self._id_to_key(id),
+            Filename=str(file_path),
+        )
 
     def filters_to_prefix(self, filters: list[Filter]) -> str:
         if len(filters) == 0:
@@ -203,18 +196,17 @@ class S3Gateway(Gateway):
             "MaxKeys": AWS_LIMIT,
             "Prefix": self.filters_to_prefix(filters),
         }
-        async with self.provider.client as client:
-            while True:
-                result = await client.list_objects_v2(**kwargs)
-                contents = result.get("Contents", [])
-                if contents:
-                    await client.delete_objects(
-                        Bucket=self.provider.bucket,
-                        Delete={
-                            "Objects": [{"Key": x["Key"]} for x in contents],
-                            "Quiet": True,
-                        },
-                    )
-                if len(contents) < AWS_LIMIT:
-                    break
-                kwargs["StartAfter"] = contents[-1]["Key"]
+        while True:
+            result = await self.provider.client.list_objects_v2(**kwargs)
+            contents = result.get("Contents", [])
+            if contents:
+                await self.provider.client.delete_objects(
+                    Bucket=self.provider.bucket,
+                    Delete={
+                        "Objects": [{"Key": x["Key"]} for x in contents],
+                        "Quiet": True,
+                    },
+                )
+            if len(contents) < AWS_LIMIT:
+                break
+            kwargs["StartAfter"] = contents[-1]["Key"]

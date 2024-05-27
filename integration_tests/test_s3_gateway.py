@@ -51,10 +51,13 @@ def s3_bucket(s3_settings):
 
 
 @pytest.fixture
-def s3_provider(s3_bucket, s3_settings):
+async def s3_provider(s3_bucket, s3_settings):
     # wipe contents before each test
     s3_bucket.objects.all().delete()
-    return S3BucketProvider(S3BucketOptions(**s3_settings))
+    provider = S3BucketProvider(S3BucketOptions(**s3_settings))
+    await provider.connect()
+    yield provider
+    await provider.disconnect()
 
 
 @pytest.fixture
