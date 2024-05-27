@@ -132,7 +132,7 @@ class ApiProvider(Provider):
         self._session = await ClientSession().__aenter__()
 
     async def disconnect(self) -> None:
-        self._session.close()
+        await self._session.close()
 
     async def _request_with_retry(
         self,

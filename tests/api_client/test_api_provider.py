@@ -214,11 +214,11 @@ async def test_custom_header_precedes(api_provider: ApiProvider, request_m):
     assert request_m.call_args[1]["headers"]["Authorization"] == "bar"
 
 
-async def test_session_closed(api_provider: ApiProvider, request_m):
+async def test_disconnect(api_provider: ApiProvider, request_m):
     with mock.patch.object(
-        ClientSession, "close", new_callable=mock.AsyncMock
+        api_provider._session, "close", new_callable=mock.AsyncMock
     ) as close_m:
-        await api_provider.request("GET", "")
+        await api_provider.disconnect()
 
     close_m.assert_awaited_once()
 
