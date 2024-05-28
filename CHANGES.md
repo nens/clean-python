@@ -3,7 +3,7 @@
 ## 0.14.1 (unreleased)
 ----------------------
 
-- Nothing changed yet.
+- Added synchronous S3 interface (installable through optional `s3_sync` dependency).
 
 
 ## 0.14.0 (2024-05-22)
