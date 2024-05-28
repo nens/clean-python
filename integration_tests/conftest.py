@@ -1,14 +1,17 @@
 # (c) Nelen & Schuurmans
 
 import asyncio
+import io
 import multiprocessing
 import os
 import time
 from urllib.error import URLError
 from urllib.request import urlopen
 
+import boto3
 import pytest
 import uvicorn
+from botocore.exceptions import ClientError
 
 
 def pytest_sessionstart(session):
@@ -97,3 +100,61 @@ async def fastapi_example_app():
         yield f"http://localhost:{port}"
     finally:
         p.terminate()
+
+
+@pytest.fixture(scope="session")
+def s3_settings(s3_url):
+    minio_settings = {
+        "url": s3_url,
+        "access_key": "cleanpython",
+        "secret_key": "cleanpython",
+        "bucket": "cleanpython-test",
+        "region": None,
+    }
+    if not minio_settings["bucket"].endswith("-test"):  # type: ignore
+        pytest.exit("Not running against a test minio bucket?! 😱")
+    return minio_settings.copy()
+
+
+@pytest.fixture(scope="session")
+def s3_bucket(s3_settings):
+    s3 = boto3.resource(
+        "s3",
+        endpoint_url=s3_settings["url"],
+        aws_access_key_id=s3_settings["access_key"],
+        aws_secret_access_key=s3_settings["secret_key"],
+    )
+    bucket = s3.Bucket(s3_settings["bucket"])
+
+    # ensure existence
+    try:
+        bucket.create()
+    except ClientError as e:
+        if "BucketAlreadyOwnedByYou" in str(e):
+            pass
+    return bucket
+
+
+@pytest.fixture
+def local_file(tmp_path):
+    path = tmp_path / "test-upload.txt"
+    path.write_bytes(b"foo")
+    return path
+
+
+@pytest.fixture
+def object_in_s3(s3_bucket):
+    s3_bucket.upload_fileobj(io.BytesIO(b"foo"), "object-in-s3")
+    return "object-in-s3"
+
+
+@pytest.fixture
+def object_in_s3_tenant(s3_bucket):
+    s3_bucket.upload_fileobj(io.BytesIO(b"foo"), "tenant-22/object-in-s3")
+    return "object-in-s3"
+
+
+@pytest.fixture
+def object_in_s3_other_tenant(s3_bucket):
+    s3_bucket.upload_fileobj(io.BytesIO(b"foo"), "tenant-222/object-in-s3")
+    return "object-in-s3"
