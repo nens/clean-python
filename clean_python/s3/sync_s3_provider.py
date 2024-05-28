@@ -3,24 +3,20 @@
 import logging
 from typing import TYPE_CHECKING
 
-try:
-    import aioboto3
-except ImportError:
-    aioboto3 = None
-
+import boto3
 from botocore.client import Config
 
 from .s3_bucket_options import S3BucketOptions
 
 if TYPE_CHECKING:
-    from types_aiobotocore_s3.client import S3Client
+    from mypy_boto3_s3.client import S3Client
 
-__all__ = ["S3BucketOptions", "S3BucketProvider"]
+__all__ = ["S3BucketOptions", "SyncS3BucketProvider"]
 
 logger = logging.getLogger(__name__)
 
 
-class S3BucketProvider:
+class SyncS3BucketProvider:
     def __init__(self, options: S3BucketOptions):
         self.options = options
 
@@ -30,9 +26,7 @@ class S3BucketProvider:
 
     @property
     def client(self) -> "S3Client":
-        assert aioboto3 is not None
-        session = aioboto3.Session()
-        return session.client(
+        return boto3.client(
             "s3",
             endpoint_url=self.options.url,
             aws_access_key_id=self.options.access_key,
