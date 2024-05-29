@@ -31,7 +31,7 @@ amqp = ["pika==1.3.*"]
 celery = ["celery==5.3.*"]
 fluentbit = ["fluent-logger"]
 sql = ["sqlalchemy==2.0.*", "asyncpg==0.29.*"]
-sql-sync = ["sqlalchemy==2.0.*", "psycopg2==2.9.*"]
+sql-sync = ["sqlalchemy==2.0.*", "psycopg2-binary==2.9.*"]
 # help the resolver a bit by copying version pins from aioboto3 / aiobotocore
 s3 = ["aioboto3==13.0.*", "aiobotocore==2.13.0", "boto3==1.34.106", "types-aioboto3[s3]"]
 s3-sync = ["boto3==1.34.*", "boto3-stubs[s3]"]

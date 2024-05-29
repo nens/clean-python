@@ -3,7 +3,7 @@
 ## 0.15.2 (unreleased)
 ----------------------
 
-- Nothing changed yet.
+- Use `psycopg2-binary` instead of `psycopg2`.
 
 
 ## 0.15.1 (2024-05-29)
