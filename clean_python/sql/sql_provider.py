@@ -7,11 +7,13 @@ from sqlalchemy import text
 from sqlalchemy.sql import Executable
 
 from clean_python import Json
+from clean_python import Provider
+from clean_python import SyncProvider
 
 __all__ = ["SQLProvider", "SQLDatabase", "SyncSQLProvider", "SyncSQLDatabase"]
 
 
-class SQLProvider:
+class SQLProvider(Provider):
     async def execute(
         self, query: Executable, bind_params: dict[str, Any] | None = None
     ) -> list[Json]:
@@ -44,7 +46,7 @@ class SQLDatabase(SQLProvider):
         await self.execute_autocommit(text(f"TRUNCATE TABLE {', '.join(quoted)}"))
 
 
-class SyncSQLProvider:
+class SyncSQLProvider(SyncProvider):
     def execute(
         self, query: Executable, bind_params: dict[str, Any] | None = None
     ) -> list[Json]:

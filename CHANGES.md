@@ -3,10 +3,20 @@
 ## 0.14.2 (unreleased)
 ----------------------
 
+- Added a base class for providers (`Provider` / `SyncProvider`) with empty
+  definitions of `connect` and `disconnect` (co)routines.
+
+- Re-use the `S3Client` in `S3Provider`. Awaiting `S3Provider.connect()` at
+  startup is now necessary.
+
+- Re-use the `ClientSession` in `ApiProvider`. Awaiting `ApiProvider.connect()`
+  at startup is now necessary.
+
 - Added `SyncInternalGateway`.
 
 - Breaking change in `InternalGateway`: it now requires a `.mapper` attribute
   instead of `.to_internal` and `.to_external` methods.
+
 
 ## 0.14.1 (2024-05-28)
 ----------------------

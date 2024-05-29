@@ -2,10 +2,12 @@
 
 from tempfile import TemporaryDirectory
 
+from .provider import SyncProvider
+
 __all__ = ["TmpDirProvider"]
 
 
-class TmpDirProvider:
+class TmpDirProvider(SyncProvider):
     def __init__(self, dir: str | None = None):
         self.dir = dir
 

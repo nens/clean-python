@@ -42,12 +42,15 @@ def response():
 
 
 @pytest.fixture
-def api_provider_no_mock() -> mock.AsyncMock:
-    return ApiProvider(
+async def api_provider_no_mock() -> mock.AsyncMock:
+    provider = ApiProvider(
         url="http://testserver/foo/",
         headers_factory=fake_token,
         retries=0,
     )
+    await provider.connect()
+    yield provider
+    await provider.disconnect()
 
 
 @pytest.fixture
@@ -211,18 +214,23 @@ async def test_custom_header_precedes(api_provider: ApiProvider, request_m):
     assert request_m.call_args[1]["headers"]["Authorization"] == "bar"
 
 
-async def test_session_closed(api_provider: ApiProvider, request_m):
+async def test_disconnect(api_provider: ApiProvider, request_m):
     with mock.patch.object(
-        ClientSession, "close", new_callable=mock.AsyncMock
+        api_provider._session, "close", new_callable=mock.AsyncMock
     ) as close_m:
-        await api_provider.request("GET", "")
+        await api_provider.disconnect()
 
     close_m.assert_awaited_once()
 
 
 @pytest.fixture
-def retry_provider():
-    return ApiProvider(url="http://testserver/foo/", retries=1, backoff_factor=0.001)
+async def retry_provider():
+    provider = ApiProvider(
+        url="http://testserver/foo/", retries=1, backoff_factor=0.001
+    )
+    await provider.connect()
+    yield provider
+    await provider.disconnect()
 
 
 @pytest.fixture
