@@ -4,7 +4,15 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Any
 
-import asyncpg
+try:
+    import asyncpg
+    from asyncpg import Connection
+    from asyncpg.exceptions import SerializationError
+    from asyncpg.exceptions import UniqueViolationError
+except ImportError:
+    asyncpg = None
+    UniqueViolationError = SerializationError = Exception
+    Connection = object
 from async_lru import alru_cache
 from sqlalchemy.dialects.postgresql.asyncpg import dialect as asyncpg_dialect
 from sqlalchemy.sql import Executable
@@ -26,7 +34,7 @@ DIALECT = asyncpg_dialect()
 
 
 def convert_unique_violation_error(
-    e: asyncpg.exceptions.UniqueViolationError,
+    e: UniqueViolationError,
 ) -> AlreadyExists:
     match = UNIQUE_VIOLATION_DETAIL_REGEX.match(e.detail)
     if match:
@@ -53,7 +61,7 @@ def compile(
     return (str(compiled),) + tuple(params[k] for k in compiled.positiontup)
 
 
-async def init_db_types(conn: asyncpg.Connection):
+async def init_db_types(conn: Connection):
     await conn.set_type_codec(
         "json", encoder=json.dumps, decoder=json.loads, schema="pg_catalog"
     )
@@ -66,6 +74,7 @@ class AsyncpgSQLDatabase(SQLDatabase):
     def __init__(
         self, url: str, *, isolation_level: str = "repeatable_read", pool_size: int = 1
     ):
+        assert asyncpg is not None
         self.url = url
         self.pool_size = pool_size
         self.isolation_level = isolation_level
@@ -94,16 +103,16 @@ class AsyncpgSQLDatabase(SQLDatabase):
         pool = await self.get_pool()
         try:
             result = await pool.fetch(*args)
-        except asyncpg.exceptions.UniqueViolationError as e:
+        except UniqueViolationError as e:
             raise convert_unique_violation_error(e)
-        except asyncpg.exceptions.SerializationError:
+        except SerializationError:
             raise Conflict("could not execute query due to concurrent update")
         return list(map(dict, result))
 
     @asynccontextmanager
     async def transaction(self) -> AsyncIterator[SQLProvider]:  # type: ignore
         pool = await self.get_pool()
-        connection: asyncpg.Connection
+        connection: Connection
         async with pool.acquire() as connection:
             async with connection.transaction(isolation=self.isolation_level):
                 yield AsyncpgSQLTransaction(connection)
@@ -111,7 +120,7 @@ class AsyncpgSQLDatabase(SQLDatabase):
     @asynccontextmanager
     async def testing_transaction(self) -> AsyncIterator[SQLProvider]:  # type: ignore
         pool = await self.get_pool()
-        connection: asyncpg.Connection
+        connection: Connection
         async with pool.acquire() as connection:
             transaction = connection.transaction()
             await transaction.start()
@@ -122,13 +131,13 @@ class AsyncpgSQLDatabase(SQLDatabase):
 
     async def execute_autocommit(self, query: Executable) -> None:
         pool = await self.get_pool()
-        connection: asyncpg.Connection
+        connection: Connection
         async with pool.acquire() as connection:
             await connection.execute(*compile(query))
 
 
 class AsyncpgSQLTransaction(SQLProvider):
-    def __init__(self, connection: asyncpg.Connection):
+    def __init__(self, connection: Connection):
         self.connection = connection
 
     async def execute(
@@ -136,9 +145,9 @@ class AsyncpgSQLTransaction(SQLProvider):
     ) -> list[Json]:
         try:
             result = await self.connection.fetch(*compile(query, bind_params))
-        except asyncpg.exceptions.UniqueViolationError as e:
+        except UniqueViolationError as e:
             raise convert_unique_violation_error(e)
-        except asyncpg.exceptions.SerializationError:
+        except SerializationError:
             raise Conflict("could not execute query due to concurrent update")
         return list(map(dict, result))
 

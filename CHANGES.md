@@ -3,7 +3,7 @@
 ## 0.15.1 (unreleased)
 ----------------------
 
-- Nothing changed yet.
+- Fixed `ImportError` because of absent `asyncpg` when using only `sql-sync` dependency.
 
 
 ## 0.15.0 (2024-05-29)
