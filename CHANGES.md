@@ -1,6 +1,6 @@
 # Changelog of clean-python
 
-## 0.14.2 (unreleased)
+## 0.15.0 (2024-05-29)
 ----------------------
 
 - Added a base class for providers (`Provider` / `SyncProvider`) with empty
