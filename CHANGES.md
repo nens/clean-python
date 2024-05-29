@@ -12,6 +12,11 @@
 - Re-use the `ClientSession` in `ApiProvider`. Awaiting `ApiProvider.connect()`
   at startup is now necessary.
 
+- Added `SyncInternalGateway`.
+
+- Breaking change in `InternalGateway`: it now requires a `.mapper` attribute
+  instead of `.to_internal` and `.to_external` methods.
+
 
 ## 0.14.1 (2024-05-28)
 ----------------------

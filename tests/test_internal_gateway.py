@@ -9,6 +9,7 @@ from clean_python import InMemoryGateway
 from clean_python import InternalGateway
 from clean_python import Json
 from clean_python import Manage
+from clean_python import Mapper
 from clean_python import Repository
 from clean_python import RootEntity
 
@@ -36,16 +37,20 @@ class ManageUser(Manage[User]):
 # infrastructure - this module
 
 
+class UserMapper(Mapper):
+    def to_internal(self, obj: User) -> Json:
+        return dict(id=obj.id, name=obj.name)
+
+
 class UserGateway(InternalGateway[User]):
+    mapper = UserMapper()
+
     def __init__(self, manage: ManageUser):
         self._manage = manage
 
     @property
     def manage(self) -> ManageUser:
         return self._manage
-
-    def to_internal(self, obj: User) -> Json:
-        return dict(id=obj.id, name=obj.name)
 
 
 @pytest.fixture

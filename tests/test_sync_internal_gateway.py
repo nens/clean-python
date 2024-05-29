@@ -1,0 +1,150 @@
+# This module is a copy paste of test_internal_gateway.py
+
+import pytest
+from pydantic import Field
+
+from clean_python import Conflict
+from clean_python import DoesNotExist
+from clean_python import Filter
+from clean_python import Id
+from clean_python import InMemorySyncGateway
+from clean_python import Json
+from clean_python import Mapper
+from clean_python import RootEntity
+from clean_python import SyncInternalGateway
+from clean_python import SyncManage
+from clean_python import SyncRepository
+
+
+# domain - other module
+class User(RootEntity):
+    name: str = Field(min_length=1)
+
+
+class UserSyncRepository(SyncRepository[User]):
+    pass
+
+
+# application - other module
+class SyncManageUser(SyncManage[User]):
+    def __init__(self):
+        self.repo = UserSyncRepository(gateway=InMemorySyncGateway([]))
+
+    def update(self, id: Id, values: Json) -> User:
+        if values.get("name") == "conflict":
+            raise Conflict()
+        return self.repo.update(id, values)
+
+
+# infrastructure - this module
+
+
+class UserMapper(Mapper):
+    def to_internal(self, obj: User) -> Json:
+        return dict(id=obj.id, name=obj.name)
+
+
+class UserGateway(SyncInternalGateway[User]):
+    mapper = UserMapper()
+
+    def __init__(self, manage: SyncManageUser):
+        self._manage = manage
+
+    @property
+    def manage(self) -> SyncManageUser:
+        return self._manage
+
+
+@pytest.fixture
+def internal_gateway():
+    return UserGateway(manage=SyncManageUser())
+
+
+def test_get_not_existing(internal_gateway: UserGateway):
+    assert internal_gateway.get(1) is None
+
+
+def test_add(internal_gateway: UserGateway):
+    actual = internal_gateway.add(dict(id=12, name="foo"))
+
+    assert actual == dict(id=12, name="foo")
+
+
+@pytest.fixture
+def internal_gateway_with_record(internal_gateway):
+    internal_gateway.add(dict(id=12, name="foo"))
+    return internal_gateway
+
+
+def test_get(internal_gateway_with_record):
+    assert internal_gateway_with_record.get(12) == dict(id=12, name="foo")
+
+
+def test_filter(internal_gateway_with_record: UserGateway):
+    assert internal_gateway_with_record.filter([]) == [dict(id=12, name="foo")]
+
+
+def test_filter_2(internal_gateway_with_record: UserGateway):
+    assert internal_gateway_with_record.filter([Filter(field="id", values=[1])]) == []
+
+
+def test_remove(internal_gateway_with_record: UserGateway):
+    assert internal_gateway_with_record.remove(12)
+
+    assert internal_gateway_with_record.manage.repo.gateway.data == {}
+
+
+def test_remove_does_not_exist(internal_gateway: UserGateway):
+    assert not internal_gateway.remove(12)
+
+
+def test_add_bad_request(internal_gateway: UserGateway):
+    # a 'bad request' should be reraised as a ValueError; errors in gateways
+    # are an internal affair.
+    with pytest.raises(ValueError):
+        internal_gateway.add(dict(id=12, name=""))
+
+
+def test_count(internal_gateway_with_record: UserGateway):
+    assert internal_gateway_with_record.count([]) == 1
+
+
+def test_count_2(internal_gateway_with_record: UserGateway):
+    assert internal_gateway_with_record.count([Filter(field="id", values=[1])]) == 0
+
+
+def test_exists(internal_gateway_with_record: UserGateway):
+    assert internal_gateway_with_record.exists([]) is True
+
+
+def test_exists_2(internal_gateway_with_record: UserGateway):
+    assert (
+        internal_gateway_with_record.exists([Filter(field="id", values=[1])]) is False
+    )
+
+
+def test_update(internal_gateway_with_record):
+    updated = internal_gateway_with_record.update({"id": 12, "name": "bar"})
+
+    assert updated == dict(id=12, name="bar")
+
+
+@pytest.mark.parametrize(
+    "values", [{"id": 12, "name": "bar"}, {"id": None, "name": "bar"}, {"name": "bar"}]
+)
+def test_update_does_not_exist(internal_gateway, values):
+    with pytest.raises(DoesNotExist):
+        assert internal_gateway.update(values)
+
+
+def test_update_bad_request(internal_gateway_with_record):
+    # a 'bad request' should be reraised as a ValueError; errors in gateways
+    # are an internal affair.
+    with pytest.raises(ValueError):
+        assert internal_gateway_with_record.update({"id": 12, "name": ""})
+
+
+def test_update_conflict(internal_gateway_with_record):
+    # a 'conflict' should bubble through the internal gateway
+    with pytest.raises(Conflict):
+        assert internal_gateway_with_record.update({"id": 12, "name": "conflict"})
