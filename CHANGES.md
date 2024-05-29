@@ -1,6 +1,6 @@
 # Changelog of clean-python
 
-## 0.15.1 (unreleased)
+## 0.15.1 (2024-05-29)
 ----------------------
 
 - Fixed `ImportError` because of absent `asyncpg` when using only `sql-sync` dependency.
