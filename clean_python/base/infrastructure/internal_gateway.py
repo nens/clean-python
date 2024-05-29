@@ -1,11 +1,11 @@
 # (c) Nelen & Schuurmans
 from abc import abstractmethod
-from abc import abstractproperty
 from datetime import datetime
 from typing import Generic
 from typing import TypeVar
 
 from clean_python.base.application.manage import Manage
+from clean_python.base.application.manage import SyncManage
 from clean_python.base.domain import BadRequest
 from clean_python.base.domain import DoesNotExist
 from clean_python.base.domain import Filter
@@ -14,37 +14,36 @@ from clean_python.base.domain import Id
 from clean_python.base.domain import Json
 from clean_python.base.domain import PageOptions
 from clean_python.base.domain import RootEntity
+from clean_python.base.domain import SyncGateway
 
-__all__ = ["InternalGateway"]
+from .mapper import Mapper
+
+__all__ = ["InternalGateway", "SyncInternalGateway"]
 
 
 T = TypeVar("T", bound=RootEntity)  # External
 
 
 class InternalGateway(Gateway, Generic[T]):
-    @abstractproperty
+    mapper: Mapper
+
+    @property
+    @abstractmethod
     def manage(self) -> Manage[T]:
         raise NotImplementedError()
-
-    @abstractmethod
-    def to_internal(self, obj: T) -> Json:
-        raise NotImplementedError()
-
-    def to_external(self, values: Json) -> Json:
-        return values
 
     async def filter(
         self, filters: list[Filter], params: PageOptions | None = None
     ) -> list[Json]:
         page = await self.manage.filter(filters, params)
-        return [self.to_internal(x) for x in page.items]
+        return [self.mapper.to_internal(x) for x in page.items]
 
     async def add(self, item: Json) -> Json:
         try:
-            created = await self.manage.create(self.to_external(item))
+            created = await self.manage.create(self.mapper.to_external(item))
         except BadRequest as e:
             raise ValueError(e)
-        return self.to_internal(created)
+        return self.mapper.to_internal(created)
 
     async def remove(self, id: Id) -> bool:
         return await self.manage.destroy(id)
@@ -59,7 +58,7 @@ class InternalGateway(Gateway, Generic[T]):
         self, item: Json, if_unmodified_since: datetime | None = None
     ) -> Json:
         assert if_unmodified_since is None  # unsupported
-        values = self.to_external(item)
+        values = self.mapper.to_external(item)
         id_ = values.pop("id", None)
         if id_ is None:
             raise DoesNotExist("item", id_)
@@ -67,4 +66,47 @@ class InternalGateway(Gateway, Generic[T]):
             updated = await self.manage.update(id_, values)
         except BadRequest as e:
             raise ValueError(e)
-        return self.to_internal(updated)
+        return self.mapper.to_internal(updated)
+
+
+class SyncInternalGateway(SyncGateway, Generic[T]):
+    mapper: Mapper
+
+    @property
+    @abstractmethod
+    def manage(self) -> SyncManage[T]:
+        raise NotImplementedError()
+
+    def filter(
+        self, filters: list[Filter], params: PageOptions | None = None
+    ) -> list[Json]:
+        page = self.manage.filter(filters, params)
+        return [self.mapper.to_internal(x) for x in page.items]
+
+    def add(self, item: Json) -> Json:
+        try:
+            created = self.manage.create(self.mapper.to_external(item))
+        except BadRequest as e:
+            raise ValueError(e)
+        return self.mapper.to_internal(created)
+
+    def remove(self, id: Id) -> bool:
+        return self.manage.destroy(id)
+
+    def count(self, filters: list[Filter]) -> int:
+        return self.manage.count(filters)
+
+    def exists(self, filters: list[Filter]) -> bool:
+        return self.manage.exists(filters)
+
+    def update(self, item: Json, if_unmodified_since: datetime | None = None) -> Json:
+        assert if_unmodified_since is None  # unsupported
+        values = self.mapper.to_external(item)
+        id_ = values.pop("id", None)
+        if id_ is None:
+            raise DoesNotExist("item", id_)
+        try:
+            updated = self.manage.update(id_, values)
+        except BadRequest as e:
+            raise ValueError(e)
+        return self.mapper.to_internal(updated)

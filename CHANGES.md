@@ -3,8 +3,10 @@
 ## 0.14.2 (unreleased)
 ----------------------
 
-- Nothing changed yet.
+- Added `SyncInternalGateway`.
 
+- Breaking change in `InternalGateway`: it now requires a `.mapper` attribute
+  instead of `.to_internal` and `.to_external` methods.
 
 ## 0.14.1 (2024-05-28)
 ----------------------
