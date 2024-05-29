@@ -62,19 +62,24 @@ class CCTokenGateway:
         async def headers_factory():
             return auth_headers
 
-        self.provider = ApiProvider(
-            url=settings.token_url, headers_factory=headers_factory
-        )
+        self._token_url = settings.token_url
+        self._headers_factory = headers_factory
+
         # This binds the cache to the CCTokenGateway instance (and not the class)
         self.cached_fetch_token = alru_cache(self._fetch_token)
 
     async def _fetch_token(self) -> str:
-        response = await self.provider.request(
+        provider = ApiProvider(
+            url=self._token_url, headers_factory=self._headers_factory
+        )
+        await provider.connect()
+        response = await provider.request(
             method="POST",
             path="",
             fields={"grant_type": "client_credentials", "scope": self.scope},
             timeout=self.timeout,
         )
+        await provider.disconnect()
         assert response is not None
         return response["access_token"]
 
@@ -100,19 +105,24 @@ class SyncCCTokenGateway:
 
         auth_headers = get_auth_headers(settings.client_id, settings.client_secret)
 
-        self.provider = SyncApiProvider(
-            url=settings.token_url, headers_factory=lambda: auth_headers
-        )
+        self._token_url = settings.token_url
+        self._headers_factory = lambda: auth_headers
+
         # This binds the cache to the SyncCCTokenGateway instance (and not the class)
         self.cached_fetch_token = lru_cache(self._fetch_token)
 
     def _fetch_token(self) -> str:
-        response = self.provider.request(
+        provider = SyncApiProvider(
+            url=self._token_url, headers_factory=self._headers_factory
+        )
+        provider.connect()
+        response = provider.request(
             method="POST",
             path="",
             fields={"grant_type": "client_credentials", "scope": self.scope},
             timeout=self.timeout,
         )
+        provider.disconnect()
         assert response is not None
         return response["access_token"]
 

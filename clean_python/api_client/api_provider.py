@@ -17,6 +17,7 @@ from pydantic import field_validator
 
 from clean_python import Conflict
 from clean_python import Json
+from clean_python import Provider
 from clean_python import ValueObject
 
 from .exceptions import ApiException
@@ -95,7 +96,7 @@ class FileFormPost(ValueObject):
         return v
 
 
-class ApiProvider:
+class ApiProvider(Provider):
     """Basic JSON API provider with retry policy and bearer tokens.
 
     The default retry policy has 3 retries with 1, 2, 4 second intervals.
@@ -125,14 +126,13 @@ class ApiProvider:
         self._backoff_factor = backoff_factor
         self._trailing_slash = trailing_slash
 
-    @property
-    def _session(self) -> ClientSession:
+    async def connect(self) -> None:
         # There seems to be an issue if the ClientSession is instantiated before
-        # the event loop runs. So we do that delayed in a property. Use this property
-        # in a context manager.
-        # TODO It is more efficient to reuse the connection / connection pools. One idea
-        # is to expose .session as a context manager (like with the SQLProvider.transaction)
-        return ClientSession()
+        # the event loop runs. So we do that in the connect().
+        self._session = await ClientSession().__aenter__()
+
+    async def disconnect(self) -> None:
+        await self._session.close()
 
     async def _request_with_retry(
         self,
@@ -168,14 +168,13 @@ class ApiProvider:
                 await asyncio.sleep(backoff)
 
             try:
-                async with self._session as session:
-                    response = await session.request(
-                        headers=actual_headers, **request_kwargs
-                    )
-                    if response.status in RETRY_STATUSES:
-                        continue
-                    await response.read()
-                    return response
+                response = await self._session.request(
+                    headers=actual_headers, **request_kwargs
+                )
+                if response.status in RETRY_STATUSES:
+                    continue
+                await response.read()
+                return response
             except (aiohttp.ClientError, asyncio.exceptions.TimeoutError):
                 if attempt == retries:
                     raise  # propagate ClientError in case no retries left

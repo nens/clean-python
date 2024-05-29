@@ -16,10 +16,13 @@ from clean_python.s3 import S3Gateway
 
 
 @pytest.fixture
-def s3_provider(s3_bucket, s3_settings) -> S3BucketProvider:
+async def s3_provider(s3_bucket, s3_settings) -> S3BucketProvider:
     # wipe contents before each test
     s3_bucket.objects.all().delete()
-    return S3BucketProvider(S3BucketOptions(**s3_settings))
+    provider = S3BucketProvider(S3BucketOptions(**s3_settings))
+    await provider.connect()
+    yield provider
+    await provider.disconnect()
 
 
 @pytest.fixture

@@ -8,6 +8,7 @@ from urllib3 import PoolManager
 from urllib3 import Retry
 
 from clean_python import Json
+from clean_python import SyncProvider
 
 from .api_provider import add_query_params
 from .api_provider import check_exception
@@ -22,7 +23,7 @@ from .response import Response
 __all__ = ["SyncApiProvider"]
 
 
-class SyncApiProvider:
+class SyncApiProvider(SyncProvider):
     """Basic JSON API provider with retry policy and bearer tokens.
 
     The default retry policy has 3 retries with 1, 2, 4 second intervals.
