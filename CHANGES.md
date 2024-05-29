@@ -1,6 +1,6 @@
 # Changelog of clean-python
 
-## 0.15.2 (unreleased)
+## 0.15.2 (2024-05-29)
 ----------------------
 
 - Use `psycopg2-binary` instead of `psycopg2`.
