@@ -4,9 +4,7 @@
 import io
 from datetime import datetime
 
-import boto3
 import pytest
-from botocore.exceptions import ClientError
 
 from clean_python import ctx
 from clean_python import DoesNotExist
@@ -16,39 +14,6 @@ from clean_python import Tenant
 from clean_python.s3 import S3BucketOptions
 from clean_python.s3 import S3BucketProvider
 from clean_python.s3 import S3Gateway
-
-
-@pytest.fixture(scope="session")
-def s3_settings(s3_url):
-    minio_settings = {
-        "url": s3_url,
-        "access_key": "cleanpython",
-        "secret_key": "cleanpython",
-        "bucket": "cleanpython-test",
-        "region": None,
-    }
-    if not minio_settings["bucket"].endswith("-test"):  # type: ignore
-        pytest.exit("Not running against a test minio bucket?! 😱")
-    return minio_settings.copy()
-
-
-@pytest.fixture(scope="session")
-def s3_bucket(s3_settings):
-    s3 = boto3.resource(
-        "s3",
-        endpoint_url=s3_settings["url"],
-        aws_access_key_id=s3_settings["access_key"],
-        aws_secret_access_key=s3_settings["secret_key"],
-    )
-    bucket = s3.Bucket(s3_settings["bucket"])
-
-    # ensure existence
-    try:
-        bucket.create()
-    except ClientError as e:
-        if "BucketAlreadyOwnedByYou" in str(e):
-            pass
-    return bucket
 
 
 @pytest.fixture
@@ -73,25 +38,6 @@ def s3_gateway(s3_provider):
     return S3Gateway(s3_provider, multitenant=True)
 
 
-@pytest.fixture
-def object_in_s3(s3_bucket):
-    s3_bucket.upload_fileobj(io.BytesIO(b"foo"), "tenant-22/object-in-s3")
-    return "object-in-s3"
-
-
-@pytest.fixture
-def object_in_s3_other_tenant(s3_bucket):
-    s3_bucket.upload_fileobj(io.BytesIO(b"foo"), "tenant-222/object-in-s3")
-    return "object-in-s3"
-
-
-@pytest.fixture
-def local_file(tmp_path):
-    path = tmp_path / "test-upload.txt"
-    path.write_bytes(b"foo")
-    return path
-
-
 async def test_upload_file_uses_tenant(s3_gateway: S3Gateway, local_file, s3_bucket):
     object_name = "test-upload-file"
 
@@ -100,10 +46,12 @@ async def test_upload_file_uses_tenant(s3_gateway: S3Gateway, local_file, s3_buc
     assert s3_bucket.Object("tenant-22/test-upload-file").content_length == 3
 
 
-async def test_download_file_uses_tenant(s3_gateway: S3Gateway, object_in_s3, tmp_path):
+async def test_download_file_uses_tenant(
+    s3_gateway: S3Gateway, object_in_s3_tenant, tmp_path
+):
     path = tmp_path / "test-download.txt"
 
-    await s3_gateway.download_file(object_in_s3, path)
+    await s3_gateway.download_file(object_in_s3_tenant, path)
 
     assert path.read_bytes() == b"foo"
 
@@ -119,10 +67,12 @@ async def test_download_file_different_tenant(
     assert not path.exists()
 
 
-async def test_remove_uses_tenant(s3_gateway: S3Gateway, s3_bucket, object_in_s3):
-    await s3_gateway.remove(object_in_s3)
+async def test_remove_uses_tenant(
+    s3_gateway: S3Gateway, s3_bucket, object_in_s3_tenant
+):
+    await s3_gateway.remove(object_in_s3_tenant)
 
-    assert await s3_gateway.get(object_in_s3) is None
+    assert await s3_gateway.get(object_in_s3_tenant) is None
 
 
 async def test_remove_other_tenant(
@@ -177,9 +127,9 @@ async def test_filter_with_cursor_multitenant(s3_gateway: S3Gateway, multiple_ob
     assert actual[0]["id"] == "raster-2/foo"
 
 
-async def test_get_multitenant(s3_gateway: S3Gateway, object_in_s3):
-    actual = await s3_gateway.get(object_in_s3)
-    assert actual["id"] == object_in_s3
+async def test_get_multitenant(s3_gateway: S3Gateway, object_in_s3_tenant):
+    actual = await s3_gateway.get(object_in_s3_tenant)
+    assert actual["id"] == object_in_s3_tenant
     assert isinstance(actual["last_modified"], datetime)
     assert actual["etag"] == "acbd18db4cc2f85cedef654fccc4a4d8"
     assert actual["size"] == 3

@@ -1,6 +1,6 @@
 # Changelog of clean-python
 
-## 0.14.1 (unreleased)
+## 0.14.2 (unreleased)
 ----------------------
 
 - Added a base class for providers (`Provider` / `SyncProvider`) with empty
@@ -11,6 +11,12 @@
 
 - Re-use the `ClientSession` in `ApiProvider`. Awaiting `ApiProvider.connect()`
   at startup is now necessary.
+
+
+## 0.14.1 (2024-05-28)
+----------------------
+
+- Added synchronous S3 interface (installable through optional `s3_sync` dependency).
 
 
 ## 0.14.0 (2024-05-22)

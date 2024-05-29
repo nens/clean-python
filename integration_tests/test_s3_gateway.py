@@ -5,9 +5,7 @@ import io
 from datetime import datetime
 from unittest import mock
 
-import boto3
 import pytest
-from botocore.exceptions import ClientError
 
 from clean_python import DoesNotExist
 from clean_python import Filter
@@ -17,41 +15,8 @@ from clean_python.s3 import S3BucketProvider
 from clean_python.s3 import S3Gateway
 
 
-@pytest.fixture(scope="session")
-def s3_settings(s3_url):
-    minio_settings = {
-        "url": s3_url,
-        "access_key": "cleanpython",
-        "secret_key": "cleanpython",
-        "bucket": "cleanpython-test",
-        "region": None,
-    }
-    if not minio_settings["bucket"].endswith("-test"):  # type: ignore
-        pytest.exit("Not running against a test minio bucket?! 😱")
-    return minio_settings.copy()
-
-
-@pytest.fixture(scope="session")
-def s3_bucket(s3_settings):
-    s3 = boto3.resource(
-        "s3",
-        endpoint_url=s3_settings["url"],
-        aws_access_key_id=s3_settings["access_key"],
-        aws_secret_access_key=s3_settings["secret_key"],
-    )
-    bucket = s3.Bucket(s3_settings["bucket"])
-
-    # ensure existence
-    try:
-        bucket.create()
-    except ClientError as e:
-        if "BucketAlreadyOwnedByYou" in str(e):
-            pass
-    return bucket
-
-
 @pytest.fixture
-async def s3_provider(s3_bucket, s3_settings):
+async def s3_provider(s3_bucket, s3_settings) -> S3BucketProvider:
     # wipe contents before each test
     s3_bucket.objects.all().delete()
     provider = S3BucketProvider(S3BucketOptions(**s3_settings))
@@ -61,7 +26,7 @@ async def s3_provider(s3_bucket, s3_settings):
 
 
 @pytest.fixture
-def s3_gateway(s3_provider):
+def s3_gateway(s3_provider) -> S3Gateway:
     return S3Gateway(s3_provider)
 
 
