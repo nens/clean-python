@@ -17,6 +17,9 @@
 - Breaking change in `InternalGateway`: it now requires a `.mapper` attribute
   instead of `.to_internal` and `.to_external` methods.
 
+- Adapted underscore to hyphen in "extra" requirements: `sql_sync -> sql-sync`,
+  `api_client -> api-client`. See PEP685.
+
 
 ## 0.14.1 (2024-05-28)
 ----------------------
