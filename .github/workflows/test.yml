@@ -53,7 +53,7 @@ jobs:
       - name: Install python dependencies
         run: |
           pip install --disable-pip-version-check --upgrade pip setuptools
-          pip install -e .[dramatiq,fastapi,auth,celery,fluentbit,sql,sql_sync,s3,s3_sync,api_client,amqp,nanoid,test] ${{ matrix.pins }}
+          pip install -e .[dramatiq,fastapi,auth,celery,fluentbit,sql,sql-sync,s3,s3-sync,api-client,amqp,nanoid,test] ${{ matrix.pins }}
           pip list
 
       - name: Run tests
