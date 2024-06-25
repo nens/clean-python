@@ -3,6 +3,8 @@
 ## 0.15.3 (unreleased)
 ----------------------
 
+- Fixed datatype of ctx.path (it was starlette.URL, now it is pydantic_core.Url).
+
 - Deprecate `dramatiq` submodule.
 
 
