@@ -3,7 +3,7 @@
 ## 0.15.3 (unreleased)
 ----------------------
 
-- Nothing changed yet.
+- Fixed datatype of ctx.path (it was starlette.URL, now it is pydantic_core.Url).
 
 
 ## 0.15.2 (2024-05-29)
