@@ -24,7 +24,6 @@ test = [
     "python-multipart",
     "pytest-celery<1"
 ]
-dramatiq = ["dramatiq==1.15.*"]
 fastapi = ["fastapi==0.110.*"]
 auth = ["pyjwt==2.8.*", "cryptography==42.0.*"]  # pyjwt[crypto]
 amqp = ["pika==1.3.*"]
