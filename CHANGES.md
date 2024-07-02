@@ -1,6 +1,6 @@
 # Changelog of clean-python
 
-## 0.15.3 (unreleased)
+## 0.16.0 (2024-07-02)
 ----------------------
 
 - Fixed datatype of ctx.path (it was starlette.URL, now it is pydantic_core.Url).
