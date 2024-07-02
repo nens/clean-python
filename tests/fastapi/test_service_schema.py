@@ -1,3 +1,4 @@
+from html.parser import HTMLParser
 from http import HTTPStatus
 
 import pytest
@@ -150,3 +151,26 @@ def test_schema_yaml(client: TestClient, expected_schema: Json):
     actual = yaml.safe_load(response.content.decode("utf-8"))
 
     assert actual == expected_schema
+
+
+@pytest.mark.parametrize("path", ["/v1/docs", "/v1/redoc"])
+def test_favicon(client: TestClient, path: str):
+    response = client.get(path)
+    assert response.status_code == HTTPStatus.OK
+
+    # parse favicon from html
+    found = set()
+
+    class FaviconParser(HTMLParser):
+        def handle_starttag(self, tag, attrs):
+            if tag == "link":
+                attr_dict = dict(attrs)
+                if (
+                    attr_dict.get("rel") in {"icon", "shortcut icon"}
+                    and "href" in attr_dict
+                ):
+                    found.add(attr_dict["href"])
+
+    FaviconParser().feed(response.text)
+
+    assert found == {"/favicon.ico"}
