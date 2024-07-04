@@ -23,3 +23,13 @@ services:
     image: fluent/fluent-bit:1.9
     ports:
       - "24224:24224"
+
+  rabbitmq:
+    image: "rabbitmq:3.9.13-management-alpine"
+    environment:
+      RABBITMQ_DEFAULT_USER: "cleanpython"
+      RABBITMQ_DEFAULT_PASS: "cleanpython"
+      RABBITMQ_DEFAULT_VHOST: "cleanpython"
+    ports:
+     - "5672:5672"
+     - "15672:15672"
