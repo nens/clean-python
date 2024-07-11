@@ -35,13 +35,24 @@ from .resource import APIVersion
 from .resource import clean_resources
 from .resource import Resource
 from .schema import add_cached_openapi_yaml
-from .schema import add_redoc
-from .schema import add_swagger_ui
 from .security import AuthSettings
 from .security import OAuth2Schema
 from .security import set_auth_scheme
 
 __all__ = ["Service"]
+
+
+def get_swagger_ui_init_oauth(
+    auth: AuthSettings | None = None,
+) -> dict[str, Any] | None:
+    return (
+        None
+        if auth is None or not auth.oauth2.login_enabled()
+        else {
+            "clientId": auth.oauth2.client_id,
+            "usePkceWithAuthorizationCodeGrant": True,
+        }
+    )
 
 
 AnyHttpUrlTA = TypeAdapter(AnyHttpUrl)
@@ -107,7 +118,6 @@ class Service:
                 for x in self.versions
             ],
             root_path_in_servers=False,
-            openapi_url=None,  # disables redoc and docs as well
         )
         if access_logger_gateway is not None:
             app.middleware("http")(
@@ -117,26 +127,16 @@ class Service:
         return app
 
     def _create_versioned_app(
-        self,
-        version: APIVersion,
-        auth_scheme: OAuth2Schema | None,
-        title: str,
-        description: str,
-        dependencies: list[Depends],
-        client_id: str | None,
+        self, version: APIVersion, auth_scheme: OAuth2Schema | None, **fastapi_kwargs
     ) -> FastAPI:
         resources = [x for x in self.resources if x.version == version]
         app = FastAPI(
-            title=title,
-            description=description,
-            dependencies=dependencies,
             version=version.prefix,
             tags=sorted(
                 [x.get_openapi_tag().model_dump() for x in resources],
                 key=lambda x: x["name"],
             ),
-            redoc_url=None,  # added manually later in add_redoc
-            docs_url=None,  # added manually later in add_swagger_ui
+            **fastapi_kwargs,
         )
         for resource in resources:
             app.include_router(
@@ -156,8 +156,6 @@ class Service:
         app.add_exception_handler(PermissionDenied, permission_denied_handler)
         app.add_exception_handler(Unauthorized, unauthorized_handler)
         add_cached_openapi_yaml(app)
-        add_swagger_ui(app, title=title, client_id=client_id)
-        add_redoc(app, title=title)
         return app
 
     def create_app(
@@ -179,18 +177,14 @@ class Service:
             on_shutdown=on_shutdown,
             access_logger_gateway=access_logger_gateway,
         )
-        dependencies = [Depends(set_request_context)]
+        fastapi_kwargs = {
+            "title": title,
+            "description": description,
+            "dependencies": [Depends(set_request_context)],
+            "swagger_ui_init_oauth": get_swagger_ui_init_oauth(auth),
+        }
         versioned_apps = {
-            v: self._create_versioned_app(
-                v,
-                auth_scheme=auth_scheme,
-                title=title,
-                description=description,
-                dependencies=dependencies,
-                client_id=auth.oauth2.client_id
-                if auth and auth.oauth2.login_enabled()
-                else None,
-            )
+            v: self._create_versioned_app(v, auth_scheme=auth_scheme, **fastapi_kwargs)
             for v in self.versions
         }
         for v, versioned_app in versioned_apps.items():

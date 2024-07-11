@@ -11,8 +11,6 @@
 
 - Fixed datatype of ctx.path (it was starlette.URL, now it is pydantic_core.Url).
 
-- Replaced FastAPI's favicon.ico with `/favicon.ico`.
-
 - Deprecate `dramatiq` submodule.
 
 
