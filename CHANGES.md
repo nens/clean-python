@@ -3,13 +3,16 @@
 ## 0.16.1 (unreleased)
 ----------------------
 
-- Nothing changed yet.
+- Reverted "FastAPI's favicon.ico with `/favicon.ico`" because of
+  login issues in Swagger.
 
 
 ## 0.16.0 (2024-07-02)
 ----------------------
 
 - Fixed datatype of ctx.path (it was starlette.URL, now it is pydantic_core.Url).
+
+- Replaced FastAPI's favicon.ico with `/favicon.ico`.
 
 - Deprecate `dramatiq` submodule.
 
