@@ -1,6 +1,6 @@
 # Changelog of clean-python
 
-## 0.16.1 (unreleased)
+## 0.16.1 (2024-07-15)
 ----------------------
 
 - Reverted "FastAPI's favicon.ico with `/favicon.ico`" because of
