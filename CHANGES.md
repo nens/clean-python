@@ -3,7 +3,8 @@
 ## 0.16.1 (unreleased)
 ----------------------
 
-- Nothing changed yet.
+- Reverted "FastAPI's favicon.ico with `/favicon.ico`" because of
+  login issues in Swagger.
 
 
 ## 0.16.0 (2024-07-02)
