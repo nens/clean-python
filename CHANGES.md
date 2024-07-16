@@ -3,7 +3,8 @@
 ## 0.16.2 (unreleased)
 ----------------------
 
-- Nothing changed yet.
+- Removed psycopg2-binary dependency (because psycopg2 compilation is better
+  for production envs).
 
 
 ## 0.16.1 (2024-07-15)
