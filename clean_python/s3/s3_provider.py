@@ -22,6 +22,7 @@ class S3BucketOptions(ValueObject):
     secret_key: str
     bucket: str
     region: str | None = None
+    addressing_style: str = "virtual"  # "path" is deprecated for AWS S3
 
 
 class S3BucketProvider:
@@ -42,7 +43,7 @@ class S3BucketProvider:
             aws_secret_access_key=self.options.secret_key,
             region_name=self.options.region,
             config=Config(
-                s3={"addressing_style": "virtual"},  # "path" will become deprecated
+                s3={"addressing_style": self.options.addressing_style},
                 signature_version="s3v4",  # for minio
                 retries={
                     "max_attempts": 4,  # 1 try and up to 3 retries
