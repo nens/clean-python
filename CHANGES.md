@@ -3,7 +3,7 @@
 ## 0.16.3 (unreleased)
 ----------------------
 
-- Nothing changed yet.
+- Allow to config/set `addressing_style` for S3 object storage. (default='virtual')
 
 
 ## 0.16.2 (2024-07-16)
