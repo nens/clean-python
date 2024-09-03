@@ -9,3 +9,4 @@ class S3BucketOptions(ValueObject):
     secret_key: str
     bucket: str
     region: str | None = None
+    addressing_style: str = "virtual"  # path is deprecated for AWS S3
