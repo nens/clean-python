@@ -1,3 +1,4 @@
+from copy import deepcopy
 from functools import lru_cache
 
 from async_lru import alru_cache
@@ -39,9 +40,12 @@ class LRUCache(Gateway):
     async def get(self, id: Id) -> Json | None:
         if self.multitenant:
             assert ctx.tenant
-            return await self._cached_get(id, ctx.tenant.id)
+            result = await self._cached_get(id, ctx.tenant.id)
         else:
-            return await self._cached_get(id, None)
+            result = await self._cached_get(id, None)
+        # deepcopy to ensure the cache is not modified as a side effect
+        # of the caller modifying the result
+        return deepcopy(result)
 
     def clear_cache(self) -> None:
         self._cached_get.cache_clear()
@@ -92,9 +96,12 @@ class SyncLRUCache(SyncGateway):
     def get(self, id: Id) -> Json | None:
         if self.multitenant:
             assert ctx.tenant
-            return self._cached_get(id, ctx.tenant.id)
+            result = self._cached_get(id, ctx.tenant.id)
         else:
-            return self._cached_get(id, None)
+            result = self._cached_get(id, None)
+        # deepcopy to ensure the cache is not modified as a side effect
+        # of the caller modifying the result
+        return deepcopy(result)
 
     def clear_cache(self) -> None:
         self._cached_get.cache_clear()

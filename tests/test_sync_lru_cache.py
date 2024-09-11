@@ -91,3 +91,16 @@ def test_get_other_tenant(
     assert cache_multitenant.get("id") == {"some": "value"}  # see fixture
     # cache is missed because of different tenant
     cache_multitenant.gateway.get.assert_called_once_with("id")
+
+
+def test_inplace_change_does_not_change_cache(cache: SyncLRUCache):
+    cached = cache.get("id")
+    cached["some"] = "other_value"
+    assert cache.get("id") == {"some": "value"}
+
+
+def test_inplace_nested_change_does_not_change_cache(cache: SyncLRUCache):
+    cache.gateway.get.return_value = {"some": {"nested": "value"}}
+    cached = cache.get("id2")
+    cached["some"]["nested"] = "other_value"
+    assert cache.get("id2") == {"some": {"nested": "value"}}

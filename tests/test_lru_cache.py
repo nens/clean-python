@@ -89,3 +89,16 @@ async def test_get_other_tenant(
     assert await cache_multitenant.get("id") == {"some": "value"}  # see fixture
     # cache is missed because of different tenant
     cache_multitenant.gateway.get.assert_awaited_once_with("id")
+
+
+async def test_inplace_change_does_not_change_cache(cache: LRUCache):
+    cached = await cache.get("id")
+    cached["some"] = "other_value"
+    assert await cache.get("id") == {"some": "value"}
+
+
+async def test_inplace_nested_change_does_not_change_cache(cache: LRUCache):
+    cache.gateway.get.return_value = {"some": {"nested": "value"}}
+    cached = await cache.get("id2")
+    cached["some"]["nested"] = "other_value"
+    assert await cache.get("id2") == {"some": {"nested": "value"}}
