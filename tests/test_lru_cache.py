@@ -4,17 +4,17 @@ from unittest import mock
 import pytest
 
 from clean_python import ctx
-from clean_python import SyncGateway
-from clean_python import SyncLRUCache
+from clean_python import Gateway
+from clean_python import LRUCache
 from clean_python import Tenant
 
 
 @pytest.fixture
-def cache():
-    gateway = mock.Mock(SyncGateway)
-    cache = SyncLRUCache(gateway, max_size=3, multitenant=False)
+async def cache():
+    gateway = mock.Mock(Gateway)
+    cache = LRUCache(gateway, max_size=3, multitenant=False)
     cache.gateway.get.return_value = {"some": "value"}
-    cache.get("id")  # preseeds the cache
+    await cache.get("id")  # preseeds the cache
     gateway.reset_mock()  # for assertions
     return cache
 
@@ -36,56 +36,56 @@ def other_tenant_context() -> Iterator[Tenant]:
 
 
 @pytest.fixture
-def cache_multitenant(tenant_context: Tenant):
-    gateway = mock.Mock(SyncGateway)
-    cache = SyncLRUCache(gateway, max_size=3, multitenant=True)
+async def cache_multitenant(tenant_context: Tenant):
+    gateway = mock.Mock(Gateway)
+    cache = LRUCache(gateway, max_size=3, multitenant=True)
     cache.gateway.get.return_value = {"some": "value"}
-    cache.get("id")  # preseeds the cache
+    await cache.get("id")  # preseeds the cache
     gateway.reset_mock()  # for assertions
     return cache
 
 
-def test_get_cache_miss(cache: SyncLRUCache):
+async def test_get_cache_miss(cache: LRUCache):
     cache.gateway.get.return_value = {"some": "other_value"}
-    assert cache.get("id2") == {"some": "other_value"}
-    cache.gateway.get.assert_called_once_with("id2")
+    assert await cache.get("id2") == {"some": "other_value"}
+    cache.gateway.get.assert_awaited_once_with("id2")
 
 
-def test_get_cache_hit(cache: SyncLRUCache):
-    assert cache.get("id") == {"some": "value"}  # see fixture
+async def test_get_cache_hit(cache: LRUCache):
+    assert await cache.get("id") == {"some": "value"}  # see fixture
     assert not cache.gateway.get.called
 
 
-def test_get_cache_clear(cache: SyncLRUCache):
+async def test_get_cache_clear(cache: LRUCache):
     cache.clear_cache()
 
-    assert cache.get("id") == {"some": "value"}  # see fixture
-    cache.gateway.get.assert_called_once_with("id")
+    assert await cache.get("id") == {"some": "value"}  # see fixture
+    cache.gateway.get.assert_awaited_once_with("id")
 
 
-def test_remove(cache: SyncLRUCache):
-    cache.remove("id")
-    cache.gateway.remove.assert_called_once_with("id")
+async def test_remove(cache: LRUCache):
+    await cache.remove("id")
+    cache.gateway.remove.assert_awaited_once_with("id")
 
 
-def test_add(cache: SyncLRUCache):
-    cache.add("item")
-    cache.gateway.add.assert_called_once_with("item")
+async def test_add(cache: LRUCache):
+    await cache.add("item")
+    cache.gateway.add.assert_awaited_once_with("item")
 
 
-def test_filter(cache: SyncLRUCache):
-    cache.filter(["filter"], "params")
-    cache.gateway.filter.assert_called_once_with(["filter"], "params")
+async def test_filter(cache: LRUCache):
+    await cache.filter(["filter"], "params")
+    cache.gateway.filter.assert_awaited_once_with(["filter"], "params")
 
 
-def test_get_multitenant(cache_multitenant: SyncLRUCache, tenant_context: Tenant):
-    assert cache_multitenant.get("id") == {"some": "value"}  # see fixture
+async def test_get_multitenant(cache_multitenant: LRUCache, tenant_context: Tenant):
+    assert await cache_multitenant.get("id") == {"some": "value"}  # see fixture
     assert not cache_multitenant.gateway.get.called
 
 
-def test_get_other_tenant(
-    cache_multitenant: SyncLRUCache, other_tenant_context: Tenant
+async def test_get_other_tenant(
+    cache_multitenant: LRUCache, other_tenant_context: Tenant
 ):
-    assert cache_multitenant.get("id") == {"some": "value"}  # see fixture
+    assert await cache_multitenant.get("id") == {"some": "value"}  # see fixture
     # cache is missed because of different tenant
-    cache_multitenant.gateway.get.assert_called_once_with("id")
+    cache_multitenant.gateway.get.assert_awaited_once_with("id")
