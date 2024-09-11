@@ -1,6 +1,6 @@
 # Changelog of clean-python
 
-## 0.16.3 (unreleased)
+## 0.16.3 (2024-09-11)
 ----------------------
 
 - Allow to config/set `addressing_style` for S3 object storage. (default='virtual')
