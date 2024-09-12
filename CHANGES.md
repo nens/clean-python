@@ -3,7 +3,7 @@
 ## 0.16.5 (unreleased)
 ----------------------
 
-- Nothing changed yet.
+- Reverted urllib3 to 2.0.* because of other constraints.
 
 
 ## 0.16.4 (2024-09-12)
