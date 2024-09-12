@@ -3,7 +3,7 @@
 ## 0.16.4 (unreleased)
 ----------------------
 
-- Nothing changed yet.
+- Bumped dependencies.
 
 
 ## 0.16.3 (2024-09-11)
