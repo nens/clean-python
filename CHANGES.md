@@ -1,6 +1,6 @@
 # Changelog of clean-python
 
-## 0.16.4 (unreleased)
+## 0.16.4 (2024-09-12)
 ----------------------
 
 - Bumped dependencies.
