@@ -1,6 +1,6 @@
 # Changelog of clean-python
 
-## 0.16.5 (unreleased)
+## 0.16.5 (2024-09-12)
 ----------------------
 
 - Reverted urllib3 to 2.0.* because of other constraints.
