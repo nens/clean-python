@@ -1,32 +1,15 @@
 import time
 
-from celery import Celery
+from celery import shared_task
+from celery import Task
 from celery.exceptions import Ignore
 from celery.exceptions import Reject
 
 from clean_python import ctx
-from clean_python.celery import BaseTask
-
-app = Celery(
-    "tasks",
-    strict_typing=False,
-    backend="rpc://",
-    broker="amqp://cleanpython:cleanpython@localhost/cleanpython",
-)
-app.conf.update(
-    task_cls=BaseTask,
-    strict_typing=False,
-    broker_transport_options={"socket_timeout": 2},
-    timezone="Europe/Amsterdam",
-    task_default_priority=0,
-    task_queue_max_priority=10,
-    task_track_started=True,
-    broker_connection_retry_on_startup=True,  # default, but hides deprecationwarning
-)
 
 
-@app.task(bind=True, base=BaseTask, name="testing")
-def sleep_task(self: BaseTask, seconds: float, return_value=None, event="success"):
+@shared_task(bind=True, name="testing")
+def sleep_task(self: Task, seconds: float, return_value=None, event="success"):
     event = event.lower()
     if event == "success":
         time.sleep(int(seconds))

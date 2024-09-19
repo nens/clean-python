@@ -106,7 +106,16 @@ async def fastapi_example_app():
 @pytest.fixture(scope="session")
 def celery_worker():
     p = subprocess.Popen(
-        ["celery", "-A", "integration_tests.celery_example", "worker", "-c", "1"],
+        [
+            "celery",
+            "-A",
+            "integration_tests.celery_example",
+            "worker",
+            "-c",
+            "1",
+            "-P",
+            "solo",
+        ],
         start_new_session=True,
     )
     try:

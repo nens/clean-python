@@ -1,2 +1,8 @@
-from .celery_app import app  # NOQA
-from .celery_app import sleep_task  # NOQA
+from clean_python.celery import CeleryConfig
+
+from .tasks import sleep_task  # NOQA
+
+app = CeleryConfig(
+    broker_url="amqp://cleanpython:cleanpython@localhost/cleanpython",
+    result_backend="rpc://",
+).apply()
