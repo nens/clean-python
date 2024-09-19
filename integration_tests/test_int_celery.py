@@ -12,6 +12,7 @@ from clean_python import Tenant
 from clean_python.celery import CeleryTaskLogger
 from clean_python.celery import set_task_logger
 
+from .celery_example import app
 from .celery_example import sleep_task
 
 
@@ -91,7 +92,7 @@ def test_log_context(celery_task_logs: SyncGateway, custom_context):
 
 
 def test_log_retry_propagates_context(celery_task_logs: SyncGateway, custom_context):
-    result = sleep_task.delay(0.0, event="retry")
+    result = sleep_task.apply_async(0.0, event="retry")
 
     with pytest.raises(MaxRetriesExceededError):
         result.get(timeout=10)
@@ -101,3 +102,21 @@ def test_log_retry_propagates_context(celery_task_logs: SyncGateway, custom_cont
     assert log["retries"] == 1
     assert log["correlation_id"] == str(custom_context.correlation_id)
     assert log["tenant_id"] == custom_context.tenant.id
+
+
+@pytest.fixture
+def celery_eager():
+    app.conf.task_always_eager = True
+    yield
+    app.conf.task_always_eager = False
+
+
+@pytest.mark.usefixtures("celery_eager")
+def test_eager_mode_with_context(custom_context):
+    result = sleep_task.delay(0.0, event="context")
+
+    assert result.__class__.__name__ == "EagerResult"
+    assert result.get() == {
+        "tenant_id": custom_context.tenant.id,
+        "correlation_id": str(custom_context.correlation_id),
+    }
