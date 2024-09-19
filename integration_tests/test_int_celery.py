@@ -3,6 +3,7 @@ import time
 from uuid import UUID
 
 import pytest
+from celery.exceptions import MaxRetriesExceededError
 
 from clean_python import ctx
 from clean_python import InMemorySyncGateway
@@ -85,5 +86,18 @@ def test_log_context(celery_task_logs: SyncGateway, custom_context):
     assert result.get(timeout=10) == {"value": 16}
 
     (log,) = celery_task_logs.filter([])
+    assert log["correlation_id"] == str(custom_context.correlation_id)
+    assert log["tenant_id"] == custom_context.tenant.id
+
+
+def test_log_retry_propagates_context(celery_task_logs: SyncGateway, custom_context):
+    result = sleep_task.delay(0.0, event="retry")
+
+    with pytest.raises(MaxRetriesExceededError):
+        result.get(timeout=10)
+
+    (log,) = celery_task_logs.filter([])
+    assert log["state"] == "FAILURE"
+    assert log["retries"] == 1
     assert log["correlation_id"] == str(custom_context.correlation_id)
     assert log["tenant_id"] == custom_context.tenant.id
