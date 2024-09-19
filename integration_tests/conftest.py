@@ -118,9 +118,12 @@ def celery_worker(tmp_path_factory):
             "worker",
             "-c",
             "1",
+            # "-P",  enable when using the debugger
+            # "solo"
         ],
         start_new_session=True,
         stdout=subprocess.PIPE,
+        # optionally add "CLEAN_PYTHON_TEST_DEBUG": "5679" to enable debugging
         env={"CLEAN_PYTHON_TEST_LOGGING": log_file, **os.environ},
     )
     try:

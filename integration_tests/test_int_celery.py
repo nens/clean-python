@@ -92,7 +92,7 @@ def test_log_context(celery_task_logs: SyncGateway, custom_context):
 
 
 def test_log_retry_propagates_context(celery_task_logs: SyncGateway, custom_context):
-    result = sleep_task.apply_async(0.0, event="retry")
+    result = sleep_task.delay(0.0, event="retry")
 
     with pytest.raises(MaxRetriesExceededError):
         result.get(timeout=10)

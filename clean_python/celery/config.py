@@ -23,9 +23,9 @@ class CeleryConfig(ValueObject):
     task_queue_max_priority: int = 10
     task_track_started: bool = True
 
-    def apply(self) -> Celery:
+    def apply(self, strict_typing: bool = True) -> Celery:
         app = current_app if current_app else Celery()
         app.task_cls = BaseTask
-        app.strict_typing = False
+        app.strict_typing = strict_typing
         app.config_from_object(self)
         return app
