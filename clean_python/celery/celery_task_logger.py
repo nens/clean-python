@@ -87,7 +87,7 @@ class CeleryTaskLogger:
 
         try:
             kwargsrepr = json.dumps(request.kwargs)
-        except TypeError:
+        except (AttributeError, TypeError):
             kwargsrepr = None
 
         log_dict = {
