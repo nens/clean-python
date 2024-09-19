@@ -4,8 +4,10 @@ import asyncio
 import io
 import multiprocessing
 import os
+import signal
 import subprocess
 import time
+from pathlib import Path
 from urllib.error import URLError
 from urllib.request import urlopen
 
@@ -13,6 +15,8 @@ import boto3
 import pytest
 import uvicorn
 from botocore.exceptions import ClientError
+
+from .celery_example import MultilineJsonFileGateway
 
 
 def pytest_sessionstart(session):
@@ -104,7 +108,8 @@ async def fastapi_example_app():
 
 
 @pytest.fixture(scope="session")
-def celery_worker():
+def celery_worker(tmp_path_factory):
+    log_file = str(tmp_path_factory.mktemp("pytest-celery") / "celery.log")
     p = subprocess.Popen(
         [
             "celery",
@@ -113,15 +118,21 @@ def celery_worker():
             "worker",
             "-c",
             "1",
-            "-P",
-            "solo",
         ],
         start_new_session=True,
+        stdout=subprocess.PIPE,
+        env={"CLEAN_PYTHON_TEST_LOGGING": log_file, **os.environ},
     )
     try:
-        yield
+        yield MultilineJsonFileGateway(Path(log_file))
     finally:
-        p.kill()
+        p.send_signal(signal.SIGQUIT)
+
+
+@pytest.fixture
+def celery_task_logs(celery_worker):
+    celery_worker.clear()
+    return celery_worker
 
 
 @pytest.fixture(scope="session")
