@@ -4,6 +4,7 @@ import asyncio
 import io
 import multiprocessing
 import os
+import subprocess
 import time
 from urllib.error import URLError
 from urllib.request import urlopen
@@ -100,6 +101,18 @@ async def fastapi_example_app():
         yield f"http://localhost:{port}"
     finally:
         p.terminate()
+
+
+@pytest.fixture(scope="session")
+def celery_worker():
+    p = subprocess.Popen(
+        ["celery", "-A", "integration_tests.celery_example", "worker", "-c", "1"],
+        start_new_session=True,
+    )
+    try:
+        yield
+    finally:
+        p.kill()
 
 
 @pytest.fixture(scope="session")
