@@ -54,9 +54,10 @@ def celery_task():
     request.origin = "hostname"
     request.retries = 25
     request.args = [1, 2]
-    request.kwargs = {
+    request.kwargs = {}
+    request.headers = {
         "clean_python_context": {
-            "tenant": {"id": 15, "name": "foo"},
+            "tenant": 15,
             "correlation_id": "b3089ea7-2585-43e5-a63c-ae30a6e9b5e4",
         }
     }
@@ -98,11 +99,12 @@ def test_log_with_result(
     assert entry["result"] == expected
 
 
-def test_log_with_request_no_args_kwargs(
+def test_log_with_request_no_args_kwargs_no_headers(
     celery_task_logger: CeleryTaskLogger, celery_task
 ):
     celery_task.request.args = None
     celery_task.request.kwargs = None
+    celery_task.request.headers = None
     celery_task_logger.stop(celery_task, "STAAT")
 
     (entry,) = celery_task_logger.gateway.filter([])
