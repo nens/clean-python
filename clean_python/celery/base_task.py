@@ -17,7 +17,7 @@ HEADER_FIELD = "clean_python_context"
 
 
 class TaskHeaders(ValueObject):
-    tenant: Id | None = None
+    tenant_id: Id | None = None
     correlation_id: UUID | None = None
 
     @classmethod
@@ -30,7 +30,7 @@ class BaseTask(Task):
         # see  https://github.com/celery/celery/issues/4875
         options["headers"] = {
             HEADER_FIELD: TaskHeaders(
-                tenant=ctx.tenant.id if ctx.tenant else None,
+                tenant_id=ctx.tenant.id if ctx.tenant else None,
                 correlation_id=ctx.correlation_id or uuid4(),
             ).model_dump(mode="json")
         }
@@ -41,6 +41,8 @@ class BaseTask(Task):
 
     def _call_with_context(self, *args, **kwargs):
         headers = TaskHeaders.from_celery_request(self.request)
-        ctx.tenant = Tenant(id=headers.tenant, name="") if headers.tenant else None
+        ctx.tenant = (
+            Tenant(id=headers.tenant_id, name="") if headers.tenant_id else None
+        )
         ctx.correlation_id = headers.correlation_id or uuid4()
         return super().__call__(*args, **kwargs)

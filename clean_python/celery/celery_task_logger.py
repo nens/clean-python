@@ -71,7 +71,7 @@ class CeleryTaskLogger:
             headers = None
 
         try:
-            tenant_id = headers.tenant  # type: ignore
+            tenant_id = headers.tenant_id  # type: ignore
         except AttributeError:
             tenant_id = None
 

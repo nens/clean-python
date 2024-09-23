@@ -26,7 +26,7 @@ def task_logger():
 
 @pytest.mark.usefixtures("celery_worker")
 def test_run_task():
-    result = sleep_task.delay(0.0, return_value=16)
+    result = sleep_task.delay(0.01, return_value=16)
 
     assert result.get(timeout=10) == {"value": 16}
 
@@ -42,7 +42,7 @@ def custom_context():
 
 @pytest.mark.usefixtures("celery_worker")
 def test_context(custom_context):
-    result = sleep_task.delay(0.0, event="context")
+    result = sleep_task.delay(0.01, event="context")
 
     assert result.get(timeout=10) == {
         "tenant_id": custom_context.tenant.id,
@@ -51,7 +51,7 @@ def test_context(custom_context):
 
 
 def test_log_success(celery_task_logs: SyncGateway):
-    result = sleep_task.delay(0.0, return_value=16)
+    result = sleep_task.delay(0.01, return_value=16)
 
     assert result.get(timeout=10) == {"value": 16}
 
@@ -62,7 +62,7 @@ def test_log_success(celery_task_logs: SyncGateway):
     assert log["state"] == "SUCCESS"
     assert log["name"] == "testing"
     assert log["duration"] > 0.0
-    assert json.loads(log["argsrepr"]) == [0.0]
+    assert json.loads(log["argsrepr"]) == [0.01]
     assert json.loads(log["kwargsrepr"]) == {"return_value": 16}
     assert log["retries"] == 0
     assert log["result"] == {"value": 16}
@@ -71,7 +71,7 @@ def test_log_success(celery_task_logs: SyncGateway):
 
 
 def test_log_failure(celery_task_logs: SyncGateway):
-    result = sleep_task.delay(0.0, event="failure")
+    result = sleep_task.delay(0.01, event="failure")
 
     with pytest.raises(ValueError):
         assert result.get(timeout=10)
@@ -82,7 +82,7 @@ def test_log_failure(celery_task_logs: SyncGateway):
 
 
 def test_log_context(celery_task_logs: SyncGateway, custom_context):
-    result = sleep_task.delay(0.0, return_value=16)
+    result = sleep_task.delay(0.01, return_value=16)
 
     assert result.get(timeout=10) == {"value": 16}
 
@@ -92,7 +92,7 @@ def test_log_context(celery_task_logs: SyncGateway, custom_context):
 
 
 def test_log_retry_propagates_context(celery_task_logs: SyncGateway, custom_context):
-    result = sleep_task.delay(0.0, event="retry")
+    result = sleep_task.delay(0.01, event="retry")
 
     with pytest.raises(MaxRetriesExceededError):
         result.get(timeout=10)
@@ -113,7 +113,7 @@ def celery_eager():
 
 @pytest.mark.usefixtures("celery_eager")
 def test_eager_mode_with_context(custom_context):
-    result = sleep_task.delay(0.0, event="context")
+    result = sleep_task.delay(0.01, event="context")
 
     assert result.__class__.__name__ == "EagerResult"
     assert result.get() == {
