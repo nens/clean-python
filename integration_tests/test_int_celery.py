@@ -3,6 +3,7 @@ import time
 from uuid import UUID
 
 import pytest
+from billiard.exceptions import WorkerLostError
 from celery.exceptions import MaxRetriesExceededError
 
 from clean_python import ctx
@@ -79,6 +80,17 @@ def test_log_failure(celery_task_logs: SyncGateway):
     (log,) = celery_task_logs.filter([])
     assert log["state"] == "FAILURE"
     assert log["result"]["traceback"].startswith("Traceback")
+
+
+def test_log_crash(celery_task_logs: SyncGateway):
+    result = sleep_task.delay(0.01, event="crash")
+
+    with pytest.raises(WorkerLostError):
+        assert result.get(timeout=10)
+
+    (log,) = celery_task_logs.filter([])
+    assert log["state"] == "FAILURE"
+    assert "SIGSEGV" in log["result"]["traceback"]
 
 
 def test_log_context(celery_task_logs: SyncGateway, custom_context):
