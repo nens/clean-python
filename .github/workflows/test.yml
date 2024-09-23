@@ -42,6 +42,15 @@ jobs:
         ports:
           - 9000:9000
 
+      rabbitmq:
+        image: "rabbitmq:3-alpine"
+        environment:
+          RABBITMQ_DEFAULT_USER: "cleanpython"
+          RABBITMQ_DEFAULT_PASS: "cleanpython"
+          RABBITMQ_DEFAULT_VHOST: "cleanpython"
+        ports:
+          - "5672:5672"
+
     steps:
       - uses: actions/checkout@v3
 
