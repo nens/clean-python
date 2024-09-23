@@ -76,7 +76,7 @@ class CeleryTaskLogger:
             tenant_id = None
 
         try:
-            correlation_id = headers.correlation_id  # type: ignore
+            correlation_id = headers.x_correlation_id  # type: ignore
         except AttributeError:
             correlation_id = None
 

@@ -56,11 +56,10 @@ def celery_task():
     request.args = [1, 2]
     request.kwargs = {}
     request.headers = {
-        "clean_python_context": {
-            "tenant_id": 15,
-            "correlation_id": "b3089ea7-2585-43e5-a63c-ae30a6e9b5e4",
-        }
+        "tenant_id": 15,
+        "x_correlation_id": "b3089ea7-2585-43e5-a63c-ae30a6e9b5e4",
     }
+
     task = mock.Mock()
     task.name = "task_name"
     task.request = request

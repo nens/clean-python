@@ -13,27 +13,23 @@ from clean_python import ValueObject
 __all__ = ["BaseTask"]
 
 
-HEADER_FIELD = "clean_python_context"
-
-
 class TaskHeaders(ValueObject):
     tenant_id: Id | None = None
-    correlation_id: UUID | None = None
+    # avoid conflict with celery's own correlation_id:
+    x_correlation_id: UUID | None = None
 
     @classmethod
     def from_celery_request(cls, request: CeleryRequest) -> "TaskHeaders":
-        return cls(**(request.headers.get(HEADER_FIELD) or {}))
+        return cls(**request.headers)
 
 
 class BaseTask(Task):
     def apply_async(self, args=None, kwargs=None, **options):
         # see  https://github.com/celery/celery/issues/4875
-        options["headers"] = {
-            HEADER_FIELD: TaskHeaders(
-                tenant_id=ctx.tenant.id if ctx.tenant else None,
-                correlation_id=ctx.correlation_id or uuid4(),
-            ).model_dump(mode="json")
-        }
+        options["headers"] = TaskHeaders(
+            tenant_id=ctx.tenant.id if ctx.tenant else None,
+            x_correlation_id=ctx.correlation_id or uuid4(),
+        ).model_dump(mode="json")
         return super().apply_async(args, kwargs, **options)
 
     def __call__(self, *args, **kwargs):
@@ -44,5 +40,5 @@ class BaseTask(Task):
         ctx.tenant = (
             Tenant(id=headers.tenant_id, name="") if headers.tenant_id else None
         )
-        ctx.correlation_id = headers.correlation_id or uuid4()
+        ctx.correlation_id = headers.x_correlation_id or uuid4()
         return super().__call__(*args, **kwargs)
