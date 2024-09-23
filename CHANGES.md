@@ -1,9 +1,11 @@
 # Changelog of clean-python
 
-## 0.16.6 (unreleased)
+## 0.17.0 (unreleased)
 ----------------------
 
-- Nothing changed yet.
+- Added a `celery.CeleryConfig` with an `apply` method that properly sets up celery
+  without making the tasks depending on the config. Also added integration tests that
+  confirm the forwarding of context (tenant and correlation id).
 
 
 ## 0.16.5 (2024-09-12)

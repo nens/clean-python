@@ -3,40 +3,32 @@ from uuid import UUID
 from uuid import uuid4
 
 from celery import Task
+from celery.worker.request import Request as CeleryRequest
 
 from clean_python import ctx
-from clean_python import Json
+from clean_python import Id
 from clean_python import Tenant
 from clean_python import ValueObject
 
 __all__ = ["BaseTask"]
 
 
-HEADER_FIELD = "clean_python_context"
-
-
 class TaskHeaders(ValueObject):
-    tenant: Tenant | None
-    correlation_id: UUID | None
+    tenant_id: Id | None = None
+    # avoid conflict with celery's own correlation_id:
+    x_correlation_id: UUID | None = None
 
     @classmethod
-    def from_kwargs(cls, kwargs: Json) -> tuple["TaskHeaders", Json]:
-        if HEADER_FIELD in kwargs:
-            kwargs = kwargs.copy()
-            headers = kwargs.pop(HEADER_FIELD)
-            return TaskHeaders(**headers), kwargs
-        else:
-            return TaskHeaders(tenant=None, correlation_id=None), kwargs
+    def from_celery_request(cls, request: CeleryRequest) -> "TaskHeaders":
+        return cls(**request.headers)
 
 
 class BaseTask(Task):
     def apply_async(self, args=None, kwargs=None, **options):
-        # include correlation_id and tenant in the kwargs
-        # and NOT the headers as that is buggy in celery
         # see  https://github.com/celery/celery/issues/4875
-        kwargs = {} if kwargs is None else kwargs.copy()
-        kwargs[HEADER_FIELD] = TaskHeaders(
-            tenant=ctx.tenant, correlation_id=ctx.correlation_id or uuid4()
+        options["headers"] = TaskHeaders(
+            tenant_id=ctx.tenant.id if ctx.tenant else None,
+            x_correlation_id=ctx.correlation_id or uuid4(),
         ).model_dump(mode="json")
         return super().apply_async(args, kwargs, **options)
 
@@ -44,7 +36,9 @@ class BaseTask(Task):
         return copy_context().run(self._call_with_context, *args, **kwargs)
 
     def _call_with_context(self, *args, **kwargs):
-        headers, kwargs = TaskHeaders.from_kwargs(kwargs)
-        ctx.tenant = headers.tenant
-        ctx.correlation_id = headers.correlation_id
+        headers = TaskHeaders.from_celery_request(self.request)
+        ctx.tenant = (
+            Tenant(id=headers.tenant_id, name="") if headers.tenant_id else None
+        )
+        ctx.correlation_id = headers.x_correlation_id or uuid4()
         return super().__call__(*args, **kwargs)
