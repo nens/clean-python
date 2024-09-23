@@ -44,7 +44,7 @@ jobs:
 
       rabbitmq:
         image: "rabbitmq:3-alpine"
-        environment:
+        env:
           RABBITMQ_DEFAULT_USER: "cleanpython"
           RABBITMQ_DEFAULT_PASS: "cleanpython"
           RABBITMQ_DEFAULT_VHOST: "cleanpython"
