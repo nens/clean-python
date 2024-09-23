@@ -1,6 +1,6 @@
 # Changelog of clean-python
 
-## 0.17.0 (unreleased)
+## 0.17.0 (2024-09-23)
 ----------------------
 
 - Added a `celery.CeleryConfig` with an `apply` method that properly sets up celery
