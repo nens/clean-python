@@ -1,6 +1,6 @@
 # Changelog of clean-python
 
-## 0.17.1 (unreleased)
+## 0.17.1 (2024-10-01)
 ----------------------
 
 - Add filename to generate s3 download url
