@@ -137,18 +137,17 @@ class SyncS3Gateway(SyncGateway):
         )
 
     def _create_presigned_url(
-        self,
-        id: Id,
-        client_method: str,
+        self, id: Id, client_method: str, filename: str | None = None
     ) -> AnyHttpUrl:
+        params = {"Bucket": self.provider.bucket, "Key": self._id_to_key(id)}
+        if filename:
+            params["ResponseContentDisposition"] = f"attachment; filename={filename}"
         return self.provider.client.generate_presigned_url(
-            client_method,
-            Params={"Bucket": self.provider.bucket, "Key": self._id_to_key(id)},
-            ExpiresIn=DEFAULT_EXPIRY,
+            client_method, Params=params, ExpiresIn=DEFAULT_EXPIRY
         )
 
-    def create_download_url(self, id: Id) -> AnyHttpUrl:
-        return self._create_presigned_url(id, "get_object")
+    def create_download_url(self, id: Id, filename: str | None = None) -> AnyHttpUrl:
+        return self._create_presigned_url(id, "get_object", filename)
 
     def create_upload_url(self, id: Id) -> AnyHttpUrl:
         return self._create_presigned_url(id, "put_object")
