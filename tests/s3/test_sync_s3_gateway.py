@@ -1,7 +1,9 @@
 from unittest.mock import Mock
+
 import pytest
 
-from clean_python.s3 import SyncS3BucketProvider, SyncS3Gateway
+from clean_python.s3 import SyncS3BucketProvider
+from clean_python.s3 import SyncS3Gateway
 from clean_python.s3.sync_s3_gateway import DEFAULT_EXPIRY
 
 
