@@ -117,6 +117,33 @@ def test_remove_multiple_empty_list(s3_gateway: SyncS3Gateway, s3_bucket):
     s3_gateway.remove_multiple([])
 
 
+def test_create_download_url(s3_gateway: SyncS3Gateway, object_in_s3):
+    actual = s3_gateway.create_download_url(object_in_s3)
+
+    assert object_in_s3 in actual
+    assert "response-content-disposition=attachment%3B%20filename%3D" not in actual
+    assert "X-Amz-Expires=3600" in actual
+    assert "X-Amz-SignedHeaders=host" in actual
+
+
+def test_create_download_url_with_filename(s3_gateway: SyncS3Gateway, object_in_s3):
+    actual = s3_gateway.create_download_url(object_in_s3, "file.txt")
+
+    assert "file.txt" in actual
+    assert "response-content-disposition=attachment%3B%20filename%3Dfile.txt" in actual
+    assert object_in_s3 in actual
+    assert "X-Amz-Expires=3600" in actual
+    assert "X-Amz-SignedHeaders=host" in actual
+
+
+def test_create_upload_url(s3_gateway: SyncS3Gateway, object_in_s3):
+    actual = s3_gateway.create_upload_url(object_in_s3)
+
+    assert object_in_s3 in actual
+    assert "X-Amz-Expires=3600" in actual
+    assert "X-Amz-SignedHeaders=host" in actual
+
+
 def test_remove_filtered_all(s3_gateway: SyncS3Gateway, multiple_objects):
     s3_gateway.remove_filtered([])
 
