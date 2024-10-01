@@ -3,7 +3,7 @@
 ## 0.17.1 (unreleased)
 ----------------------
 
-- Nothing changed yet.
+- Add filename to generate s3 download url
 
 
 ## 0.17.0 (2024-09-23)
