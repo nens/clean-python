@@ -1,11 +1,16 @@
+import logging
+
 from celery import Celery
 from celery import current_app
+from celery.signals import worker_process_init
 
 from clean_python import Json
 from clean_python import ValueObject
 from clean_python.celery import BaseTask
 
 __all__ = ["CeleryConfig"]
+
+logger = logging.getLogger(__name__)
 
 
 class CeleryConfig(ValueObject):
@@ -28,19 +33,22 @@ class CeleryConfig(ValueObject):
         app.task_cls = BaseTask
         app.strict_typing = strict_typing
         app.config_from_object(self)
-
-        # check if Sentry is configured in such a way that it would break clean-python
-        try:
-            import sentry_sdk
-            from sentry_sdk.integrations.celery import CeleryIntegration
-
-            integration = sentry_sdk.get_client().get_integration(CeleryIntegration)
-            if integration is not None and integration.propagate_traces:
-                raise ValueError(
-                    "Sentry's trace propagation makes use of message headers in such a way that it prevents "
-                    "clean-python to set the headers. "
-                    "Please disable it as such: ... integrations=[CeleryIntegration(propagate_traces=False)]"
-                )
-        except ImportError:
-            pass
         return app
+
+
+@worker_process_init.connect
+def worker_init(**kwargs):
+    # Fix Sentry configuration (if inplace)
+    try:
+        import sentry_sdk
+        from sentry_sdk.integrations.celery import CeleryIntegration
+
+        integration = sentry_sdk.get_client().get_integration(CeleryIntegration)
+        if integration is not None and integration.propagate_traces:
+            integration.propagate_traces = False
+            logger.warning(
+                "Automatically disabled Sentry's trace propagation. "
+                "Set CeleryIntegration(propagate_traces=False) to disable this warning."
+            )
+    except ImportError:
+        pass
