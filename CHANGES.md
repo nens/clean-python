@@ -3,7 +3,7 @@
 ## 0.17.2 (unreleased)
 ----------------------
 
-- Nothing changed yet.
+- Fixed context forwarding to celery tasks in case Sentry is used.
 
 
 ## 0.17.1 (2024-10-01)
