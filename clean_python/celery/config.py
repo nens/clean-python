@@ -28,4 +28,19 @@ class CeleryConfig(ValueObject):
         app.task_cls = BaseTask
         app.strict_typing = strict_typing
         app.config_from_object(self)
+
+        # check if Sentry is configured in such a way that it would break clean-python
+        try:
+            import sentry_sdk
+            from sentry_sdk.integrations.celery import CeleryIntegration
+
+            integration = sentry_sdk.get_client().get_integration(CeleryIntegration)
+            if integration is not None and integration.propagate_traces:
+                raise ValueError(
+                    "Sentry's trace propagation makes use of message headers in such a way that it prevents "
+                    "clean-python to set the headers. "
+                    "Please disable it as such: ... integrations=[CeleryIntegration(propagate_traces=False)]"
+                )
+        except ImportError:
+            pass
         return app
