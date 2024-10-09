@@ -28,7 +28,7 @@ services:
       - "24224:24224"
 
   rabbitmq:
-    image: "rabbitmq:3.9.13-alpine"
+    image: "rabbitmq:3-alpine"
     environment:
       RABBITMQ_DEFAULT_USER: "cleanpython"
       RABBITMQ_DEFAULT_PASS: "cleanpython"
