@@ -1,5 +1,11 @@
 # Changelog of clean-python
 
+## 0.17.3 (unreleased)
+----------------------
+
+- Nothing changed yet.
+
+
 ## 0.17.2 (2024-10-10)
 ----------------------
 
