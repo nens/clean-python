@@ -1,6 +1,6 @@
 # Changelog of clean-python
 
-## 0.17.2 (unreleased)
+## 0.17.2 (2024-10-10)
 ----------------------
 
 - Fixed context forwarding to celery tasks in case Sentry is used.
