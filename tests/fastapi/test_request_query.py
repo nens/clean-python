@@ -92,7 +92,6 @@ def test_filters_comparison(values, expected):
 
 class FooResource(Resource, version=v(1), name="testing"):
     @get("/query")
-    
     def query(self, q: Annotated[SomeQuery, Query()]):
         return q.model_dump()
 
