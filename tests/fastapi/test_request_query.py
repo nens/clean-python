@@ -1,4 +1,5 @@
 from http import HTTPStatus
+from typing import Annotated
 from typing import List
 from typing import Literal
 from typing import Optional
@@ -91,7 +92,8 @@ def test_filters_comparison(values, expected):
 
 class FooResource(Resource, version=v(1), name="testing"):
     @get("/query")
-    def query(self, q: SomeQuery = SomeQuery.depends()):
+    
+    def query(self, q: Annotated[SomeQuery, Query()]):
         return q.model_dump()
 
 
