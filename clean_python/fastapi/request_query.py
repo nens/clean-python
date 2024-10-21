@@ -3,6 +3,7 @@
 from inspect import signature
 from typing import ClassVar
 from typing import Literal
+from warnings import warn
 
 from fastapi import Depends
 from fastapi import Query
@@ -23,7 +24,7 @@ class RequestQuery(ValueObject):
     Example usage in a Resource:
 
         @get("/books")
-        def list_books(self, q: RequestQuery = RequestQuery.depends()):
+        def list_books(self, q: Annotated[RequestQuery, Query()]):
             return self.manage.filter(q.filters(), q.as_page_options())
     """
 
@@ -85,15 +86,19 @@ class RequestQuery(ValueObject):
 
     @classmethod
     def depends(cls) -> Depends:
-        """FastAPI does not directly support pydantic models for query parameters.
-
-        Specifically, pydantic ValidationErrors lead to an internal server error. For this to work,
-        we wrap the RequestQuery, forwarding the type signature.
+        """DEPRECATED: FastAPI now does directly support pydantic models for query parameters.
+        See class docstring for usage.
 
         Source:
 
+        - https://fastapi.tiangolo.com/tutorial/query-param-models/
         - https://github.com/tiangolo/fastapi/issues/1474
         """
+        warn(
+            "Deprecated: Pydantic models as query parameters are now supported, see class docstring.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
 
         def wrapper(*args, **kwargs):
             try:
