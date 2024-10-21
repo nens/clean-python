@@ -1,6 +1,6 @@
 # Changelog of clean-python
 
-## 0.17.3 (unreleased)
+## 0.18.0 (2024-10-21)
 ----------------------
 
 - Bumped FastAPI to 0.115.* so that pydantic models are directly supported to
