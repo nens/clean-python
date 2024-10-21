@@ -3,7 +3,9 @@
 ## 0.17.3 (unreleased)
 ----------------------
 
-- Nothing changed yet.
+- Bumped FastAPI to 0.115.* so that pydantic models are directly supported to
+  declare query parameters. This deprecates the `RequestQuery.depends()` syntax,
+  use `Annotated[RequestQuery, Query()]` instead.
 
 
 ## 0.17.2 (2024-10-10)
