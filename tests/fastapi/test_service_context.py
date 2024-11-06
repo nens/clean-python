@@ -4,6 +4,7 @@ from uuid import uuid4
 
 import pytest
 from fastapi.testclient import TestClient
+from pydantic_core import Url
 
 from clean_python import ctx
 from clean_python import InMemoryGateway
@@ -16,6 +17,7 @@ from clean_python.fastapi import v
 class FooResource(Resource, version=v(1), name="testing"):
     @get("/context")
     def context(self):
+        assert isinstance(ctx.path, Url)
         return {
             "path": str(ctx.path),
             "user": ctx.user,

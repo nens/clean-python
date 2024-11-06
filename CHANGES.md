@@ -1,6 +1,96 @@
 # Changelog of clean-python
 
-## 0.14.2 (unreleased)
+## 0.18.1 (unreleased)
+----------------------
+
+- Test against PostGRES 16 (instead of 14).
+
+
+## 0.18.0 (2024-10-21)
+----------------------
+
+- Bumped FastAPI to 0.115.* so that pydantic models are directly supported to
+  declare query parameters. This deprecates the `RequestQuery.depends()` syntax,
+  use `Annotated[RequestQuery, Query()]` instead.
+
+
+## 0.17.2 (2024-10-10)
+----------------------
+
+- Fixed context forwarding to celery tasks in case Sentry is used.
+
+
+## 0.17.1 (2024-10-01)
+----------------------
+
+- Add filename to generate s3 download url
+
+
+## 0.17.0 (2024-09-23)
+----------------------
+
+- Added a `celery.CeleryConfig` with an `apply` method that properly sets up celery
+  without making the tasks depending on the config. Also added integration tests that
+  confirm the forwarding of context (tenant and correlation id).
+
+
+## 0.16.5 (2024-09-12)
+----------------------
+
+- Reverted urllib3 to 2.0.* because of other constraints.
+
+
+## 0.16.4 (2024-09-12)
+----------------------
+
+- Bumped dependencies.
+
+
+## 0.16.3 (2024-09-11)
+----------------------
+
+- Allow to config/set `addressing_style` for S3 object storage. (default='virtual')
+
+- Added `LRUCache` and `SyncLRUCache`.
+
+
+## 0.16.2 (2024-07-16)
+----------------------
+
+- Removed psycopg2-binary dependency (because psycopg2 compilation is better
+  for production envs).
+
+
+## 0.16.1 (2024-07-15)
+----------------------
+
+- Reverted "FastAPI's favicon.ico with `/favicon.ico`" because of
+  login issues in Swagger.
+
+
+## 0.16.0 (2024-07-02)
+----------------------
+
+- Fixed datatype of ctx.path (it was starlette.URL, now it is pydantic_core.Url).
+
+- Replaced FastAPI's favicon.ico with `/favicon.ico`.
+
+- Deprecate `dramatiq` submodule.
+
+
+## 0.15.2 (2024-05-29)
+----------------------
+
+- Use `psycopg2-binary` instead of `psycopg2`.
+
+
+## 0.15.1 (2024-05-29)
+----------------------
+
+- Fixed `ImportError` because of absent `asyncpg` when using only `sql-sync` dependency.
+
+
+## 0.15.0 (2024-05-29)
 ----------------------
 
 - Added a base class for providers (`Provider` / `SyncProvider`) with empty
@@ -16,6 +106,9 @@
 
 - Breaking change in `InternalGateway`: it now requires a `.mapper` attribute
   instead of `.to_internal` and `.to_external` methods.
+
+- Adapted underscore to hyphen in "extra" requirements: `sql_sync -> sql-sync`,
+  `api_client -> api-client`. See PEP685.
 
 
 ## 0.14.1 (2024-05-28)

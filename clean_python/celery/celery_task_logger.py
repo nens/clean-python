@@ -66,17 +66,17 @@ class CeleryTaskLogger:
             request = None
 
         try:
-            headers, kwargs = TaskHeaders.from_kwargs(request.kwargs)
+            headers = TaskHeaders.from_celery_request(request)
         except (AttributeError, TypeError):
-            headers = kwargs = None  # type: ignore
+            headers = None
 
         try:
-            tenant_id = headers.tenant.id  # type: ignore
+            tenant_id = headers.tenant_id  # type: ignore
         except AttributeError:
             tenant_id = None
 
         try:
-            correlation_id = headers.correlation_id
+            correlation_id = headers.x_correlation_id  # type: ignore
         except AttributeError:
             correlation_id = None
 
@@ -86,8 +86,8 @@ class CeleryTaskLogger:
             argsrepr = None
 
         try:
-            kwargsrepr = json.dumps(kwargs)
-        except TypeError:
+            kwargsrepr = json.dumps(request.kwargs)
+        except (AttributeError, TypeError):
             kwargsrepr = None
 
         log_dict = {

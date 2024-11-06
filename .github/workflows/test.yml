@@ -26,7 +26,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:14-alpine
+        image: postgres:16-alpine
         env:
           POSTGRES_PASSWORD: postgres
         ports:
@@ -41,6 +41,15 @@ jobs:
         ports:
           - 9000:9000
 
+      rabbitmq:
+        image: "rabbitmq:3-alpine"
+        env:
+          RABBITMQ_DEFAULT_USER: "cleanpython"
+          RABBITMQ_DEFAULT_PASS: "cleanpython"
+          RABBITMQ_DEFAULT_VHOST: "cleanpython"
+        ports:
+          - "5672:5672"
+
     steps:
       - uses: actions/checkout@v4
 
@@ -53,7 +62,7 @@ jobs:
       - name: Install python dependencies
         run: |
           pip install --disable-pip-version-check --upgrade pip setuptools
-          pip install -e .[dramatiq,fastapi,auth,celery,fluentbit,sql,sql_sync,s3,s3_sync,api_client,amqp,nanoid,test] ${{ matrix.pins }}
+          pip install -e .[fastapi,auth,celery,fluentbit,sql,sql-sync,s3,s3-sync,api-client,amqp,nanoid,test] ${{ matrix.pins }} psycopg2-binary==2.9.*
           pip list
 
       - name: Run tests

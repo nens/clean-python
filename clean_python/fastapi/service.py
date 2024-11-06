@@ -9,6 +9,8 @@ from fastapi import Depends
 from fastapi import FastAPI
 from fastapi import Request
 from fastapi.exceptions import RequestValidationError
+from pydantic import AnyHttpUrl
+from pydantic import TypeAdapter
 from starlette.types import ASGIApp
 from starlette.types import StatelessLifespan
 
@@ -53,8 +55,11 @@ def get_swagger_ui_init_oauth(
     )
 
 
+AnyHttpUrlTA = TypeAdapter(AnyHttpUrl)
+
+
 async def set_request_context(request: Request) -> None:
-    ctx.path = request.url
+    ctx.path = AnyHttpUrlTA.validate_python(str(request.url))
     ctx.correlation_id = get_correlation_id(request)
 
 
