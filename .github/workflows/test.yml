@@ -15,14 +15,13 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # 2022
           - python: "3.10"
             pins: ""
-          # 2023
           - python: "3.11"
             pins: ""
-          # current
           - python: "3.12"
+            pins: ""
+          - python: "3.13"
             pins: ""
 
     services:
@@ -52,12 +51,13 @@ jobs:
           - "5672:5672"
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up Python ${{ matrix.python }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
+          allow-prereleases: ${{ matrix.allow-prereleases || false }}
 
       - name: Install python dependencies
         run: |
