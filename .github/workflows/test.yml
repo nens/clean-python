@@ -22,7 +22,6 @@ jobs:
           - python: "3.12"
             pins: ""
           - python: "3.13"
-            allow-prereleases: true
             pins: ""
 
     services:
