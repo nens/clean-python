@@ -5,7 +5,7 @@
 
 - Test against PostGRES 16 (instead of 14).
 
-- Test against Python 3.13 (bumped asyncpg to `0.30.*`).
+- Test against Python 3.13 (bumped asyncpg to `0.30.*` and aiohttp to `3.10.*`).
 
 
 ## 0.18.0 (2024-10-21)
