@@ -3,7 +3,7 @@
 ## 0.18.1 (unreleased)
 ----------------------
 
-- Nothing changed yet.
+- Test against PostGRES 16 (instead of 14).
 
 
 ## 0.18.0 (2024-10-21)

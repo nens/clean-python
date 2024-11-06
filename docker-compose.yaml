@@ -1,7 +1,7 @@
 services:
 
   postgres:
-    image: postgres:14-alpine
+    image: postgres:16-alpine
     environment:
       POSTGRES_PASSWORD: "postgres"
     # command: ["postgres", "-c", "log_connections=all", "-c", "log_disconnections=all", "-c", "log_statement=all", "-c", "log_destination=stderr"]
