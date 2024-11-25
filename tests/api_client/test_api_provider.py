@@ -112,6 +112,9 @@ async def test_post_json(api_provider: ApiProvider, response, request_m):
         ("bar/", {"a": 2}, "http://testserver/foo/bar?a=2"),
         ("", {"a": [1, 2]}, "http://testserver/foo?a=1&a=2"),
         ("", {"a": 1, "b": "foo"}, "http://testserver/foo?a=1&b=foo"),
+        ("", {"a": None}, "http://testserver/foo"),
+        ("", {"a": ""}, "http://testserver/foo?a="),
+        ("", {"a": []}, "http://testserver/foo"),
     ],
 )
 async def test_url(api_provider: ApiProvider, path, params, expected_url, request_m):

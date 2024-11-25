@@ -76,9 +76,12 @@ def join(url: str, path: str, trailing_slash: bool = False) -> str:
 
 
 def add_query_params(url: str, params: Json | None) -> str:
+    # explicitly filter out None values
     if params is None:
         return url
-    return url + "?" + urlencode(params, doseq=True)
+    params = {k: v for k, v in params.items() if v is not None}
+    query_str = urlencode(params, doseq=True)
+    return url + "?" + query_str if query_str else url
 
 
 class FileFormPost(ValueObject):
