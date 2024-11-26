@@ -7,6 +7,10 @@
 
 - Test against Python 3.13 (bumped asyncpg to `0.30.*` and aiohttp to `3.10.*`).
 
+- Fixed a bug in (Sync)ApiProvider and Gateway: if a query parameter with value `None`
+  is presented, this now hides the query parameter from the generated url. Before,
+  it resulted in `path?foo=None`.
+
 
 ## 0.18.0 (2024-10-21)
 ----------------------
