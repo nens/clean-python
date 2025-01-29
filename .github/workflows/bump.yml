@@ -1,0 +1,45 @@
+name: Bump dependencies
+
+on:
+  schedule:
+    - cron: '0 8 * * 1' # Runs at 08:00 UTC every Monday
+  pull_request:  # also run on PRs touching this file
+    paths:
+      - ".github/workflows/bump.yml"
+
+
+jobs:
+  test:
+    name: Bump dependencies
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"  # lowest supported
+
+      - name: Install python dependencies
+        run: |
+          pip install --disable-pip-version-check --upgrade pip setuptools pip-tools
+          pip list
+
+      - name: Upgrade to a consistent set of dependencies
+        run: pip-compile requirements/*.in -o requirements/all.txt --upgrade --strip-extras
+
+      - name: Compile all upgraded requirement files
+        run: |
+          for file in requirements/*.in; do
+            pip-compile "$file" -c requirements/all.txt --upgrade --no-header --no-annotate --strip-extras
+          done
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: bump-dependencies
+          delete-branch: true
+          add-paths: requirements/*.txt
+          commit-message: "Bump dependencies"
+          title: "Bump dependencies"

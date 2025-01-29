@@ -1,0 +1,7 @@
+pydantic
+inject
+asgiref
+blinker
+async-lru
+backoff
+pyyaml

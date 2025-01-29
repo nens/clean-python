@@ -1,0 +1,10 @@
+annotated-types==0.7.0
+asgiref==3.8.1
+async-lru==2.0.4
+backoff==2.2.1
+blinker==1.9.0
+inject==5.2.1
+pydantic==2.10.6
+pydantic-core==2.27.2
+pyyaml==6.0.2
+typing-extensions==4.12.2
