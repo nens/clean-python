@@ -13,6 +13,8 @@
 
 - Removed yappi and viztracer profilers.
 
+- Bumped all dependencies except for boto3 and aioboto3.
+
 
 ## 0.18.0 (2024-10-21)
 ----------------------
