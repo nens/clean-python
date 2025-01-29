@@ -10,34 +10,7 @@ license = {text = "MIT"}
 classifiers = ["Programming Language :: Python"]
 keywords = []
 requires-python = ">=3.10"
-dependencies = ["pydantic==2.9.*", "inject==5.*", "asgiref==3.8.*", "blinker==1.8.*", "async-lru==2.0.*", "backoff==2.2.*", "pyyaml==6.0.*"]
-dynamic = ["version"]
-
-[project.optional-dependencies]
-test = [
-    "pytest",
-    "pytest-cov",
-    "pytest-asyncio==0.21.*",  # https://github.com/pytest-dev/pytest-asyncio/issues/706
-    "debugpy",
-    "httpx",
-    "uvicorn",
-    "python-multipart",
-    "pytest-celery<1"
-]
-fastapi = ["fastapi==0.115.*"]
-auth = ["pyjwt==2.9.*", "cryptography==43.0.*"]  # pyjwt[crypto]
-amqp = ["pika==1.3.*"]
-celery = ["celery==5.4.*"]
-fluentbit = ["fluent-logger"]
-sql = ["sqlalchemy==2.0.*", "asyncpg==0.30.*", "greenlet==3.*"]
-sql-sync = ["sqlalchemy==2.0.*"]  # also requires psycopg2 or psycopg2-binary
-# help the resolver a bit by copying version pins from aioboto3 / aiobotocore
-s3 = ["aioboto3==13.1.*", "aiobotocore==2.13.1", "boto3==1.34.131", "types-aioboto3[s3]"]
-s3-sync = ["boto3==1.34.*", "boto3-stubs[s3]"]
-api-client = ["aiohttp==3.10.*", "urllib3==2.0.*"]
-profiler = ["yappi"]
-debugger = ["debugpy"]
-nanoid = ["nanoid==2.0.0"]
+dynamic = ["version", "dependencies", "optional-dependencies"]
 
 [project.urls]
 homepage = "https://github.com/nens/clean-python"
@@ -51,6 +24,19 @@ include = ["clean_python*"]
 
 [tool.setuptools.dynamic]
 version = {attr = "clean_python.__version__"}
+dependencies = {file = ["requirements/base.txt"]}
+optional-dependencies.fastapi = { file = ["requirements/fastapi.txt"] }
+optional-dependencies.auth = { file = ["requirements/auth.txt"] }
+optional-dependencies.amqp = { file = ["requirements/amqp.txt"] }
+optional-dependencies.celery = { file = ["requirements/celery.txt"] }
+optional-dependencies.fluentbit = { file = ["requirements/fluentbit.txt"] }
+optional-dependencies.sql = { file = ["requirements/sql.txt"] }
+optional-dependencies.sql-sync = { file = ["requirements/sql_sync.txt"] }
+optional-dependencies.s3 = { file = ["requirements/s3.txt"] }
+optional-dependencies.s3-sync = { file = ["requirements/s3_sync.txt"] }
+optional-dependencies.api-client = { file = ["requirements/api_client.txt"] }
+optional-dependencies.nanoid = { file = ["requirements/nanoid.txt"] }
+
 
 [tool.isort]
 profile = "black"

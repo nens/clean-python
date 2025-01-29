@@ -11,6 +11,8 @@
   is presented, this now hides the query parameter from the generated url. Before,
   it resulted in `path?foo=None`.
 
+- Removed yappi and viztracer profilers.
+
 
 ## 0.18.0 (2024-10-21)
 ----------------------
