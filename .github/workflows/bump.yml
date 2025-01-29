@@ -37,8 +37,8 @@ jobs:
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7
+        if: github.ref == 'refs/heads/main'
         with:
-          base: main
           branch: bump-dependencies
           delete-branch: true
           add-paths: requirements/*.txt
