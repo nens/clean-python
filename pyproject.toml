@@ -36,7 +36,7 @@ optional-dependencies.s3 = { file = ["requirements/s3.txt"] }
 optional-dependencies.s3-sync = { file = ["requirements/s3_sync.txt"] }
 optional-dependencies.api-client = { file = ["requirements/api_client.txt"] }
 optional-dependencies.nanoid = { file = ["requirements/nanoid.txt"] }
-
+optional-dependencies.test = { file = ["requirements/test.txt"]}
 
 [tool.isort]
 profile = "black"

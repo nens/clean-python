@@ -1,2 +1,2 @@
-aioboto3
+aioboto3==13.1.*
 types-aioboto3[s3]
