@@ -118,3 +118,23 @@ Our current approach is to have 1 *aggregate* (whose root is implemented as a ``
 Optional dependencies can be added with:
 
     $ pip install clean-python[sql,fastapi]
+
+## Managing dependencies
+
+``clean-python`` has all of its dependencies pinned, because in that way the automated tests run
+in the same environment that the application that uses ``clean-python``. The requirements are automatically
+updated each week by the GH Actions script located in `.github/workflows/bump.yml`.
+
+This works as follows:
+
+- Requirements are specified in `requirements/*.in` files. Mostly, they do not have version specifies.
+- To ensure that all optional requirements are consistent with one another, we first generate
+  a single requirement file `all.txt` from all `*.in` files together. We use pip-tools for that
+  (see https://github.com/jazzband/pip-tools).
+- Then for each `*.in` file, a requirements file is generated. This requirement file is constrained to
+  the consistent set generated in the previous step using `-c all.txt`.
+  For instance the `fastapi.txt` is generated from `fastapi.in`.
+- The `pyproject.toml` refers to requirement files from its `dependencies` and `optional-dependencies`
+  section. Each optional dependency has its own requirement file.
+
+The result of this is that you can install ``clean-python`` with any combination of optional dependencies.
