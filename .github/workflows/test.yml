@@ -107,7 +107,7 @@ jobs:
 
   notify:
     name: Create issue in case of failed build
-    needs: [tests]
+    needs: [test]
     if: failure() && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
