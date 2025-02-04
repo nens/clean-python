@@ -30,31 +30,31 @@ jobs:
             pins: "psycopg2-binary"
             minimum: false
 
-    # services:
-    #   postgres:
-    #     image: postgres:16-alpine
-    #     env:
-    #       POSTGRES_PASSWORD: postgres
-    #     ports:
-    #       - 5432:5432
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
 
-    #   s3:
-    #     image: minio/minio:edge-cicd
-    #     env:
-    #       MINIO_DOMAIN: localhost  # virtual hosted-style access
-    #       MINIO_ROOT_USER: cleanpython
-    #       MINIO_ROOT_PASSWORD: cleanpython
-    #     ports:
-    #       - 9000:9000
+      s3:
+        image: minio/minio:edge-cicd
+        env:
+          MINIO_DOMAIN: localhost  # virtual hosted-style access
+          MINIO_ROOT_USER: cleanpython
+          MINIO_ROOT_PASSWORD: cleanpython
+        ports:
+          - 9000:9000
 
-    #   rabbitmq:
-    #     image: "rabbitmq:3-alpine"
-    #     env:
-    #       RABBITMQ_DEFAULT_USER: "cleanpython"
-    #       RABBITMQ_DEFAULT_PASS: "cleanpython"
-    #       RABBITMQ_DEFAULT_VHOST: "cleanpython"
-    #     ports:
-    #       - "5672:5672"
+      rabbitmq:
+        image: "rabbitmq:3-alpine"
+        env:
+          RABBITMQ_DEFAULT_USER: "cleanpython"
+          RABBITMQ_DEFAULT_PASS: "cleanpython"
+          RABBITMQ_DEFAULT_VHOST: "cleanpython"
+        ports:
+          - "5672:5672"
 
     steps:
       - uses: actions/checkout@v4
@@ -69,7 +69,7 @@ jobs:
         run: |
           pip install --disable-pip-version-check --upgrade pip setuptools packaging pip-tools
 
-      - name: Compute minimum requirement constraints
+      - name: Compute minimum requirement constraints from pyproject.toml
         run: |
           pip install -e . --no-deps
           python scripts/extract_minimum_requirements.py clean_python[$extras] > constraints.txt
@@ -78,9 +78,8 @@ jobs:
       - name: Compile and install requirements
         run: |
           touch constraints.txt
-          pip-compile --extra=$extras -c constraints.txt -o requirements.txt
+          pip-compile --extra=$extras -c constraints.txt -o requirements.txt --no-header --no-annotate
           pip install -r requirements.txt ${{ matrix.pins }}
-          pip list
 
       - name: Run tests
         run: pytest tests --cov
