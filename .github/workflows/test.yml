@@ -65,7 +65,7 @@ jobs:
           python-version: ${{ matrix.python }}
           allow-prereleases: ${{ matrix.allow-prereleases || false }}
 
-      - name: Install system dependencies
+      - name: Install python dependencies
         run: |
           pip install --disable-pip-version-check --upgrade pip setuptools packaging pip-tools
 
