@@ -97,3 +97,13 @@ jobs:
         env:
           POSTGRES_URL: 'postgres:postgres@localhost:5432'
           S3_URL: 'http://localhost:9000'
+
+  notify:
+    name: Create issue in case of failed build
+    needs: [tests]
+    if: failure() && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: jayqi/failed-build-issue-action@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
