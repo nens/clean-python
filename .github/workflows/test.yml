@@ -86,6 +86,7 @@ jobs:
       - name: Archive requirement files
         uses: actions/upload-artifact@v4
         with:
+          name: "dependencies-Py${{ matrix.python }}-${{ matrix.versions }}"
           path: |
             requirements.txt
             constraints.txt
