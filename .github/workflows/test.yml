@@ -73,7 +73,7 @@ jobs:
         run: |
           pip install -e . --no-deps
           python scripts/extract_minimum_requirements.py clean_python[$extras] > constraints.txt
-        if: ${{ matrix.versions == "minimum" }}
+        if: matrix.versions == 'minimum'
 
       - name: Compile and install requirements
         run: |
