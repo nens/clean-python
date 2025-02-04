@@ -11,18 +11,24 @@ jobs:
   test:
     name: Test, Linux, Python ${{ matrix.python }}
     runs-on: ubuntu-latest
+    env:
+      extras: "fastapi,auth,celery,fluentbit,sql,sql-sync,s3,s3-sync,api-client,amqp,nanoid,test"
     strategy:
       fail-fast: false
       matrix:
         include:
           - python: "3.10"
-            pins: ""
+            pins: "psycopg2-binary==2.9.3"
+            minimum: true
           - python: "3.11"
-            pins: ""
+            pins: "psycopg2-binary"
+            minimum: false
           - python: "3.12"
-            pins: ""
+            pins: "psycopg2-binary"
+            minimum: false
           - python: "3.13"
-            pins: ""
+            pins: "psycopg2-binary"
+            minimum: false
 
     services:
       postgres:
@@ -59,10 +65,17 @@ jobs:
           python-version: ${{ matrix.python }}
           allow-prereleases: ${{ matrix.allow-prereleases || false }}
 
+      - name: Compute minimum requirements
+        run: |
+          pip install packaging -e . --no-deps
+          python scripts/extract_minimum_requirements.py clean_python[$extras] > constraints.txt
+        if: matrix.minimum == true
+
       - name: Install python dependencies
         run: |
+          touch constraints.txt
           pip install --disable-pip-version-check --upgrade pip setuptools
-          pip install -e .[fastapi,auth,celery,fluentbit,sql,sql-sync,s3,s3-sync,api-client,amqp,nanoid,test] ${{ matrix.pins }} psycopg2-binary==2.9.*
+          pip install -e .[$extras] ${{ matrix.pins }} -c constraints.txt
           pip list
 
       - name: Run tests
