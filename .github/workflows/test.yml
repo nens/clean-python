@@ -80,8 +80,15 @@ jobs:
       - name: Compile and install requirements
         run: |
           touch constraints.txt
-          pip-compile --extra=$extras -c constraints.txt -o requirements.txt --no-header --no-annotate --strip-extras
+          pip-compile --extra=$extras -c constraints.txt -o requirements.txt --strip-extras
           pip install -r requirements.txt ${{ matrix.pins }}
+
+      - name: Archive requirement files
+        uses: actions/upload-artifact@v4
+        with:
+          path: |
+            requirements.txt
+            constraints.txt
 
       - name: Run tests
         run: pytest tests --cov
