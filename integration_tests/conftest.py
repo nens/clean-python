@@ -153,7 +153,7 @@ def s3_settings(s3_url):
 
 
 @pytest.fixture(scope="session")
-def s3_bucket_session(s3_settings):
+def s3_bucket(s3_settings):
     s3 = boto3.resource(
         "s3",
         endpoint_url=s3_settings["url"],
@@ -169,12 +169,6 @@ def s3_bucket_session(s3_settings):
         if "BucketAlreadyOwnedByYou" in str(e):
             pass
     return bucket
-
-
-@pytest.fixture
-def s3_bucket(s3_bucket_session):
-    yield s3_bucket_session
-    s3_bucket_session.objects.all().delete()
 
 
 @pytest.fixture

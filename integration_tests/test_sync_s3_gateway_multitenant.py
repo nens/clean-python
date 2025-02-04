@@ -17,6 +17,8 @@ from clean_python.s3 import SyncS3Gateway
 
 @pytest.fixture
 def s3_provider(s3_bucket, s3_settings):
+    # wipe contents before each test
+    s3_bucket.objects.all().delete()
     # set up a tenant
     ctx.tenant = Tenant(id=22, name="foo")
     yield SyncS3BucketProvider(S3BucketOptions(**s3_settings))
