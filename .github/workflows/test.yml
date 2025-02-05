@@ -55,7 +55,7 @@ jobs:
         run: pytest tests --cov
 
       - name: Start containers
-        run: docker-compose up -d
+        run: docker compose up -d
 
       - name: Run integration tests
         run: pytest integration_tests
