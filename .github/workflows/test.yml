@@ -41,7 +41,7 @@ jobs:
           - 5432:5432
 
       s3:
-        image: minio/minio:edge-cicd
+        image: minio/minio:latest
         env:
           MINIO_DOMAIN: localhost  # virtual hosted-style access
           MINIO_ROOT_USER: cleanpython
