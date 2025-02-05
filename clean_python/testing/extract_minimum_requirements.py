@@ -5,7 +5,7 @@ The scripts assumes that the current package is installed as 'editable', so that
 metadata can be found with importlib.
 
 Usage:
-    $ python scripts/extract_dependencies.py clean_python[nanoid,fastapi]
+    $ python clean_python/testing/extract_dependencies.py clean_python[nanoid,fastapi]
     pydantic==2.9 inject==5 asgiref==3.8 blinker==1.8 async-lru==2.0 backoff==2.2 pyyaml==6.0 fastapi==0.115 nanoid==2
 """
 

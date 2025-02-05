@@ -22,7 +22,8 @@ test = [
     "httpx",
     "uvicorn",
     "python-multipart",
-    "pytest-celery<1"
+    "pytest-celery<1",
+    "packaging"
 ]
 fastapi = ["fastapi>=0.115"]
 auth = ["pyjwt[crypto]>=2.9"]
