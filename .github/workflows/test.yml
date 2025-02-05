@@ -71,25 +71,9 @@ jobs:
         run: |
           pip install --disable-pip-version-check --upgrade pip setuptools packaging pip-tools
 
-      - name: Compute minimum requirement constraints from pyproject.toml
-        run: |
-          pip install -e . --no-deps
-          python clean_python/testing/extract_minimum_requirements.py clean_python[$extras] > constraints.txt
-        if: matrix.versions == 'minimum'
-
-      - name: Compile and install requirements
-        run: |
-          touch constraints.txt
-          pip-compile --extra=$extras -c constraints.txt -o requirements.txt --strip-extras
-          pip install -r requirements.txt ${{ matrix.pins }}
-
-      - name: Archive requirement files
-        uses: actions/upload-artifact@v4
-        with:
-          name: "dependencies-Py${{ matrix.python }}-${{ matrix.versions }}"
-          path: |
-            requirements.txt
-            constraints.txt
+      - name: Compile and install ${{ matrix.versions }} requirements
+        run: "scripts/install_${{ matrix.versions }}.sh"
+        shell: bash
 
       - name: Run tests
         run: pytest tests --cov
