@@ -32,33 +32,6 @@ jobs:
             pins: "psycopg2-binary"
             versions: "latest"
 
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_PASSWORD: postgres
-        ports:
-          - 5432:5432
-
-      s3:
-        image: minio/minio:latest
-        command: minio server /data
-        env:
-          MINIO_DOMAIN: localhost  # virtual hosted-style access
-          MINIO_ROOT_USER: cleanpython
-          MINIO_ROOT_PASSWORD: cleanpython
-        ports:
-          - 9000:9000
-
-      rabbitmq:
-        image: "rabbitmq:3-alpine"
-        env:
-          RABBITMQ_DEFAULT_USER: "cleanpython"
-          RABBITMQ_DEFAULT_PASS: "cleanpython"
-          RABBITMQ_DEFAULT_VHOST: "cleanpython"
-        ports:
-          - "5672:5672"
-
     steps:
       - uses: actions/checkout@v4
 
@@ -81,11 +54,8 @@ jobs:
       - name: Run tests
         run: pytest tests --cov
 
-      - name: Wait for postgres
-        run: scripts/wait-for-postgres.sh
-        env:
-          POSTGRES_URL: 'postgres:postgres@localhost:5432'
-        timeout-minutes: 1
+      - name: Start containers
+        run: docker-compose up -d
 
       - name: Run integration tests
         run: pytest integration_tests
