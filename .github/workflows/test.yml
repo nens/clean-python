@@ -23,7 +23,7 @@ jobs:
             pins: "psycopg2-binary==2.9.3"
             versions: "minimum"
           - python: "3.11"
-            pins: "psycopg2-binary"
+            pins: "psycopg2-binary==2.9.3"
             versions: "minimum"
           - python: "3.12"
             pins: "psycopg2-binary"
