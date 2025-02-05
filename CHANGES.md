@@ -1,6 +1,6 @@
 # Changelog of clean-python
 
-## 0.18.1 (unreleased)
+## 0.18.1 (2025-02-05)
 ----------------------
 
 - Test against PostGRES 16 (instead of 14).
