@@ -118,3 +118,16 @@ Our current approach is to have 1 *aggregate* (whose root is implemented as a ``
 Optional dependencies can be added with:
 
     $ pip install clean-python[sql,fastapi]
+
+
+## Managing dependencies
+
+This package has all of its dependencies specified in the ``pyproject.toml`` file.
+Most packages are specified with a minimum version (e.g. ``pydantic>=2.9``).
+In the automated tests both the minimum and the latest versions are tested.
+
+The automated tests run every week, and if they fail (mostly due to an updated dependency), there will
+be an issue created automatically.
+
+Locally, minimum and latest environments can be created using scripts in the `scripts` directory.
+Use ``EXTRAS`` and ``PINS`` environment variables to tweak what is installed.

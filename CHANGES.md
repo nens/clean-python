@@ -11,6 +11,10 @@
   is presented, this now hides the query parameter from the generated url. Before,
   it resulted in `path?foo=None`.
 
+- Removed version pins on the dependencies. Instead we now test each week against
+  the latest versions, and automatically create an issue if there is something wrong.
+  Also the minimum versions are tested.
+
 
 ## 0.18.0 (2024-10-21)
 ----------------------

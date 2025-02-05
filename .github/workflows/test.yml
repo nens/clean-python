@@ -6,23 +6,31 @@ on:
     branches:
       - main
   pull_request:
+  schedule:
+    - cron: '0 8 * * 1' # Runs at 08:00 UTC every Monday
 
 jobs:
   test:
-    name: Test, Linux, Python ${{ matrix.python }}
+    name: Test, Linux, Python ${{ matrix.python }}, ${{ matrix.versions }}
     runs-on: ubuntu-latest
+    env:
+      extras: "fastapi,auth,celery,fluentbit,sql,sql-sync,s3,s3-sync,api-client,amqp,nanoid,test"
     strategy:
       fail-fast: false
       matrix:
         include:
           - python: "3.10"
-            pins: ""
+            pins: "psycopg2-binary==2.9.3"
+            versions: "minimum"
           - python: "3.11"
-            pins: ""
+            pins: "psycopg2-binary==2.9.3"
+            versions: "minimum"
           - python: "3.12"
-            pins: ""
+            pins: "psycopg2-binary"
+            versions: "latest"
           - python: "3.13"
-            pins: ""
+            pins: "psycopg2-binary"
+            versions: "latest"
 
     services:
       postgres:
@@ -61,9 +69,13 @@ jobs:
 
       - name: Install python dependencies
         run: |
-          pip install --disable-pip-version-check --upgrade pip setuptools
-          pip install -e .[fastapi,auth,celery,fluentbit,sql,sql-sync,s3,s3-sync,api-client,amqp,nanoid,test] ${{ matrix.pins }} psycopg2-binary==2.9.*
-          pip list
+          pip install --disable-pip-version-check --upgrade pip setuptools packaging pip-tools
+
+      - name: Compile and install ${{ matrix.versions }} requirements
+        run: "scripts/install_${{ matrix.versions }}.sh"
+        shell: bash
+        env:
+          PINS: ${{ matrix.pins }}
 
       - name: Run tests
         run: pytest tests --cov
@@ -79,3 +91,13 @@ jobs:
         env:
           POSTGRES_URL: 'postgres:postgres@localhost:5432'
           S3_URL: 'http://localhost:9000'
+
+  notify:
+    name: Create issue in case of failed build
+    needs: [test]
+    if: failure() && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: jayqi/failed-build-issue-action@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
