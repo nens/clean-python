@@ -15,6 +15,10 @@
   the latest versions, and automatically create an issue if there is something wrong.
   Also the minimum versions are tested.
 
+- Allow boto3 version 1.36. Note that this has a known incompatibility with older versions
+  of MinIO; upgrade minio to the latest versions to fix issues with missing Content-MD5 headers.
+  See: https://github.com/minio/minio/issues/20845
+
 
 ## 0.18.0 (2024-10-21)
 ----------------------
