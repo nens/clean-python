@@ -74,6 +74,8 @@ jobs:
       - name: Compile and install ${{ matrix.versions }} requirements
         run: "scripts/install_${{ matrix.versions }}.sh"
         shell: bash
+        env:
+          PINS: ${{ matrix.pins }}
 
       - name: Run tests
         run: pytest tests --cov
