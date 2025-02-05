@@ -42,6 +42,7 @@ jobs:
 
       s3:
         image: minio/minio:latest
+        command: minio server /data
         env:
           MINIO_DOMAIN: localhost  # virtual hosted-style access
           MINIO_ROOT_USER: cleanpython
