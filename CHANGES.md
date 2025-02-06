@@ -3,7 +3,8 @@
 ## 0.18.2 (unreleased)
 ----------------------
 
-- Nothing changed yet.
+- Reuse connections in `SyncS3BucketProvider`. This requires `SyncS3BucketProvider.connect()`
+  to be called at application start.
 
 
 ## 0.18.1 (2025-02-05)

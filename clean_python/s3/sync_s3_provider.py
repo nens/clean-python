@@ -6,6 +6,8 @@ from typing import TYPE_CHECKING
 import boto3
 from botocore.client import Config
 
+from clean_python import SyncProvider
+
 from .s3_bucket_options import S3BucketOptions
 
 if TYPE_CHECKING:
@@ -16,9 +18,10 @@ __all__ = ["S3BucketOptions", "SyncS3BucketProvider"]
 logger = logging.getLogger(__name__)
 
 
-class SyncS3BucketProvider:
+class SyncS3BucketProvider(SyncProvider):
     def __init__(self, options: S3BucketOptions):
         self.options = options
+        self._client = None
 
     @property
     def bucket(self) -> str:
@@ -26,7 +29,13 @@ class SyncS3BucketProvider:
 
     @property
     def client(self) -> "S3Client":
-        return boto3.client(
+        assert (
+            self._client is not None
+        ), "S3BucketProvider not connected, call connect() first"
+        return self._client
+
+    def connect(self) -> None:
+        self._client = boto3.client(
             "s3",
             endpoint_url=self.options.url,
             aws_access_key_id=self.options.access_key,
@@ -42,3 +51,8 @@ class SyncS3BucketProvider:
             ),
             use_ssl=self.options.url.startswith("https"),
         )
+
+    def disconnect(self) -> None:
+        if self._client:
+            self._client.close()
+            self._client = None
