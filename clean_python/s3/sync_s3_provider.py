@@ -32,6 +32,8 @@ class SyncS3BucketProvider(SyncProvider):
         assert (
             self._client is not None
         ), "S3BucketProvider not connected, call connect() first"
+        # "Clients are generally thread-safe"
+        # https://boto3.amazonaws.com/v1/documentation/api/latest/guide/clients.html#multithreading-or-multiprocessing-with-clients
         return self._client
 
     def connect(self) -> None:
