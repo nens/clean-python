@@ -1,6 +1,6 @@
 # Changelog of clean-python
 
-## 0.18.2 (unreleased)
+## 0.19.0 (2025-02-06)
 ----------------------
 
 - Reuse connections in `SyncS3BucketProvider`. This requires `SyncS3BucketProvider.connect()`
