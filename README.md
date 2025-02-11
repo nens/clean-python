@@ -119,12 +119,32 @@ Optional dependencies can be added with:
 
     $ pip install clean-python[sql,fastapi]
 
+## Local development
+
+For local development of ``clean-python``, clone the repository and `cd` into the directory.
+Then, create a fresh virtual environment (using at least Python 3.10) and activate it. We recommend using [PyEnv](https://github.com/pyenv/pyenv) for that.
+
+Then install the library in *editable* mode, with all optional dependencies:
+
+    $ pip install -e .[fastapi,auth,celery,fluentbit,sql,sql-sync,s3,s3-sync,api-client,amqp,nanoid,test]
+
+**N.B.**: pip may have a hard time resolving some dependencies, if so, please use the convenience installation scripts referred to in the section below.
+
+Finally run the unittests as follows:
+
+    $ pytest tests
+
+For the integration tests, databases are necessary which are managed using *docker compose*:
+
+    $ docker compose up -d
+    $ pytest integration_tests
 
 ## Managing dependencies
 
 This package has all of its dependencies specified in the ``pyproject.toml`` file.
 Most packages are specified with a minimum version (e.g. ``pydantic>=2.9``).
 In the automated tests both the minimum and the latest versions are tested.
+Locally, the minimum and latest versions can be installed using convenience scripts, respectively `scripts/install_minimum.sh` and `scripts/install_latest.sh`.
 
 The automated tests run every week, and if they fail (mostly due to an updated dependency), there will
 be an issue created automatically.
