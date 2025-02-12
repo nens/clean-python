@@ -160,11 +160,31 @@ class SyncS3Gateway(SyncGateway):
     def create_upload_url(self, id: Id) -> AnyHttpUrl:
         return self._create_presigned_url(id, "put_object")
 
+    def create_multipart_upload(self, id: Id) -> str:
+        """Initiate a multipart upload."""
+        result = self.provider.client.create_multipart_upload(
+            Bucket=self.provider.bucket, Key=self._id_to_key(id)
+        )
+        return result["UploadId"]
+
     def create_multipart_upload_url(
         self, id: Id, upload_id: str, part_number: int
     ) -> AnyHttpUrl:
+        """Return a presigned URL for uploading a part."""
         return self._create_presigned_url(
             id, "upload_part", upload_id=upload_id, part_number=part_number
+        )
+
+    def complete_multipart_upload(self, id: Id, upload_id: str) -> None:
+        """Complete a multipart upload by assembling its parts."""
+        self.provider.client.complete_multipart_upload(
+            Bucket=self.provider.bucket, Key=self._id_to_key(id), UploadId=upload_id
+        )
+
+    def abort_multipart_upload(self, id: Id, upload_id: str) -> None:
+        """Abort a multipart upload and delete its parts."""
+        self.provider.client.abort_multipart_upload(
+            Bucket=self.provider.bucket, Key=self._id_to_key(id), UploadId=upload_id
         )
 
     def download_file(self, id: Id, file_path: Path) -> None:
