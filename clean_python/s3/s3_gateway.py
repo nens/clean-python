@@ -5,6 +5,7 @@ from pathlib import Path
 
 import inject
 from botocore.exceptions import ClientError
+from mypy_boto3_s3.type_defs import CompletedPartTypeDef
 from pydantic import AnyHttpUrl
 
 from clean_python import ctx
@@ -159,14 +160,38 @@ class S3Gateway(Gateway):
     ) -> AnyHttpUrl:
         return await self._create_presigned_url(id, "get_object", filename)
 
-    async def create_upload_url(self, id: Id) -> AnyHttpUrl:
-        return await self._create_presigned_url(id, "put_object")
-
-    async def create_multipart_upload_url(
+    async def create_upload_url(
         self, id: Id, upload_id: str, part_number: int
     ) -> AnyHttpUrl:
-        return await self._create_presigned_url(
-            id, "upload_part", upload_id=upload_id, part_number=part_number
+        if upload_id is None and part_number is None:
+            return await self._create_presigned_url(id, "put_object")
+        else:
+            return await self._create_presigned_url(
+                id, "upload_part", upload_id=upload_id, part_number=part_number
+            )
+
+    async def begin_multipart_upload(self, id: Id) -> str:
+        """Initiate a multipart upload."""
+        result = await self.provider.client.create_multipart_upload(
+            Bucket=self.provider.bucket, Key=self._id_to_key(id)
+        )
+        return result["UploadId"]
+
+    async def commit_multipart_upload(
+        self, id: Id, upload_id: str, parts: list[CompletedPartTypeDef]
+    ) -> None:
+        """Finalize a multipart upload by assembling its parts."""
+        await self.provider.client.complete_multipart_upload(
+            Bucket=self.provider.bucket,
+            Key=self._id_to_key(id),
+            UploadId=upload_id,
+            MultipartUpload={"Parts": parts},
+        )
+
+    async def rollback_multipart_upload(self, id: Id, upload_id: str) -> None:
+        """Cancel a multipart upload and delete any parts."""
+        await self.provider.client.abort_multipart_upload(
+            Bucket=self.provider.bucket, Key=self._id_to_key(id), UploadId=upload_id
         )
 
     async def download_file(self, id: Id, file_path: Path) -> None:
