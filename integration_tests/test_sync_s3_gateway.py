@@ -148,6 +148,16 @@ def test_create_upload_url(s3_gateway: SyncS3Gateway, object_in_s3):
     assert "X-Amz-SignedHeaders=host" in actual
 
 
+def test_create_multipart_upload_url(s3_gateway: SyncS3Gateway, object_in_s3):
+    actual = s3_gateway.create_multipart_upload_url(object_in_s3, "foo", 1)
+
+    assert object_in_s3 in actual
+    assert "X-Amz-Expires=3600" in actual
+    assert "X-Amz-SignedHeaders=host" in actual
+    assert f"uploadId=foo" in actual
+    assert f"partNumber=1" in actual
+
+
 def test_remove_filtered_all(s3_gateway: SyncS3Gateway, multiple_objects):
     s3_gateway.remove_filtered([])
 
