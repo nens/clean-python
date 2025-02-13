@@ -5,6 +5,7 @@ from pathlib import Path
 
 import inject
 from botocore.exceptions import ClientError
+from mypy_boto3_s3.type_defs import CompletedPartTypeDef
 from pydantic import AnyHttpUrl
 
 from clean_python import ctx
@@ -174,17 +175,19 @@ class SyncS3Gateway(SyncGateway):
         )
         return result["UploadId"]
 
-    def commit_multipart_upload(self, id: Id, upload_id: str, parts) -> None:
+    def commit_multipart_upload(
+        self, id: Id, upload_id: str, parts: list[CompletedPartTypeDef]
+    ) -> None:
         """Finalize a multipart upload by assembling its parts."""
         self.provider.client.complete_multipart_upload(
             Bucket=self.provider.bucket,
             Key=self._id_to_key(id),
             UploadId=upload_id,
-            MultipartUpload={"Parts": parts},
+            MultipartUpload={"Parts": parts}
         )
 
     def rollback_multipart_upload(self, id: Id, upload_id: str) -> None:
-        """Cancel a multipart upload and delete its parts."""
+        """Cancel a multipart upload and delete any parts."""
         self.provider.client.abort_multipart_upload(
             Bucket=self.provider.bucket, Key=self._id_to_key(id), UploadId=upload_id
         )
