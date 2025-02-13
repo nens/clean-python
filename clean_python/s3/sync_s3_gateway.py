@@ -183,7 +183,7 @@ class SyncS3Gateway(SyncGateway):
             Bucket=self.provider.bucket,
             Key=self._id_to_key(id),
             UploadId=upload_id,
-            MultipartUpload={"Parts": parts}
+            MultipartUpload={"Parts": parts},
         )
 
     def rollback_multipart_upload(self, id: Id, upload_id: str) -> None:
