@@ -148,7 +148,6 @@ class SyncS3Gateway(SyncGateway):
         if filename:
             params["ResponseContentDisposition"] = f"attachment; filename={filename}"
         elif client_method == "upload_part":
-            assert upload_id and part_number
             params["UploadId"] = upload_id
             params["PartNumber"] = part_number
         return self.provider.client.generate_presigned_url(
