@@ -6,6 +6,7 @@ from pathlib import Path
 import inject
 from botocore.exceptions import ClientError
 from pydantic import AnyHttpUrl
+from types_aiobotocore_s3.type_defs import CompletedPartTypeDef
 
 from clean_python import ctx
 from clean_python import DoesNotExist
@@ -140,18 +141,58 @@ class S3Gateway(Gateway):
         self,
         id: Id,
         client_method: str,
+        filename: str | None = None,
+        upload_id: str | None = None,
+        part_number: int | None = None,
     ) -> AnyHttpUrl:
+        params = {"Bucket": self.provider.bucket, "Key": self._id_to_key(id)}
+        if filename:
+            params["ResponseContentDisposition"] = f"attachment; filename={filename}"
+        elif client_method == "upload_part":
+            params["UploadId"] = upload_id
+            params["PartNumber"] = part_number
         return await self.provider.client.generate_presigned_url(
-            client_method,
-            Params={"Bucket": self.provider.bucket, "Key": self._id_to_key(id)},
-            ExpiresIn=DEFAULT_EXPIRY,
+            client_method, Params=params, ExpiresIn=DEFAULT_EXPIRY
         )
 
-    async def create_download_url(self, id: Id) -> AnyHttpUrl:
-        return await self._create_presigned_url(id, "get_object")
+    async def create_download_url(
+        self, id: Id, filename: str | None = None
+    ) -> AnyHttpUrl:
+        return await self._create_presigned_url(id, "get_object", filename)
 
-    async def create_upload_url(self, id: Id) -> AnyHttpUrl:
-        return await self._create_presigned_url(id, "put_object")
+    async def create_upload_url(
+        self, id: Id, upload_id: str, part_number: int
+    ) -> AnyHttpUrl:
+        if upload_id is None and part_number is None:
+            return await self._create_presigned_url(id, "put_object")
+        else:
+            return await self._create_presigned_url(
+                id, "upload_part", upload_id=upload_id, part_number=part_number
+            )
+
+    async def begin_multipart_upload(self, id: Id) -> str:
+        """Initiate a multipart upload."""
+        result = await self.provider.client.create_multipart_upload(
+            Bucket=self.provider.bucket, Key=self._id_to_key(id)
+        )
+        return result["UploadId"]
+
+    async def commit_multipart_upload(
+        self, id: Id, upload_id: str, parts: list[CompletedPartTypeDef]
+    ) -> None:
+        """Finalize a multipart upload by assembling its parts."""
+        await self.provider.client.complete_multipart_upload(
+            Bucket=self.provider.bucket,
+            Key=self._id_to_key(id),
+            UploadId=upload_id,
+            MultipartUpload={"Parts": parts},
+        )
+
+    async def rollback_multipart_upload(self, id: Id, upload_id: str) -> None:
+        """Cancel a multipart upload and delete any parts."""
+        await self.provider.client.abort_multipart_upload(
+            Bucket=self.provider.bucket, Key=self._id_to_key(id), UploadId=upload_id
+        )
 
     async def download_file(self, id: Id, file_path: Path) -> None:
         if file_path.exists():
