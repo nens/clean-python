@@ -5,8 +5,8 @@ from pathlib import Path
 
 import inject
 from botocore.exceptions import ClientError
-from types_aiobotocore_s3.type_defs import CompletedPartTypeDef
 from pydantic import AnyHttpUrl
+from types_aiobotocore_s3.type_defs import CompletedPartTypeDef
 
 from clean_python import ctx
 from clean_python import DoesNotExist
