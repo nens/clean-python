@@ -65,7 +65,7 @@ def test_create_upload_url(gateway: SyncS3Gateway, provider: Mock):
 def test_create_multipart_upload_url(gateway: SyncS3Gateway, provider: Mock):
     provider.client.generate_presigned_url.return_value = "https://s3.com/S3Object"
 
-    actual = gateway.create_multipart_upload_url("S3Object", "foo", 1)
+    actual = gateway.create_upload_url("S3Object", "foo", 1)
 
     assert actual == provider.client.generate_presigned_url.return_value
     provider.client.generate_presigned_url.assert_called_once_with(

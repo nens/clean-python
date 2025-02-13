@@ -149,7 +149,7 @@ def test_create_upload_url(s3_gateway: SyncS3Gateway, object_in_s3):
 
 
 def test_create_multipart_upload_url(s3_gateway: SyncS3Gateway, object_in_s3):
-    actual = s3_gateway.create_multipart_upload_url(object_in_s3, "foo", 1)
+    actual = s3_gateway.create_upload_url(object_in_s3, "foo", 1)
 
     assert object_in_s3 in actual
     assert "X-Amz-Expires=3600" in actual

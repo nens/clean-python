@@ -148,6 +148,7 @@ class SyncS3Gateway(SyncGateway):
         if filename:
             params["ResponseContentDisposition"] = f"attachment; filename={filename}"
         elif client_method == "upload_part":
+            assert upload_id and part_number
             params["UploadId"] = upload_id
             params["PartNumber"] = part_number
         return self.provider.client.generate_presigned_url(
@@ -157,32 +158,34 @@ class SyncS3Gateway(SyncGateway):
     def create_download_url(self, id: Id, filename: str | None = None) -> AnyHttpUrl:
         return self._create_presigned_url(id, "get_object", filename)
 
-    def create_upload_url(self, id: Id) -> AnyHttpUrl:
-        return self._create_presigned_url(id, "put_object")
+    def create_upload_url(
+        self, id: Id, upload_id: str | None = None, part_number: int | None = None
+    ) -> AnyHttpUrl:
+        if upload_id is None and part_number is None:
+            return self._create_presigned_url(id, "put_object")
+        else:
+            return self._create_presigned_url(
+                id, "upload_part", upload_id=upload_id, part_number=part_number
+            )
 
-    def create_multipart_upload(self, id: Id) -> str:
+    def begin_multipart_upload(self, id: Id) -> str:
         """Initiate a multipart upload."""
         result = self.provider.client.create_multipart_upload(
             Bucket=self.provider.bucket, Key=self._id_to_key(id)
         )
         return result["UploadId"]
 
-    def create_multipart_upload_url(
-        self, id: Id, upload_id: str, part_number: int
-    ) -> AnyHttpUrl:
-        """Return a presigned URL for uploading a part."""
-        return self._create_presigned_url(
-            id, "upload_part", upload_id=upload_id, part_number=part_number
-        )
-
-    def complete_multipart_upload(self, id: Id, upload_id: str) -> None:
-        """Complete a multipart upload by assembling its parts."""
+    def commit_multipart_upload(self, id: Id, upload_id: str, parts) -> None:
+        """Finalize a multipart upload by assembling its parts."""
         self.provider.client.complete_multipart_upload(
-            Bucket=self.provider.bucket, Key=self._id_to_key(id), UploadId=upload_id
+            Bucket=self.provider.bucket,
+            Key=self._id_to_key(id),
+            UploadId=upload_id,
+            MultipartUpload={"Parts": parts},
         )
 
-    def abort_multipart_upload(self, id: Id, upload_id: str) -> None:
-        """Abort a multipart upload and delete its parts."""
+    def rollback_multipart_upload(self, id: Id, upload_id: str) -> None:
+        """Cancel a multipart upload and delete its parts."""
         self.provider.client.abort_multipart_upload(
             Bucket=self.provider.bucket, Key=self._id_to_key(id), UploadId=upload_id
         )
