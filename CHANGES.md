@@ -1,9 +1,12 @@
 # Changelog of clean-python
 
-## 0.19.1 (unreleased)
+## 0.20.0 (unreleased)
 ----------------------
 
-- Nothing changed yet.
+- `DomainEvent` subclasses should now be pydantic models instead of python dataclasses.
+
+- When event sending and handling are used in an application, an implementation of an `EventProvider`
+  must be registered when bootstrapping the application.
 
 
 ## 0.19.0 (2025-02-06)
