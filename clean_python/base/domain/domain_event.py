@@ -8,27 +8,39 @@ from typing import TypeVar
 
 import inject
 
+from .provider import SyncProvider
 from .value_object import ValueObject
 
-__all__ = ["DomainEvent", "EventProvider"]
+__all__ = [
+    "DomainEvent",
+    "EventProvider",
+    "register_handler",
+    "EventHandler",
+    "event_handler_registry",
+]
 
 
 T = TypeVar("T", bound="DomainEvent")
+EventHandler = Callable[["DomainEvent"], None | Awaitable[None]]
+event_handler_registry: set[tuple[tuple[str, ...], EventHandler]] = set()
 
 
-class EventProvider(ABC):
+def register_handler(path: tuple[str, ...], receiver: EventHandler) -> EventHandler:
+    event_handler_registry.add((path, receiver))
+    return receiver
+
+
+def clear_handlers():
+    event_handler_registry.clear()
+
+
+class EventProvider(SyncProvider, ABC):
     @abstractmethod
     def send(self, event: "DomainEvent") -> None:
         pass
 
     @abstractmethod
     async def send_async(self, event: "DomainEvent") -> None:
-        pass
-
-    @abstractmethod
-    def register_handler(
-        self, event: type[T], receiver: Callable[[T], None | Awaitable[None]]
-    ) -> Callable[[T], None | Awaitable[None]]:
         pass
 
 
@@ -47,3 +59,9 @@ class DomainEvent(ValueObject):
 
     async def send_async(self) -> None:
         await inject.instance(EventProvider).send_async(self)
+
+    @classmethod
+    def register_handler(
+        cls: type["DomainEvent"], receiver: EventHandler
+    ) -> EventHandler:
+        return register_handler(cls.event_path, receiver)

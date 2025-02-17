@@ -5,6 +5,7 @@ from .exceptions import *  # NOQA
 from .filter import *  # NOQA
 from .gateway import *  # NOQA
 from .pagination import *  # NOQA
+from .provider import *  # NOQA
 from .repository import *  # NOQA
 from .root_entity import *  # NOQA
 from .types import *  # NOQA

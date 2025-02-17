@@ -1,27 +1,33 @@
 # (c) Nelen & Schuurmans
-from collections.abc import Awaitable
-from collections.abc import Callable
 from typing import TypeVar
 
 import blinker
 
 from clean_python import DomainEvent
+from clean_python import event_handler_registry
 from clean_python import EventProvider
 
 T = TypeVar("T", bound=DomainEvent)
 
+__all__ = ["BlinkerEventProvider"]
+
 
 class BlinkerEventProvider(EventProvider):
-    def _signal(self, event_type: type[DomainEvent]) -> blinker.Signal:
-        return blinker.signal(event_type.event_path)
+    def __init__(self):
+        self._connected = False
+
+    def connect(self) -> None:
+        for path, handler in event_handler_registry:
+            self._signal(path).connect(handler)
+        self._connected = True
+
+    def _signal(self, path: tuple[str, ...]) -> blinker.Signal:
+        return blinker.signal(".".join(path))
 
     def send(self, event: DomainEvent) -> None:
-        self._signal(event.__class__).send(event)
+        assert self._connected, "Event provider not connected"
+        self._signal(event.__class__.event_path).send(event)
 
     async def send_async(self, event: DomainEvent) -> None:
-        await self._signal(event.__class__).send_async(event)
-
-    def register_handler(
-        self, event_type: type[T], receiver: Callable[[T], None | Awaitable[None]]
-    ) -> Callable[[T], None | Awaitable[None]]:
-        return self._signal(event_type).connect(receiver)
+        assert self._connected, "Event provider not connected"
+        await self._signal(event.__class__.event_path).send_async(event)
