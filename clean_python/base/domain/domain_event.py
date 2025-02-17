@@ -1,29 +1,39 @@
 # (c) Nelen & Schuurmans
+from abc import ABC
+from abc import abstractmethod
 from collections.abc import Awaitable
 from collections.abc import Callable
 from typing import TypeVar
 
-import blinker
+import inject
 
-__all__ = ["DomainEvent"]
+from .value_object import ValueObject
+
+__all__ = ["DomainEvent", "EventProvider"]
 
 
 T = TypeVar("T", bound="DomainEvent")
 
 
-class DomainEvent:
-    @classmethod
-    def _signal(cls) -> blinker.Signal:
-        return blinker.signal(cls.__name__)
+class EventProvider(ABC):
+    @abstractmethod
+    def send(self, event: "DomainEvent") -> None:
+        pass
 
-    @classmethod
+    @abstractmethod
+    async def send_async(self, event: "DomainEvent") -> None:
+        pass
+
+    @abstractmethod
     def register_handler(
-        cls: type[T], receiver: Callable[[T], None | Awaitable[None]]
+        self, event: type[T], receiver: Callable[[T], None | Awaitable[None]]
     ) -> Callable[[T], None | Awaitable[None]]:
-        return cls._signal().connect(receiver)
+        pass
 
+
+class DomainEvent(ValueObject):
     def send(self) -> None:
-        self._signal().send(self)
+        inject.instance(EventProvider).send(self)
 
     async def send_async(self) -> None:
-        await self._signal().send_async(self)
+        await inject.instance(EventProvider).send_async(self)

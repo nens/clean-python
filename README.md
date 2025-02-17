@@ -126,7 +126,7 @@ Then, create a fresh virtual environment (using at least Python 3.10) and activa
 
 Then install the library in *editable* mode, with all optional dependencies:
 
-    $ pip install -e .[fastapi,auth,celery,fluentbit,sql,sql-sync,s3,s3-sync,api-client,amqp,nanoid,test]
+    $ pip install -e .[fastapi,auth,celery,fluentbit,sql,sql-sync,s3,s3-sync,api-client,amqp,nanoid,blinker,test]
 
 **N.B.**: pip may have a hard time resolving some dependencies, if so, please use the convenience installation scripts referred to in the section below.
 
