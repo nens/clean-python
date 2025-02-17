@@ -3,6 +3,7 @@ from abc import ABC
 from abc import abstractmethod
 from collections.abc import Awaitable
 from collections.abc import Callable
+from typing import ClassVar
 from typing import TypeVar
 
 import inject
@@ -32,6 +33,15 @@ class EventProvider(ABC):
 
 
 class DomainEvent(ValueObject):
+    event_path: ClassVar[tuple[str, ...]] = ()
+
+    def __init_subclass__(cls: type["DomainEvent"], path: str | None = None) -> None:
+        if path is None:
+            cls.event_path += (cls.__name__,)
+        else:
+            cls.event_path += tuple(path.split("."))
+        super().__init_subclass__()
+
     def send(self) -> None:
         inject.instance(EventProvider).send(self)
 

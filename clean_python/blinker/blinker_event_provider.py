@@ -13,7 +13,7 @@ T = TypeVar("T", bound=DomainEvent)
 
 class BlinkerEventProvider(EventProvider):
     def _signal(self, event_type: type[DomainEvent]) -> blinker.Signal:
-        return blinker.signal(event_type.__name__)
+        return blinker.signal(event_type.event_path)
 
     def send(self, event: DomainEvent) -> None:
         self._signal(event.__class__).send(event)
