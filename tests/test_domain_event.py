@@ -42,7 +42,7 @@ def test_event_subclass():
     class TestEvent(DomainEvent):
         pass
 
-    assert TestEvent.event_path == ("TestEvent",)
+    assert TestEvent.event_path == ("testevent",)
 
 
 def test_event_subclass_with_path():
@@ -56,7 +56,7 @@ def test_event_double_subclass():
     class TestEvent2(TestEvent):
         pass
 
-    assert TestEvent2.event_path == ("test", "TestEvent2")
+    assert TestEvent2.event_path == ("test", "testevent2")
     assert TestEvent.event_path == ("test",)  # unchanged
 
 

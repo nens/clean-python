@@ -49,7 +49,7 @@ class DomainEvent(ValueObject):
 
     def __init_subclass__(cls: type["DomainEvent"], path: str | None = None) -> None:
         if path is None:
-            cls.event_path += (cls.__name__,)
+            cls.event_path += (cls.__name__.lower(),)
         else:
             cls.event_path += tuple(path.split("."))
         super().__init_subclass__()
