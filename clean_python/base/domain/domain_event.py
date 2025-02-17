@@ -1,29 +1,67 @@
 # (c) Nelen & Schuurmans
+from abc import ABC
+from abc import abstractmethod
 from collections.abc import Awaitable
 from collections.abc import Callable
+from typing import ClassVar
 from typing import TypeVar
 
-import blinker
+import inject
 
-__all__ = ["DomainEvent"]
+from .provider import SyncProvider
+from .value_object import ValueObject
+
+__all__ = [
+    "DomainEvent",
+    "EventProvider",
+    "register_handler",
+    "EventHandler",
+    "event_handler_registry",
+]
 
 
 T = TypeVar("T", bound="DomainEvent")
+EventHandler = Callable[["DomainEvent"], None | Awaitable[None]]
+event_handler_registry: set[tuple[tuple[str, ...], EventHandler]] = set()
 
 
-class DomainEvent:
-    @classmethod
-    def _signal(cls) -> blinker.Signal:
-        return blinker.signal(cls.__name__)
+def register_handler(path: tuple[str, ...], receiver: EventHandler) -> EventHandler:
+    event_handler_registry.add((path, receiver))
+    return receiver
+
+
+def clear_handlers() -> None:
+    event_handler_registry.clear()
+
+
+class EventProvider(SyncProvider, ABC):
+    @abstractmethod
+    def send(self, event: "DomainEvent") -> None:
+        pass
+
+    @abstractmethod
+    async def send_async(self, event: "DomainEvent") -> None:
+        pass
+
+
+class DomainEvent(ValueObject):
+    event_path: ClassVar[tuple[str, ...]] = ()
+
+    def __init_subclass__(cls: type["DomainEvent"], path: str | None = None) -> None:
+        if path is None:
+            cls.event_path += (cls.__name__.lower(),)
+        else:
+            cls.event_path += tuple(path.split("."))
+        super().__init_subclass__()
+
+    def send(self) -> None:
+        inject.instance(EventProvider).send(self)
+
+    async def send_async(self) -> None:
+        await inject.instance(EventProvider).send_async(self)
 
     @classmethod
     def register_handler(
-        cls: type[T], receiver: Callable[[T], None | Awaitable[None]]
-    ) -> Callable[[T], None | Awaitable[None]]:
-        return cls._signal().connect(receiver)
-
-    def send(self) -> None:
-        self._signal().send(self)
-
-    async def send_async(self) -> None:
-        await self._signal().send_async(self)
+        cls: type["DomainEvent"], receiver: EventHandler
+    ) -> EventHandler:
+        return register_handler(cls.event_path, receiver)

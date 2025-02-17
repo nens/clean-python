@@ -2,7 +2,7 @@
 
 from tempfile import TemporaryDirectory
 
-from .provider import SyncProvider
+from ..domain import SyncProvider
 
 __all__ = ["TmpDirProvider"]
 
