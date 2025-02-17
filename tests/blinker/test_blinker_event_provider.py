@@ -21,6 +21,7 @@ def event_provider() -> Iterator[EventProvider]:
     obj = BlinkerEventProvider()
     inject.configure(lambda binder: binder.bind(EventProvider, obj))
     yield obj
+    obj.disconnect()
     inject.clear()
 
 

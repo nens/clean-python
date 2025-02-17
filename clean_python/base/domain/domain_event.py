@@ -30,7 +30,7 @@ def register_handler(path: tuple[str, ...], receiver: EventHandler) -> EventHand
     return receiver
 
 
-def clear_handlers():
+def clear_handlers() -> None:
     event_handler_registry.clear()
 
 

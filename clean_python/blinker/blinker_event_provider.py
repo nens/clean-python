@@ -21,6 +21,10 @@ class BlinkerEventProvider(EventProvider):
             self._signal(path).connect(handler)
         self._connected = True
 
+    def disconnect(self) -> None:
+        blinker.default_namespace.clear()
+        self._connected = False
+
     def _signal(self, path: tuple[str, ...]) -> blinker.Signal:
         return blinker.signal(".".join(path))
 
