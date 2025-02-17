@@ -161,7 +161,7 @@ class S3Gateway(Gateway):
         return await self._create_presigned_url(id, "get_object", filename)
 
     async def create_upload_url(
-        self, id: Id, upload_id: str, part_number: int
+        self, id: Id, upload_id: str | None = None, part_number: int | None = None
     ) -> AnyHttpUrl:
         if upload_id is None and part_number is None:
             return await self._create_presigned_url(id, "put_object")
