@@ -158,15 +158,15 @@ class SyncS3Gateway(SyncGateway):
     def create_download_url(self, id: Id, filename: str | None = None) -> AnyHttpUrl:
         return self._create_presigned_url(id, "get_object", filename)
 
-    def create_upload_url(
-        self, id: Id, upload_id: str | None = None, part_number: int | None = None
+    def create_upload_url(self, id: Id) -> AnyHttpUrl:
+        return self._create_presigned_url(id, "put_object")
+
+    def create_multipart_upload_url(
+        self, id: Id, upload_id: str, part_number: int
     ) -> AnyHttpUrl:
-        if upload_id is None and part_number is None:
-            return self._create_presigned_url(id, "put_object")
-        else:
-            return self._create_presigned_url(
-                id, "upload_part", upload_id=upload_id, part_number=part_number
-            )
+        return self._create_presigned_url(
+            id, "upload_part", upload_id=upload_id, part_number=part_number
+        )
 
     def begin_multipart_upload(self, id: Id) -> str:
         """Initiate a multipart upload."""

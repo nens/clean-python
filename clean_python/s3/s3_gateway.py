@@ -160,15 +160,15 @@ class S3Gateway(Gateway):
     ) -> AnyHttpUrl:
         return await self._create_presigned_url(id, "get_object", filename)
 
-    async def create_upload_url(
-        self, id: Id, upload_id: str | None = None, part_number: int | None = None
+    async def create_upload_url(self, id: Id) -> AnyHttpUrl:
+        return await self._create_presigned_url(id, "put_object")
+
+    async def create_multipart_upload_url(
+        self, id: Id, upload_id: str, part_number: int
     ) -> AnyHttpUrl:
-        if upload_id is None and part_number is None:
-            return await self._create_presigned_url(id, "put_object")
-        else:
-            return await self._create_presigned_url(
-                id, "upload_part", upload_id=upload_id, part_number=part_number
-            )
+        return await self._create_presigned_url(
+            id, "upload_part", upload_id=upload_id, part_number=part_number
+        )
 
     async def begin_multipart_upload(self, id: Id) -> str:
         """Initiate a multipart upload."""
