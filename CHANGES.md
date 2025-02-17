@@ -3,7 +3,7 @@
 ## 0.19.1 (unreleased)
 ----------------------
 
-- Nothing changed yet.
+- Added support for multipart uploads to S3.
 
 
 ## 0.19.0 (2025-02-06)
