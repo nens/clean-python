@@ -6,7 +6,6 @@ from pathlib import Path
 import inject
 from botocore.exceptions import ClientError
 from pydantic import AnyHttpUrl
-from types_aiobotocore_s3.type_defs import CompletedPartTypeDef
 
 from clean_python import ctx
 from clean_python import DoesNotExist
@@ -17,6 +16,7 @@ from clean_python import Json
 from clean_python import PageOptions
 
 from .s3_provider import S3BucketProvider
+from .types import CompletedPart
 
 DEFAULT_EXPIRY = 3600  # in seconds
 DEFAULT_TIMEOUT = 1.0
@@ -147,7 +147,9 @@ class S3Gateway(Gateway):
     ) -> AnyHttpUrl:
         params = {"Bucket": self.provider.bucket, "Key": self._id_to_key(id)}
         if filename:
-            params["ResponseContentDisposition"] = f"attachment; filename={filename}"
+            params[
+                "ResponseContentDisposition"
+            ] = f"attachment; filename={filename}"  # noqa
         elif client_method == "upload_part":
             params["UploadId"] = upload_id
             params["PartNumber"] = part_number
@@ -178,14 +180,18 @@ class S3Gateway(Gateway):
         return result["UploadId"]
 
     async def commit_multipart_upload(
-        self, id: Id, upload_id: str, parts: list[CompletedPartTypeDef]
+        self, id: Id, upload_id: str, parts: list[CompletedPart]
     ) -> None:
         """Finalize a multipart upload by assembling its parts."""
         await self.provider.client.complete_multipart_upload(
             Bucket=self.provider.bucket,
             Key=self._id_to_key(id),
             UploadId=upload_id,
-            MultipartUpload={"Parts": parts},
+            MultipartUpload={
+                "Parts": [
+                    {"ETag": x["etag"], "PartNumber": x["part_number"]} for x in parts
+                ]
+            },
         )
 
     async def rollback_multipart_upload(self, id: Id, upload_id: str) -> None:
