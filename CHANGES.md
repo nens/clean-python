@@ -1,6 +1,6 @@
 # Changelog of clean-python
 
-## 0.19.1 (unreleased)
+## 0.19.1 (2025-02-19)
 ----------------------
 
 - Added support for multipart uploads to S3.
