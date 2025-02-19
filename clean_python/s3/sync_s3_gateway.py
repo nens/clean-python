@@ -16,6 +16,7 @@ from clean_python import PageOptions
 from clean_python import SyncGateway
 
 from .sync_s3_provider import SyncS3BucketProvider
+from .types import CompletedPart
 
 DEFAULT_EXPIRY = 3600  # in seconds
 DEFAULT_TIMEOUT = 1.0
@@ -137,11 +138,21 @@ class SyncS3Gateway(SyncGateway):
         )
 
     def _create_presigned_url(
-        self, id: Id, client_method: str, filename: str | None = None
+        self,
+        id: Id,
+        client_method: str,
+        filename: str | None = None,
+        upload_id: str | None = None,
+        part_number: int | None = None,
     ) -> AnyHttpUrl:
         params = {"Bucket": self.provider.bucket, "Key": self._id_to_key(id)}
         if filename:
-            params["ResponseContentDisposition"] = f"attachment; filename={filename}"
+            params[
+                "ResponseContentDisposition"
+            ] = f"attachment; filename={filename}"  # noqa
+        elif client_method == "upload_part":
+            params["UploadId"] = upload_id
+            params["PartNumber"] = part_number
         return self.provider.client.generate_presigned_url(
             client_method, Params=params, ExpiresIn=DEFAULT_EXPIRY
         )
@@ -151,6 +162,41 @@ class SyncS3Gateway(SyncGateway):
 
     def create_upload_url(self, id: Id) -> AnyHttpUrl:
         return self._create_presigned_url(id, "put_object")
+
+    def create_multipart_upload_url(
+        self, id: Id, upload_id: str, part_number: int
+    ) -> AnyHttpUrl:
+        return self._create_presigned_url(
+            id, "upload_part", upload_id=upload_id, part_number=part_number
+        )
+
+    def begin_multipart_upload(self, id: Id) -> str:
+        """Initiate a multipart upload."""
+        result = self.provider.client.create_multipart_upload(
+            Bucket=self.provider.bucket, Key=self._id_to_key(id)
+        )
+        return result["UploadId"]
+
+    def commit_multipart_upload(
+        self, id: Id, upload_id: str, parts: list[CompletedPart]
+    ) -> None:
+        """Finalize a multipart upload by assembling its parts."""
+        self.provider.client.complete_multipart_upload(
+            Bucket=self.provider.bucket,
+            Key=self._id_to_key(id),
+            UploadId=upload_id,
+            MultipartUpload={
+                "Parts": [
+                    {"ETag": x["etag"], "PartNumber": x["part_number"]} for x in parts
+                ]
+            },
+        )
+
+    def rollback_multipart_upload(self, id: Id, upload_id: str) -> None:
+        """Cancel a multipart upload and delete any parts."""
+        self.provider.client.abort_multipart_upload(
+            Bucket=self.provider.bucket, Key=self._id_to_key(id), UploadId=upload_id
+        )
 
     def download_file(self, id: Id, file_path: Path) -> None:
         if file_path.exists():
